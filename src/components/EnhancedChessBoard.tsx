@@ -6,7 +6,9 @@ import ChessSquare from './ChessSquare';
 import GameResultModal from './GameResultModal';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
-import { RotateCcw, Eye, Settings, Crown, AlertTriangle } from 'lucide-react';
+import { RotateCcw, Eye, Settings, Crown, AlertTriangle, Volume2, VolumeX } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { Card } from '@/components/ui/card';
 
 interface EnhancedChessBoardProps {
   gameState: GameState;
@@ -20,11 +22,10 @@ const EnhancedChessBoard: React.FC<EnhancedChessBoardProps> = ({
   const [draggedPiece, setDraggedPiece] = useState<{ from: Position } | null>(null);
   const [showCoordinates, setShowCoordinates] = useState(true);
   const [boardFlipped, setBoardFlipped] = useState(false);
-  const [showAnalysisArrows, setShowAnalysisArrows] = useState(false);
   const [showResultModal, setShowResultModal] = useState(false);
+  const [soundEnabled, setSoundEnabled] = useState(true);
 
   const handleSquareClick = useCallback((position: Position) => {
-    // Don't allow moves if game is over
     if (gameState.isGameOver) {
       if (!showResultModal) {
         setShowResultModal(true);
@@ -35,38 +36,24 @@ const EnhancedChessBoard: React.FC<EnhancedChessBoardProps> = ({
     const piece = gameState.board[position.y][position.x];
     
     if (gameState.selectedSquare) {
-      // Try to make a move
       const newGameState = makeMove(gameState, gameState.selectedSquare, position);
       if (newGameState) {
         onGameStateChange(newGameState);
         
-        // Check for captures
         if (piece && piece.color !== gameState.currentPlayer) {
           toast.success(`${piece.type} captured!`, {
             duration: 2000,
           });
         }
         
-        // Check for special game states
         if (newGameState.isGameOver) {
-          if (newGameState.winner === 'draw') {
-            toast.info('Game ended in a draw!', { duration: 3000 });
-          } else {
-            toast.success(`${newGameState.winner} wins!`, { duration: 3000 });
-          }
           setTimeout(() => setShowResultModal(true), 1000);
         } else if (isInCheck(newGameState.board, newGameState.currentPlayer)) {
-          toast.warning('Check!', {
-            duration: 3000,
-          });
+          toast.warning('Check!', { duration: 3000 });
         }
       } else {
-        // Invalid move
-        toast.error('Invalid move!', {
-          duration: 1000,
-        });
+        toast.error('Invalid move!', { duration: 1000 });
         
-        // Select new piece or deselect
         if (piece && piece.color === gameState.currentPlayer) {
           const validMoves = getValidMoves(piece, gameState.board, gameState);
           onGameStateChange({
@@ -83,7 +70,6 @@ const EnhancedChessBoard: React.FC<EnhancedChessBoardProps> = ({
         }
       }
     } else if (piece && piece.color === gameState.currentPlayer) {
-      // Select piece
       const validMoves = getValidMoves(piece, gameState.board, gameState);
       onGameStateChange({
         ...gameState,
@@ -104,9 +90,8 @@ const EnhancedChessBoard: React.FC<EnhancedChessBoardProps> = ({
       setDraggedPiece({ from: position });
       e.dataTransfer.effectAllowed = 'move';
       
-      // Add ghost image styling
       const dragImage = e.currentTarget.cloneNode(true) as HTMLElement;
-      dragImage.style.transform = 'rotate(5deg)';
+      dragImage.style.transform = 'rotate(5deg) scale(1.1)';
       e.dataTransfer.setDragImage(dragImage, 32, 32);
     }
   }, [gameState]);
@@ -123,9 +108,7 @@ const EnhancedChessBoard: React.FC<EnhancedChessBoardProps> = ({
       const newGameState = makeMove(gameState, draggedPiece.from, position);
       if (newGameState) {
         onGameStateChange(newGameState);
-        toast.success('Good move!', {
-          duration: 1500,
-        });
+        toast.success('Nice move!', { duration: 1500 });
       }
       setDraggedPiece(null);
     }
@@ -149,75 +132,63 @@ const EnhancedChessBoard: React.FC<EnhancedChessBoardProps> = ({
 
   const handleNewGame = () => {
     setShowResultModal(false);
-    // This will be handled by parent component
   };
 
-  // Check if current player is in check
   const currentPlayerInCheck = isInCheck(gameState.board, gameState.currentPlayer);
 
   return (
-    <div className="space-y-4">
-      {/* Enhanced Board Controls */}
-      <div className="flex justify-center space-x-3">
-        <Button
-          onClick={() => setBoardFlipped(!boardFlipped)}
-          variant="outline"
-          size="sm"
-          className="bg-white/90 backdrop-blur-sm border-white/30 hover:bg-white/80"
-        >
-          <RotateCcw className="w-4 h-4 mr-1" />
-          Flip Board
-        </Button>
-        <Button
-          onClick={() => setShowCoordinates(!showCoordinates)}
-          variant="outline"
-          size="sm"
-          className="bg-white/90 backdrop-blur-sm border-white/30 hover:bg-white/80"
-        >
-          <Eye className="w-4 h-4 mr-1" />
-          {showCoordinates ? 'Hide' : 'Show'} Coords
-        </Button>
-        <Button
-          onClick={() => setShowAnalysisArrows(!showAnalysisArrows)}
-          variant="outline"
-          size="sm"
-          className="bg-white/90 backdrop-blur-sm border-white/30 hover:bg-white/80"
-        >
-          <Settings className="w-4 h-4 mr-1" />
-          Analysis
-        </Button>
+    <div className="w-full max-w-2xl mx-auto">
+      {/* Board Controls */}
+      <div className="flex justify-between items-center mb-4 px-2">
+        <div className="flex space-x-2">
+          <Button
+            onClick={() => setBoardFlipped(!boardFlipped)}
+            variant="outline"
+            size="sm"
+            className="bg-white/95 backdrop-blur-sm shadow-md hover:shadow-lg transition-all"
+          >
+            <RotateCcw className="w-4 h-4" />
+          </Button>
+          <Button
+            onClick={() => setShowCoordinates(!showCoordinates)}
+            variant="outline"
+            size="sm"
+            className="bg-white/95 backdrop-blur-sm shadow-md hover:shadow-lg transition-all"
+          >
+            <Eye className="w-4 h-4" />
+          </Button>
+        </div>
+        
+        <div className="flex items-center space-x-2">
+          {currentPlayerInCheck && (
+            <Badge variant="destructive" className="animate-pulse">
+              <AlertTriangle className="w-3 h-3 mr-1" />
+              Check!
+            </Badge>
+          )}
+          
+          <Button
+            onClick={() => setSoundEnabled(!soundEnabled)}
+            variant="ghost"
+            size="sm"
+            className="text-gray-600"
+          >
+            {soundEnabled ? <Volume2 className="w-4 h-4" /> : <VolumeX className="w-4 h-4" />}
+          </Button>
+        </div>
       </div>
 
-      {/* Game Status Alert */}
-      {(currentPlayerInCheck || gameState.isGameOver) && (
-        <div className="flex justify-center">
-          <div className={`px-4 py-2 rounded-lg font-medium flex items-center space-x-2 ${
-            gameState.isGameOver 
-              ? 'bg-red-100 text-red-800 border border-red-200'
-              : 'bg-yellow-100 text-yellow-800 border border-yellow-200'
-          }`}>
-            {gameState.isGameOver ? (
-              <>
-                <Crown className="w-4 h-4" />
-                <span>Game Over - {gameState.winner === 'draw' ? 'Draw' : `${gameState.winner} wins!`}</span>
-              </>
-            ) : (
-              <>
-                <AlertTriangle className="w-4 h-4" />
-                <span>Check! {gameState.currentPlayer} king is under attack</span>
-              </>
-            )}
-          </div>
-        </div>
-      )}
-
-      {/* Premium Chess Board */}
+      {/* Chess Board Container */}
       <div className="relative">
-        <div className="inline-block border-8 border-amber-900 rounded-2xl shadow-2xl bg-gradient-to-br from-amber-100 to-amber-200 p-4">
-          {/* Board Decoration */}
-          <div className="absolute -top-2 -left-2 -right-2 -bottom-2 bg-gradient-to-br from-amber-800 to-amber-900 rounded-2xl opacity-50"></div>
+        <div className="bg-gradient-to-br from-amber-100 via-amber-50 to-orange-100 p-6 rounded-2xl shadow-2xl border-4 border-amber-800/20">
+          {/* Board Background Pattern */}
+          <div className="absolute inset-0 opacity-5 rounded-2xl" 
+               style={{
+                 backgroundImage: `url('data:image/svg+xml,%3Csvg width="40" height="40" viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg"%3E%3Cg fill="%23d4a574" fill-opacity="0.4"%3E%3Cpath d="M0 0h20v20H0V0zm20 20h20v20H20V20z"/%3E%3C/g%3E%3C/svg%3E')`
+               }} />
           
-          <div className="relative grid grid-cols-8 gap-0 rounded-xl overflow-hidden shadow-inner">
+          {/* Chess Board Grid */}
+          <div className="relative grid grid-cols-8 gap-0 rounded-xl overflow-hidden shadow-inner bg-white/10 backdrop-blur-sm border border-white/20">
             {displayBoard.map((row, y) =>
               row.map((piece, x) => {
                 const actualX = boardFlipped ? 7 - x : x;
@@ -243,50 +214,32 @@ const EnhancedChessBoard: React.FC<EnhancedChessBoardProps> = ({
             )}
           </div>
           
-          {/* Enhanced Board evaluation bar */}
-          <div className="mt-6 h-4 bg-gradient-to-r from-red-900 via-gray-300 to-green-900 rounded-full overflow-hidden shadow-inner">
+          {/* Decorative Corner Elements */}
+          <div className="absolute top-3 left-3 w-6 h-6 border-l-3 border-t-3 border-amber-700/40 rounded-tl-lg"></div>
+          <div className="absolute top-3 right-3 w-6 h-6 border-r-3 border-t-3 border-amber-700/40 rounded-tr-lg"></div>
+          <div className="absolute bottom-3 left-3 w-6 h-6 border-l-3 border-b-3 border-amber-700/40 rounded-bl-lg"></div>
+          <div className="absolute bottom-3 right-3 w-6 h-6 border-r-3 border-b-3 border-amber-700/40 rounded-br-lg"></div>
+        </div>
+
+        {/* Position Evaluation Bar */}
+        <Card className="mt-4 p-3 bg-white/95 backdrop-blur-sm shadow-lg">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-sm font-medium text-gray-700">Position Evaluation</span>
+            <Badge variant="outline" className="text-xs">Engine</Badge>
+          </div>
+          <div className="relative h-3 bg-gray-200 rounded-full overflow-hidden">
             <div 
-              className="h-full bg-gradient-to-r from-red-500 to-green-500 transition-all duration-1000 relative"
+              className="h-full bg-gradient-to-r from-black via-gray-500 to-white transition-all duration-1000"
               style={{ width: '52%' }}
-            >
-              <div className="absolute top-0 left-1/2 transform -translate-x-1/2 w-1 h-full bg-white shadow-lg"></div>
-            </div>
+            />
+            <div className="absolute top-0 left-1/2 transform -translate-x-1/2 w-0.5 h-full bg-yellow-400 shadow-sm"></div>
           </div>
-          <div className="text-center text-sm text-gray-700 mt-2 font-medium">
-            Position: <span className="text-green-600 font-semibold">+0.3 (White is slightly better)</span>
+          <div className="flex justify-between mt-2 text-xs text-gray-600">
+            <span>Black</span>
+            <span className="font-mono font-medium">+0.3</span>
+            <span>White</span>
           </div>
-        </div>
-
-        {/* Analysis Arrows Overlay */}
-        {showAnalysisArrows && (
-          <div className="absolute inset-0 pointer-events-none">
-            <svg className="w-full h-full">
-              <defs>
-                <marker id="arrowhead" markerWidth="10" markerHeight="7" 
-                        refX="10" refY="3.5" orient="auto">
-                  <polygon points="0 0, 10 3.5, 0 7" fill="#10b981" />
-                </marker>
-              </defs>
-              <line x1="25%" y1="75%" x2="35%" y2="55%" 
-                    stroke="#10b981" strokeWidth="4" 
-                    markerEnd="url(#arrowhead)" opacity="0.8" />
-              <text x="30%" y="50%" fill="#10b981" fontSize="12" fontWeight="bold">
-                Best
-              </text>
-            </svg>
-          </div>
-        )}
-      </div>
-
-      {/* Move Suggestion */}
-      <div className="text-center bg-white/90 backdrop-blur-sm rounded-xl p-3 shadow-lg border border-white/30">
-        <div className="text-sm text-gray-600 mb-1">Engine Suggestion</div>
-        <div className="text-lg font-bold text-blue-600">
-          {gameState.isGameOver ? 'Game Over' : 'Nf3'}
-        </div>
-        <div className="text-xs text-gray-500">
-          {gameState.isGameOver ? 'Review your game' : 'Develops knight, controls center'}
-        </div>
+        </Card>
       </div>
 
       {/* Game Result Modal */}

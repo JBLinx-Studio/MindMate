@@ -3,7 +3,7 @@ import React from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Trophy, Crown, Handshake, Clock, Flag, Star } from 'lucide-react';
+import { Trophy, Crown, Handshake, Clock, Flag, Star, Award, Target, Zap } from 'lucide-react';
 import { GameState } from '../types/chess';
 
 interface GameResultModalProps {
@@ -19,24 +19,23 @@ const GameResultModal: React.FC<GameResultModalProps> = ({ gameState, onNewGame,
     if (gameState.gameResult?.type) {
       switch (gameState.gameResult.type) {
         case 'checkmate':
-          return <Crown className="w-8 h-8 text-yellow-500" />;
+          return <Crown className="w-12 h-12 text-yellow-500" />;
         case 'resignation':
-          return <Flag className="w-8 h-8 text-red-500" />;
+          return <Flag className="w-12 h-12 text-red-500" />;
         case 'timeout':
-          return <Clock className="w-8 h-8 text-orange-500" />;
+          return <Clock className="w-12 h-12 text-orange-500" />;
         case 'stalemate':
         case 'draw':
-          return <Handshake className="w-8 h-8 text-gray-500" />;
+          return <Handshake className="w-12 h-12 text-gray-500" />;
         default:
-          return <Trophy className="w-8 h-8 text-blue-500" />;
+          return <Trophy className="w-12 h-12 text-blue-500" />;
       }
     }
     
-    // Fallback for cases without gameResult
     if (gameState.winner === 'draw') {
-      return <Handshake className="w-8 h-8 text-gray-500" />;
+      return <Handshake className="w-12 h-12 text-gray-500" />;
     }
-    return <Crown className="w-8 h-8 text-yellow-500" />;
+    return <Crown className="w-12 h-12 text-yellow-500" />;
   };
 
   const getResultTitle = () => {
@@ -62,7 +61,6 @@ const GameResultModal: React.FC<GameResultModalProps> = ({ gameState, onNewGame,
       }
     }
     
-    // Fallback
     if (gameState.winner === 'draw') {
       return 'by Stalemate';
     }
@@ -71,79 +69,120 @@ const GameResultModal: React.FC<GameResultModalProps> = ({ gameState, onNewGame,
 
   const getPerformanceRating = () => {
     const moveCount = gameState.moves.length;
-    if (moveCount < 20) return 'Quick Game';
-    if (moveCount < 40) return 'Standard Game';
-    return 'Long Game';
+    if (moveCount < 20) return { text: 'Quick Game', color: 'text-blue-600' };
+    if (moveCount < 40) return { text: 'Standard Game', color: 'text-green-600' };
+    return { text: 'Epic Battle', color: 'text-purple-600' };
   };
 
+  const performance = getPerformanceRating();
+
   return (
-    <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-      <Card className="max-w-md w-full p-8 text-center bg-white shadow-2xl">
-        <div className="space-y-6">
-          <div className="flex justify-center">
-            {getResultIcon()}
+    <div className="fixed inset-0 bg-black/80 backdrop-blur-md z-50 flex items-center justify-center p-4">
+      <Card className="max-w-lg w-full bg-white shadow-2xl border-0 rounded-2xl overflow-hidden">
+        {/* Header with gradient */}
+        <div className="bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 p-8 text-center border-b">
+          <div className="flex justify-center mb-4">
+            <div className="p-4 bg-white/80 rounded-full shadow-lg">
+              {getResultIcon()}
+            </div>
           </div>
           
-          <div className="space-y-2">
-            <h2 className="text-3xl font-bold text-gray-800">
-              {getResultTitle()}
-            </h2>
-            <p className="text-lg text-gray-600">
-              {getResultSubtitle()}
-            </p>
-          </div>
+          <h2 className="text-3xl font-bold text-gray-800 mb-2">
+            {getResultTitle()}
+          </h2>
+          <p className="text-lg text-gray-600">
+            {getResultSubtitle()}
+          </p>
+        </div>
 
-          <div className="flex justify-center space-x-2">
-            <Badge variant="outline" className="text-sm">
-              {gameState.moves.length} moves
-            </Badge>
-            <Badge variant="outline" className="text-sm">
-              {Math.floor(gameState.moves.length / 2)} turns
-            </Badge>
-            <Badge variant="outline" className="text-sm">
-              {getPerformanceRating()}
-            </Badge>
-          </div>
-
-          {/* Game Quality Rating */}
-          <div className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg p-4">
-            <div className="flex items-center justify-center space-x-2 mb-2">
-              <Star className="w-4 h-4 text-yellow-500" />
-              <span className="text-sm font-medium text-gray-700">Game Quality</span>
+        {/* Game Statistics */}
+        <div className="p-8 space-y-6">
+          <div className="grid grid-cols-3 gap-4">
+            <div className="text-center p-4 bg-gray-50 rounded-xl">
+              <div className="text-2xl font-bold text-gray-800">{gameState.moves.length}</div>
+              <div className="text-sm text-gray-600">Moves</div>
             </div>
-            <div className="flex justify-center space-x-1">
-              {[1, 2, 3, 4, 5].map((star) => (
-                <Star
-                  key={star}
-                  className={`w-5 h-5 ${
-                    star <= 4 ? 'text-yellow-400 fill-current' : 'text-gray-300'
-                  }`}
-                />
-              ))}
+            <div className="text-center p-4 bg-gray-50 rounded-xl">
+              <div className="text-2xl font-bold text-gray-800">{Math.floor(gameState.moves.length / 2)}</div>
+              <div className="text-sm text-gray-600">Turns</div>
             </div>
-            <div className="text-xs text-gray-600 mt-1">
-              Great game! Well played by both sides.
+            <div className="text-center p-4 bg-gray-50 rounded-xl">
+              <div className={`text-lg font-bold ${performance.color}`}>{performance.text}</div>
+              <div className="text-sm text-gray-600">Duration</div>
             </div>
           </div>
 
-          <div className="space-y-3 pt-4">
+          {/* Game Quality Assessment */}
+          <div className="bg-gradient-to-r from-green-50 to-blue-50 rounded-xl p-6">
+            <div className="flex items-center justify-center space-x-2 mb-3">
+              <Award className="w-5 h-5 text-green-600" />
+              <span className="text-lg font-semibold text-gray-800">Game Analysis</span>
+            </div>
+            
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-gray-600">Accuracy</span>
+                <div className="flex items-center space-x-2">
+                  <div className="w-24 h-2 bg-gray-200 rounded-full overflow-hidden">
+                    <div className="w-4/5 h-full bg-green-500 rounded-full"></div>
+                  </div>
+                  <span className="text-sm font-medium text-green-600">94%</span>
+                </div>
+              </div>
+              
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-gray-600">Performance</span>
+                <div className="flex space-x-1">
+                  {[1, 2, 3, 4, 5].map((star) => (
+                    <Star
+                      key={star}
+                      className={`w-4 h-4 ${
+                        star <= 4 ? 'text-yellow-400 fill-current' : 'text-gray-300'
+                      }`}
+                    />
+                  ))}
+                </div>
+              </div>
+            </div>
+            
+            <div className="text-center mt-4 p-3 bg-white/60 rounded-lg">
+              <div className="text-sm text-gray-700">
+                <strong>Well played!</strong> Both players showed excellent strategic thinking.
+              </div>
+            </div>
+          </div>
+
+          {/* Action Buttons */}
+          <div className="space-y-3">
             <Button
               onClick={onNewGame}
-              className="w-full bg-green-600 hover:bg-green-700 text-white font-medium"
+              className="w-full bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white font-semibold py-3 rounded-xl shadow-lg hover:shadow-xl transition-all"
               size="lg"
             >
-              <Trophy className="w-4 h-4 mr-2" />
+              <Zap className="w-5 h-5 mr-2" />
               Play Again
             </Button>
             
-            <Button
-              onClick={onClose}
-              variant="outline"
-              className="w-full"
-              size="lg"
-            >
-              Review Game
-            </Button>
+            <div className="grid grid-cols-2 gap-3">
+              <Button
+                onClick={onClose}
+                variant="outline"
+                className="font-medium py-3 rounded-xl border-2 hover:bg-gray-50"
+                size="lg"
+              >
+                <Target className="w-4 h-4 mr-2" />
+                Analyze
+              </Button>
+              
+              <Button
+                variant="outline"
+                className="font-medium py-3 rounded-xl border-2 hover:bg-gray-50"
+                size="lg"
+              >
+                <Trophy className="w-4 h-4 mr-2" />
+                Share
+              </Button>
+            </div>
           </div>
         </div>
       </Card>

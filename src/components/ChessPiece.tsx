@@ -34,18 +34,19 @@ const ChessPiece: React.FC<ChessPieceProps> = ({ piece, isDragging }) => {
   return (
     <div 
       className={`
-        text-5xl cursor-pointer select-none flex items-center justify-center
-        transition-all duration-200 hover:scale-110 hover:brightness-110
-        ${isDragging ? 'opacity-60 scale-125 rotate-3' : ''}
-        ${piece.color === 'white' ? 'drop-shadow-lg' : 'drop-shadow-md'}
+        text-4xl md:text-5xl cursor-pointer select-none flex items-center justify-center
+        transition-all duration-300 hover:scale-125 hover:brightness-110 active:scale-95
+        ${isDragging ? 'opacity-70 scale-125 rotate-6 z-50' : ''}
+        ${piece.color === 'white' ? 'drop-shadow-xl' : 'drop-shadow-lg'}
       `}
       style={{ 
         textShadow: piece.color === 'white' 
-          ? '2px 2px 4px rgba(0,0,0,0.4), 0 0 8px rgba(255,255,255,0.8)' 
-          : '2px 2px 4px rgba(0,0,0,0.6), 0 0 8px rgba(0,0,0,0.3)',
-        filter: `drop-shadow(0 4px 8px rgba(0,0,0,0.3)) ${
-          piece.color === 'white' ? 'brightness(1.1)' : 'brightness(0.95)'
-        }`
+          ? '3px 3px 6px rgba(0,0,0,0.5), 0 0 12px rgba(255,255,255,0.9), 1px 1px 2px rgba(0,0,0,0.8)' 
+          : '3px 3px 6px rgba(0,0,0,0.8), 0 0 8px rgba(0,0,0,0.4), 1px 1px 2px rgba(255,255,255,0.3)',
+        filter: `drop-shadow(0 6px 12px rgba(0,0,0,0.4)) ${
+          piece.color === 'white' ? 'brightness(1.15) contrast(1.1)' : 'brightness(0.95) contrast(1.05)'
+        }`,
+        transform: isDragging ? 'rotate(8deg) scale(1.2)' : 'none'
       }}
     >
       {getPieceSymbol(piece)}
