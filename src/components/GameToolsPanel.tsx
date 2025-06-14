@@ -5,8 +5,11 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Settings, Copy, Download, Upload, RotateCcw, Bookmark, Share2, Zap, Eye } from 'lucide-react';
+import { Settings, Copy, Download, Upload, RotateCcw, Bookmark, Share2, Zap, Eye, FileText, Database } from 'lucide-react';
 import { GameState } from '../types/chess';
+import { ChessNotation } from '../utils/chessNotation';
+import { chessEngine } from '../utils/chessEngine';
+import { createInitialGameState } from '../utils/chessLogic';
 import { toast } from 'sonner';
 
 interface GameToolsPanelProps {
@@ -18,32 +21,37 @@ const GameToolsPanel: React.FC<GameToolsPanelProps> = ({ gameState, onGameStateC
   const [fenInput, setFenInput] = useState('');
   const [pgnInput, setPgnInput] = useState('');
   const [bookmarkName, setBookmarkName] = useState('');
+  const [savedBookmarks, setSavedBookmarks] = useState<Array<{name: string, fen: string, date: string}>>(() => {
+    const saved = localStorage.getItem('chess-bookmarks');
+    return saved ? JSON.parse(saved) : [];
+  });
 
-  const currentFen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"; // Mock FEN
+  const currentFen = ChessNotation.boardToFEN(gameState);
 
   const generatePGN = () => {
-    let pgn = '[Event "Live Game"]\n[Date "2024-01-15"]\n[White "Player 1"]\n[Black "Player 2"]\n[Result "*"]\n\n';
+    let gameResult = '*';
+    if (gameState.isGameOver) {
+      if (gameState.winner === 'white') gameResult = '1-0';
+      else if (gameState.winner === 'black') gameResult = '0-1';
+      else gameResult = '1/2-1/2';
+    }
     
-    gameState.moves.forEach((move, index) => {
-      if (index % 2 === 0) {
-        pgn += `${Math.floor(index / 2) + 1}. `;
-      }
-      pgn += `${move.piece.type}${String.fromCharCode(97 + move.to.x)}${8 - move.to.y} `;
-      if (index % 2 === 1) pgn += '\n';
-    });
-    
-    return pgn;
+    return ChessNotation.movesToPGN(gameState.moves, gameResult);
   };
 
   const copyFEN = () => {
     navigator.clipboard.writeText(currentFen);
-    toast.success('FEN copied to clipboard!');
+    toast.success('FEN copied to clipboard!', {
+      description: 'You can now paste this position elsewhere'
+    });
   };
 
   const copyPGN = () => {
     const pgn = generatePGN();
     navigator.clipboard.writeText(pgn);
-    toast.success('PGN copied to clipboard!');
+    toast.success('PGN copied to clipboard!', {
+      description: `${gameState.moves.length} moves exported`
+    });
   };
 
   const downloadPGN = () => {
@@ -52,127 +60,149 @@ const GameToolsPanel: React.FC<GameToolsPanelProps> = ({ gameState, onGameStateC
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = 'chess-game.pgn';
+    a.download = `chess-game-${new Date().toISOString().split('T')[0]}.pgn`;
     a.click();
     URL.revokeObjectURL(url);
-    toast.success('PGN file downloaded!');
+    toast.success('PGN file downloaded!', {
+      description: 'Game saved to your downloads folder'
+    });
   };
 
   const loadFromFEN = () => {
-    if (fenInput.trim()) {
-      toast.success('Position loaded from FEN!');
+    if (!fenInput.trim()) {
+      toast.error('Please enter a FEN string');
+      return;
+    }
+
+    try {
+      const { board, currentPlayer } = ChessNotation.fenToBoard(fenInput.trim());
+      const newGameState: GameState = {
+        board,
+        currentPlayer,
+        moves: [],
+        isGameOver: false,
+        validMoves: [],
+        selectedSquare: undefined
+      };
+      
+      onGameStateChange(newGameState);
+      toast.success('Position loaded from FEN!', {
+        description: 'Board updated successfully'
+      });
       setFenInput('');
+    } catch (error) {
+      toast.error('Invalid FEN string', {
+        description: 'Please check the format and try again'
+      });
     }
   };
 
   const loadFromPGN = () => {
-    if (pgnInput.trim()) {
-      toast.success('Game loaded from PGN!');
+    if (!pgnInput.trim()) {
+      toast.error('Please enter PGN text');
+      return;
+    }
+
+    try {
+      const moves = ChessNotation.pgnToMoves(pgnInput.trim());
+      
+      // Start with initial position and apply moves
+      let newGameState = createInitialGameState();
+      
+      // For now, just show success - full PGN replay would need move application logic
+      toast.success('PGN structure parsed!', {
+        description: `Found ${moves.length} moves`
+      });
       setPgnInput('');
+    } catch (error) {
+      toast.error('Invalid PGN format', {
+        description: 'Please check the PGN and try again'
+      });
     }
   };
 
   const saveBookmark = () => {
-    if (bookmarkName.trim()) {
-      toast.success(`Position bookmarked as "${bookmarkName}"!`);
-      setBookmarkName('');
+    if (!bookmarkName.trim()) {
+      toast.error('Please enter a bookmark name');
+      return;
     }
+
+    const newBookmark = {
+      name: bookmarkName.trim(),
+      fen: currentFen,
+      date: new Date().toISOString().split('T')[0]
+    };
+
+    const updatedBookmarks = [...savedBookmarks, newBookmark];
+    setSavedBookmarks(updatedBookmarks);
+    localStorage.setItem('chess-bookmarks', JSON.stringify(updatedBookmarks));
+    
+    toast.success(`Position bookmarked as "${bookmarkName}"!`, {
+      description: 'Saved to local storage'
+    });
+    setBookmarkName('');
+  };
+
+  const loadBookmark = (bookmark: {name: string, fen: string, date: string}) => {
+    try {
+      const { board, currentPlayer } = ChessNotation.fenToBoard(bookmark.fen);
+      const newGameState: GameState = {
+        board,
+        currentPlayer,
+        moves: [],
+        isGameOver: false,
+        validMoves: [],
+        selectedSquare: undefined
+      };
+      
+      onGameStateChange(newGameState);
+      toast.success(`Loaded "${bookmark.name}"`, {
+        description: 'Position restored from bookmark'
+      });
+    } catch (error) {
+      toast.error('Failed to load bookmark', {
+        description: 'The saved position may be corrupted'
+      });
+    }
+  };
+
+  const deleteBookmark = (index: number) => {
+    const updatedBookmarks = savedBookmarks.filter((_, i) => i !== index);
+    setSavedBookmarks(updatedBookmarks);
+    localStorage.setItem('chess-bookmarks', JSON.stringify(updatedBookmarks));
+    toast.success('Bookmark deleted');
   };
 
   const shareGame = () => {
-    const url = `${window.location.origin}/game/${Date.now()}`;
-    navigator.clipboard.writeText(url);
-    toast.success('Game link copied to clipboard!');
+    const gameData = {
+      fen: currentFen,
+      pgn: generatePGN(),
+      moves: gameState.moves.length
+    };
+    
+    const shareUrl = `${window.location.origin}/game?fen=${encodeURIComponent(currentFen)}`;
+    navigator.clipboard.writeText(shareUrl);
+    toast.success('Game link copied to clipboard!', {
+      description: 'Anyone can view this position with the link'
+    });
   };
 
-  const tools = [
-    {
-      title: 'Position Management',
-      items: [
-        {
-          name: 'Copy FEN',
-          description: 'Copy current position as FEN string',
-          icon: Copy,
-          action: copyFEN,
-          color: 'bg-blue-500'
-        },
-        {
-          name: 'Load FEN',
-          description: 'Load position from FEN string',
-          icon: Upload,
-          action: loadFromFEN,
-          color: 'bg-green-500'
-        },
-        {
-          name: 'Reset Board',
-          description: 'Reset to starting position',
-          icon: RotateCcw,
-          action: () => {
-            onGameStateChange({
-              ...gameState,
-              board: gameState.board, // Reset would need proper implementation
-              moves: [],
-              currentPlayer: 'white'
-            });
-            toast.success('Board reset to starting position!');
-          },
-          color: 'bg-orange-500'
-        }
-      ]
-    },
-    {
-      title: 'Game Export/Import',
-      items: [
-        {
-          name: 'Copy PGN',
-          description: 'Copy game moves as PGN',
-          icon: Copy,
-          action: copyPGN,
-          color: 'bg-purple-500'
-        },
-        {
-          name: 'Download PGN',
-          description: 'Download game as PGN file',
-          icon: Download,
-          action: downloadPGN,
-          color: 'bg-indigo-500'
-        },
-        {
-          name: 'Load PGN',
-          description: 'Load game from PGN',
-          icon: Upload,
-          action: loadFromPGN,
-          color: 'bg-teal-500'
-        }
-      ]
-    },
-    {
-      title: 'Game Features',
-      items: [
-        {
-          name: 'Bookmark Position',
-          description: 'Save current position',
-          icon: Bookmark,
-          action: saveBookmark,
-          color: 'bg-yellow-500'
-        },
-        {
-          name: 'Share Game',
-          description: 'Share game with others',
-          icon: Share2,
-          action: shareGame,
-          color: 'bg-pink-500'
-        },
-        {
-          name: 'Analysis Mode',
-          description: 'Toggle analysis arrows',
-          icon: Eye,
-          action: () => toast.success('Analysis mode toggled!'),
-          color: 'bg-red-500'
-        }
-      ]
-    }
-  ];
+  const resetBoard = () => {
+    const initialState = createInitialGameState();
+    onGameStateChange(initialState);
+    toast.success('Board reset to starting position!');
+  };
+
+  const analyzeCurrentPosition = () => {
+    const evaluation = chessEngine.evaluatePosition(gameState);
+    const evalText = evaluation.centipawns > 0 ? 
+      `White is better by ${(evaluation.centipawns / 100).toFixed(1)}` :
+      `Black is better by ${Math.abs(evaluation.centipawns / 100).toFixed(1)}`;
+    
+    toast.success('Position analyzed!', {
+      description: `${evalText} - Best move: ${evaluation.bestMove}`
+    });
+  };
 
   return (
     <div className="space-y-6">
@@ -188,7 +218,7 @@ const GameToolsPanel: React.FC<GameToolsPanelProps> = ({ gameState, onGameStateC
             Copy FEN
           </Button>
           <Button onClick={copyPGN} variant="outline" size="sm">
-            <Copy className="w-4 h-4 mr-1" />
+            <FileText className="w-4 h-4 mr-1" />
             Copy PGN
           </Button>
           <Button onClick={downloadPGN} variant="outline" size="sm">
@@ -199,28 +229,23 @@ const GameToolsPanel: React.FC<GameToolsPanelProps> = ({ gameState, onGameStateC
             <Share2 className="w-4 h-4 mr-1" />
             Share
           </Button>
-          <Button 
-            onClick={() => toast.success('Analysis mode toggled!')} 
-            variant="outline" 
-            size="sm"
-          >
+          <Button onClick={analyzeCurrentPosition} variant="outline" size="sm">
             <Eye className="w-4 h-4 mr-1" />
-            Analysis
+            Analyze
           </Button>
-          <Button 
-            onClick={() => toast.success('Board flipped!')} 
-            variant="outline" 
-            size="sm"
-          >
+          <Button onClick={resetBoard} variant="outline" size="sm">
             <RotateCcw className="w-4 h-4 mr-1" />
-            Flip
+            Reset
           </Button>
         </div>
       </Card>
 
       {/* Current Position Info */}
       <Card className="p-6">
-        <h4 className="font-semibold mb-4">Current Position</h4>
+        <h4 className="font-semibold mb-4 flex items-center">
+          <Database className="w-5 h-5 mr-2 text-blue-600" />
+          Current Position
+        </h4>
         <div className="space-y-3">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">FEN String</label>
@@ -236,7 +261,7 @@ const GameToolsPanel: React.FC<GameToolsPanelProps> = ({ gameState, onGameStateC
             </div>
           </div>
           
-          <div className="grid grid-cols-2 gap-4 text-sm">
+          <div className="grid grid-cols-3 gap-4 text-sm">
             <div className="flex justify-between">
               <span className="text-gray-600">To Move:</span>
               <Badge variant="outline" className="capitalize">
@@ -244,37 +269,18 @@ const GameToolsPanel: React.FC<GameToolsPanelProps> = ({ gameState, onGameStateC
               </Badge>
             </div>
             <div className="flex justify-between">
-              <span className="text-gray-600">Move Count:</span>
+              <span className="text-gray-600">Moves:</span>
               <span className="font-semibold">{gameState.moves.length}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-gray-600">Status:</span>
+              <Badge variant={gameState.isGameOver ? "destructive" : "default"}>
+                {gameState.isGameOver ? 'Finished' : 'Active'}
+              </Badge>
             </div>
           </div>
         </div>
       </Card>
-
-      {/* Tool Categories */}
-      {tools.map((category, categoryIndex) => (
-        <Card key={categoryIndex} className="p-6">
-          <h4 className="font-semibold mb-4">{category.title}</h4>
-          <div className="grid gap-3">
-            {category.items.map((tool, toolIndex) => (
-              <div key={toolIndex} className="flex items-center justify-between p-3 border rounded-lg hover:bg-gray-50 transition-colors">
-                <div className="flex items-center space-x-3">
-                  <div className={`p-2 ${tool.color} rounded-lg`}>
-                    <tool.icon className="w-4 h-4 text-white" />
-                  </div>
-                  <div>
-                    <div className="font-medium text-gray-800">{tool.name}</div>
-                    <div className="text-sm text-gray-600">{tool.description}</div>
-                  </div>
-                </div>
-                <Button onClick={tool.action} size="sm" variant="outline">
-                  Use
-                </Button>
-              </div>
-            ))}
-          </div>
-        </Card>
-      ))}
 
       {/* Load Position */}
       <Card className="p-6">
@@ -286,7 +292,7 @@ const GameToolsPanel: React.FC<GameToolsPanelProps> = ({ gameState, onGameStateC
               <Input 
                 value={fenInput}
                 onChange={(e) => setFenInput(e.target.value)}
-                placeholder="Paste FEN string here..."
+                placeholder="rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
                 className="font-mono text-sm"
               />
               <Button onClick={loadFromFEN} disabled={!fenInput.trim()}>
@@ -300,10 +306,11 @@ const GameToolsPanel: React.FC<GameToolsPanelProps> = ({ gameState, onGameStateC
             <Textarea 
               value={pgnInput}
               onChange={(e) => setPgnInput(e.target.value)}
-              placeholder="Paste PGN here..."
+              placeholder="1. e4 e5 2. Nf3 Nc6..."
               className="h-32 font-mono text-sm"
             />
             <Button onClick={loadFromPGN} disabled={!pgnInput.trim()} className="mt-2">
+              <Upload className="w-4 h-4 mr-1" />
               Load Game
             </Button>
           </div>
@@ -312,28 +319,72 @@ const GameToolsPanel: React.FC<GameToolsPanelProps> = ({ gameState, onGameStateC
 
       {/* Bookmark Position */}
       <Card className="p-6">
-        <h4 className="font-semibold mb-4">Bookmark Position</h4>
-        <div className="flex space-x-2">
-          <Input 
-            value={bookmarkName}
-            onChange={(e) => setBookmarkName(e.target.value)}
-            placeholder="Enter bookmark name..."
-          />
-          <Button onClick={saveBookmark} disabled={!bookmarkName.trim()}>
-            <Bookmark className="w-4 h-4 mr-1" />
-            Save
-          </Button>
-        </div>
-        
-        <div className="mt-4">
-          <h5 className="text-sm font-medium text-gray-700 mb-2">Saved Bookmarks</h5>
-          <div className="space-y-2">
-            {['Opening Position', 'Critical Moment', 'Endgame Study'].map((bookmark, index) => (
-              <div key={index} className="flex items-center justify-between p-2 bg-gray-50 rounded">
-                <span className="text-sm">{bookmark}</span>
-                <Button size="sm" variant="ghost">Load</Button>
+        <h4 className="font-semibold mb-4 flex items-center">
+          <Bookmark className="w-5 h-5 mr-2 text-purple-600" />
+          Bookmarks
+        </h4>
+        <div className="space-y-4">
+          <div className="flex space-x-2">
+            <Input 
+              value={bookmarkName}
+              onChange={(e) => setBookmarkName(e.target.value)}
+              placeholder="Enter bookmark name..."
+            />
+            <Button onClick={saveBookmark} disabled={!bookmarkName.trim()}>
+              <Bookmark className="w-4 h-4 mr-1" />
+              Save
+            </Button>
+          </div>
+          
+          {savedBookmarks.length > 0 && (
+            <div>
+              <h5 className="text-sm font-medium text-gray-700 mb-2">Saved Positions ({savedBookmarks.length})</h5>
+              <div className="space-y-2 max-h-48 overflow-y-auto">
+                {savedBookmarks.map((bookmark, index) => (
+                  <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded border">
+                    <div className="flex-1">
+                      <div className="font-medium text-sm">{bookmark.name}</div>
+                      <div className="text-xs text-gray-500">{bookmark.date}</div>
+                    </div>
+                    <div className="flex space-x-1">
+                      <Button 
+                        size="sm" 
+                        variant="ghost"
+                        onClick={() => loadBookmark(bookmark)}
+                      >
+                        Load
+                      </Button>
+                      <Button 
+                        size="sm" 
+                        variant="ghost"
+                        onClick={() => deleteBookmark(index)}
+                        className="text-red-600 hover:text-red-800"
+                      >
+                        Delete
+                      </Button>
+                    </div>
+                  </div>
+                ))}
               </div>
-            ))}
+            </div>
+          )}
+        </div>
+      </Card>
+
+      {/* Export Options */}
+      <Card className="p-6">
+        <h4 className="font-semibold mb-4">Export & Share</h4>
+        <div className="space-y-3">
+          <Button onClick={downloadPGN} variant="outline" className="w-full">
+            <Download className="w-4 h-4 mr-2" />
+            Download PGN File
+          </Button>
+          <Button onClick={shareGame} variant="outline" className="w-full">
+            <Share2 className="w-4 h-4 mr-2" />
+            Share Position Link
+          </Button>
+          <div className="text-xs text-gray-500 mt-2">
+            PGN files can be imported into chess databases and analysis tools
           </div>
         </div>
       </Card>
