@@ -30,12 +30,12 @@ const defaultSettings: EnhancedGameSettings = {
   boardTheme: 'classic',
   pieceStyle: 'classic',
   showCoordinates: true,
-  autoRotateBoard: false,
+  autoRotateBoard: false, // Disabled by default to prevent flipping
   animationSpeed: 'normal',
   showMoveHints: true,
   highlightLastMove: true,
   showLegalMoves: true,
-  enableHapticFeedback: true,
+  enableHapticFeedback: false, // Disabled to prevent browser vibration issues
   autoPromoteToQueen: false,
   confirmResignation: true,
   showMoveHistory: true,

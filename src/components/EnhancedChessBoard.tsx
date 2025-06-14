@@ -1,3 +1,4 @@
+
 import React, { useState, useCallback, useEffect } from 'react';
 import { Position, GameState } from '../types/chess';
 import { getValidMoves, makeMove, isInCheck } from '../utils/chessLogic';
@@ -5,7 +6,7 @@ import ChessSquare from './ChessSquare';
 import GameResultModal from './GameResultModal';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
-import { RotateCcw, Eye, Settings, Crown, AlertTriangle, Volume2, VolumeX, Maximize, Minimize, Zap } from 'lucide-react';
+import { RotateCcw, Eye, Settings, Volume2, VolumeX, Maximize, Minimize, Zap } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
 import { Slider } from '@/components/ui/slider';
@@ -54,10 +55,6 @@ const EnhancedChessBoard: React.FC<EnhancedChessBoardProps> = ({
           enhancedSoundManager.playMove(true);
           toast.success(`${piece.type} captured!`, {
             duration: 2000,
-            action: {
-              label: "Undo",
-              onClick: () => console.log("Undo move"),
-            },
           });
         } else {
           enhancedSoundManager.playMove(false);
@@ -119,10 +116,6 @@ const EnhancedChessBoard: React.FC<EnhancedChessBoardProps> = ({
     if (piece && piece.color === gameState.currentPlayer) {
       setDraggedPiece({ from: position });
       e.dataTransfer.effectAllowed = 'move';
-      
-      const dragImage = e.currentTarget.cloneNode(true) as HTMLElement;
-      dragImage.style.transform = 'rotate(5deg) scale(1.1)';
-      e.dataTransfer.setDragImage(dragImage, 32, 32);
     }
   }, [gameState]);
 
@@ -159,16 +152,13 @@ const EnhancedChessBoard: React.FC<EnhancedChessBoardProps> = ({
     );
   }, [gameState.moves, settings.highlightLastMove]);
 
-  const displayBoard = settings.autoRotateBoard && gameState.currentPlayer === 'black' ? 
-    [...gameState.board].reverse().map(row => [...row].reverse()) : 
-    gameState.board;
+  // Always display board in normal orientation (no auto-rotation)
+  const displayBoard = gameState.board;
 
   const handleNewGame = () => {
     setShowResultModal(false);
     enhancedSoundManager.playGameStart();
   };
-
-  const currentPlayerInCheck = isInCheck(gameState.board, gameState.currentPlayer);
 
   const getBoardSize = () => {
     switch (settings.boardSize) {
@@ -187,6 +177,7 @@ const EnhancedChessBoard: React.FC<EnhancedChessBoardProps> = ({
             onClick={() => updateSetting('autoRotateBoard', !settings.autoRotateBoard)}
             variant="outline"
             size="sm"
+            disabled={true} // Disabled to prevent board flipping
           >
             <RotateCcw className="w-4 h-4" />
           </Button>
@@ -207,13 +198,6 @@ const EnhancedChessBoard: React.FC<EnhancedChessBoardProps> = ({
         </div>
         
         <div className="flex items-center space-x-2">
-          {currentPlayerInCheck && (
-            <Badge variant="destructive" className="animate-pulse">
-              <AlertTriangle className="w-3 h-3 mr-1" />
-              Check!
-            </Badge>
-          )}
-          
           <Button
             onClick={() => setShowQuickSettings(!showQuickSettings)}
             variant="ghost"
@@ -252,15 +236,15 @@ const EnhancedChessBoard: React.FC<EnhancedChessBoardProps> = ({
               </div>
             </div>
             <div className="flex items-center justify-between">
-              <span className="text-sm">Animation Speed</span>
+              <span className="text-sm">Board Size</span>
               <select
-                value={settings.animationSpeed}
-                onChange={(e) => updateSetting('animationSpeed', e.target.value as any)}
+                value={settings.boardSize}
+                onChange={(e) => updateSetting('boardSize', e.target.value as any)}
                 className="text-sm border rounded px-2 py-1"
               >
-                <option value="slow">Slow</option>
-                <option value="normal">Normal</option>
-                <option value="fast">Fast</option>
+                <option value="small">Small</option>
+                <option value="medium">Medium</option>
+                <option value="large">Large</option>
               </select>
             </div>
           </div>
@@ -271,53 +255,28 @@ const EnhancedChessBoard: React.FC<EnhancedChessBoardProps> = ({
       <div className={`relative ${isFullscreen ? 'fixed inset-0 z-50 bg-black/90 flex items-center justify-center' : ''}`}>
         <div className="w-full aspect-square border-4 border-amber-800 rounded-lg shadow-lg bg-amber-200 p-4">
           {/* Chess Board Grid */}
-          <div className="w-full h-full grid grid-cols-8 gap-0 rounded">
+          <div className="w-full h-full grid grid-cols-8 gap-0 rounded overflow-hidden">
             {displayBoard.map((row, y) =>
-              row.map((piece, x) => {
-                const actualX = (settings.autoRotateBoard && gameState.currentPlayer === 'black') ? 7 - x : x;
-                const actualY = (settings.autoRotateBoard && gameState.currentPlayer === 'black') ? 7 - y : y;
-                
-                return (
-                  <ChessSquare
-                    key={`${actualX}-${actualY}`}
-                    position={{ x: actualX, y: actualY }}
-                    piece={piece}
-                    isLight={(actualX + actualY) % 2 === 0}
-                    isSelected={gameState.selectedSquare?.x === actualX && gameState.selectedSquare?.y === actualY}
-                    isValidMove={isValidMove({ x: actualX, y: actualY })}
-                    isLastMove={isLastMove({ x: actualX, y: actualY })}
-                    onClick={() => handleSquareClick({ x: actualX, y: actualY })}
-                    onDragStart={(e) => handleDragStart(e, { x: actualX, y: actualY })}
-                    onDragOver={handleDragOver}
-                    onDrop={(e) => handleDrop(e, { x: actualX, y: actualY })}
-                    showCoordinates={settings.showCoordinates}
-                    boardTheme={settings.boardTheme}
-                  />
-                );
-              })
+              row.map((piece, x) => (
+                <ChessSquare
+                  key={`${x}-${y}`}
+                  position={{ x, y }}
+                  piece={piece}
+                  isLight={(x + y) % 2 === 0}
+                  isSelected={gameState.selectedSquare?.x === x && gameState.selectedSquare?.y === y}
+                  isValidMove={isValidMove({ x, y })}
+                  isLastMove={isLastMove({ x, y })}
+                  onClick={() => handleSquareClick({ x, y })}
+                  onDragStart={(e) => handleDragStart(e, { x, y })}
+                  onDragOver={handleDragOver}
+                  onDrop={(e) => handleDrop(e, { x, y })}
+                  showCoordinates={settings.showCoordinates}
+                  boardTheme={settings.boardTheme}
+                />
+              ))
             )}
           </div>
         </div>
-
-        {/* Position Evaluation Bar */}
-        <Card className="mt-4 p-3">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-sm font-medium">Position Evaluation</span>
-            <Badge variant="outline" className="text-xs">Engine</Badge>
-          </div>
-          <div className="relative h-3 bg-gradient-to-r from-gray-800 via-gray-400 to-gray-100 rounded-full overflow-hidden">
-            <div 
-              className="h-full bg-gradient-to-r from-black via-gray-500 to-white transition-all duration-1000"
-              style={{ width: '52%' }}
-            />
-            <div className="absolute top-0 left-1/2 transform -translate-x-1/2 w-0.5 h-full bg-yellow-400"></div>
-          </div>
-          <div className="flex justify-between mt-2 text-xs text-gray-600">
-            <span>Black</span>
-            <span className="font-mono text-green-600">+0.3</span>
-            <span>White</span>
-          </div>
-        </Card>
       </div>
 
       {/* Game Result Modal */}
