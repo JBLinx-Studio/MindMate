@@ -7,7 +7,7 @@ import { Trophy, Users, Calendar } from 'lucide-react';
 
 const Tournaments = () => {
   return (
-    <SidebarProvider collapsedWidth={64}>
+    <SidebarProvider>
       <div className="min-h-screen flex w-full bg-gradient-to-br from-amber-50 to-orange-100">
         <AppSidebar />
         

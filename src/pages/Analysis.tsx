@@ -7,7 +7,7 @@ import { Upload, Play, RotateCcw } from 'lucide-react';
 
 const Analysis = () => {
   return (
-    <SidebarProvider collapsedWidth={64}>
+    <SidebarProvider>
       <div className="min-h-screen flex w-full bg-gradient-to-br from-amber-50 to-orange-100">
         <AppSidebar />
         
