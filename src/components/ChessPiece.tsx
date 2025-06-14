@@ -41,18 +41,25 @@ const ChessPiece: React.FC<ChessPieceProps> = ({
   return (
     <div 
       className={`
-        text-3xl sm:text-4xl cursor-pointer select-none 
+        text-4xl md:text-5xl cursor-pointer select-none 
         flex items-center justify-center
         transition-all duration-300 ease-out
-        ${isDragging ? 'opacity-80 scale-110 z-50' : ''}
-        ${isSelected ? 'scale-110' : 'hover:scale-105'}
-        ${isAnimating ? 'animate-pulse' : ''}
-        ${piece.color === 'white' ? 'text-gray-100' : 'text-gray-900'}
+        ${isDragging ? 'opacity-90 scale-125 z-50 rotate-3' : ''}
+        ${isSelected ? 'scale-115 animate-pulse' : 'hover:scale-110'}
+        ${isAnimating ? 'animate-bounce' : ''}
+        ${piece.color === 'white' 
+          ? 'text-slate-50 drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]' 
+          : 'text-slate-900 drop-shadow-[0_2px_4px_rgba(255,255,255,0.8)]'
+        }
+        hover:brightness-110 active:scale-95
       `}
       style={{
-        textShadow: piece.color === 'white' 
-          ? '2px 2px 4px rgba(0,0,0,0.8), 0 0 8px rgba(0,0,0,0.5)'
-          : '2px 2px 4px rgba(255,255,255,0.8), 0 0 8px rgba(255,255,255,0.5)'
+        filter: piece.color === 'white' 
+          ? 'drop-shadow(0 0 8px rgba(255,255,255,0.4)) drop-shadow(0 4px 8px rgba(0,0,0,0.6))'
+          : 'drop-shadow(0 0 8px rgba(0,0,0,0.4)) drop-shadow(0 4px 8px rgba(255,255,255,0.6))',
+        textShadow: piece.color === 'white'
+          ? '0 0 12px rgba(255,255,255,0.6), 2px 2px 8px rgba(0,0,0,0.8)'
+          : '0 0 12px rgba(0,0,0,0.6), 2px 2px 8px rgba(255,255,255,0.8)'
       }}
     >
       {getPieceSymbol(piece)}

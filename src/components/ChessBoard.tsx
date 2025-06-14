@@ -87,11 +87,17 @@ const ChessBoard: React.FC<ChessBoardProps> = ({ gameState, onGameStateChange })
 
   return (
     <div className="flex justify-center">
-      <div className="w-full max-w-lg aspect-square">
-        {/* Chess board container */}
-        <div className="w-full h-full border-4 border-amber-800 rounded-lg shadow-lg bg-amber-200 p-3">
+      <div className="w-full max-w-2xl aspect-square">
+        {/* Enhanced Chess board container */}
+        <div className="w-full h-full border-8 border-gradient-to-br from-amber-900 to-amber-800 rounded-2xl shadow-2xl bg-gradient-to-br from-amber-200 to-amber-300 p-6 relative">
+          {/* Decorative corner elements */}
+          <div className="absolute top-2 left-2 w-4 h-4 bg-amber-900 rounded-full opacity-60" />
+          <div className="absolute top-2 right-2 w-4 h-4 bg-amber-900 rounded-full opacity-60" />
+          <div className="absolute bottom-2 left-2 w-4 h-4 bg-amber-900 rounded-full opacity-60" />
+          <div className="absolute bottom-2 right-2 w-4 h-4 bg-amber-900 rounded-full opacity-60" />
+          
           {/* Chess board grid */}
-          <div className="w-full h-full grid grid-cols-8 gap-0 rounded">
+          <div className="w-full h-full grid grid-cols-8 gap-1 rounded-xl overflow-hidden shadow-inner">
             {gameState.board.map((row, y) =>
               row.map((piece, x) => (
                 <ChessSquare
