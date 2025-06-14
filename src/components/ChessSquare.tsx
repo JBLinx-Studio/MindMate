@@ -14,6 +14,7 @@ interface ChessSquareProps {
   onDragStart: (e: React.DragEvent) => void;
   onDragOver: (e: React.DragEvent) => void;
   onDrop: (e: React.DragEvent) => void;
+  showCoordinates?: boolean;
 }
 
 const ChessSquare: React.FC<ChessSquareProps> = ({
@@ -26,14 +27,15 @@ const ChessSquare: React.FC<ChessSquareProps> = ({
   onClick,
   onDragStart,
   onDragOver,
-  onDrop
+  onDrop,
+  showCoordinates = true
 }) => {
   const { x, y } = position;
   
   const getSquareColor = () => {
-    if (isSelected) return 'bg-yellow-400';
-    if (isLastMove) return 'bg-yellow-300';
-    if (isValidMove) return isLight ? 'bg-green-300' : 'bg-green-400';
+    if (isSelected) return 'bg-yellow-400 shadow-lg';
+    if (isLastMove) return 'bg-yellow-300 shadow-md';
+    if (isValidMove) return isLight ? 'bg-green-300 shadow-md' : 'bg-green-400 shadow-md';
     return isLight ? 'bg-amber-100' : 'bg-amber-800';
   };
 
@@ -42,28 +44,34 @@ const ChessSquare: React.FC<ChessSquareProps> = ({
       className={`
         relative w-16 h-16 flex items-center justify-center
         border border-amber-900/20 cursor-pointer
-        transition-all duration-200 hover:brightness-110
+        transition-all duration-300 hover:brightness-110 hover:scale-105
         ${getSquareColor()}
+        ${isSelected ? 'ring-4 ring-yellow-500 ring-opacity-50' : ''}
       `}
       onClick={onClick}
       onDragOver={onDragOver}
       onDrop={onDrop}
     >
       {/* Coordinate labels */}
-      {x === 0 && (
-        <div className="absolute -left-4 text-xs font-medium text-amber-900">
+      {showCoordinates && x === 0 && (
+        <div className="absolute -left-5 text-xs font-bold text-amber-900 select-none">
           {8 - y}
         </div>
       )}
-      {y === 7 && (
-        <div className="absolute -bottom-4 text-xs font-medium text-amber-900">
+      {showCoordinates && y === 7 && (
+        <div className="absolute -bottom-5 text-xs font-bold text-amber-900 select-none">
           {String.fromCharCode(97 + x)}
         </div>
       )}
       
-      {/* Valid move indicator */}
+      {/* Valid move indicator with enhanced styling */}
       {isValidMove && !piece && (
-        <div className="w-4 h-4 bg-green-600 rounded-full opacity-60" />
+        <div className="w-5 h-5 bg-green-600 rounded-full opacity-70 animate-pulse shadow-lg" />
+      )}
+      
+      {/* Attack indicator for valid moves on enemy pieces */}
+      {isValidMove && piece && (
+        <div className="absolute inset-0 border-4 border-red-500 rounded-lg opacity-60 animate-pulse" />
       )}
       
       {/* Piece */}
@@ -71,10 +79,15 @@ const ChessSquare: React.FC<ChessSquareProps> = ({
         <div
           draggable
           onDragStart={onDragStart}
-          className="w-full h-full flex items-center justify-center"
+          className="w-full h-full flex items-center justify-center transition-transform duration-200 hover:scale-110"
         >
           <ChessPiece piece={piece} />
         </div>
+      )}
+      
+      {/* Selected piece glow effect */}
+      {isSelected && (
+        <div className="absolute inset-0 bg-yellow-400 opacity-20 rounded-lg animate-pulse" />
       )}
     </div>
   );

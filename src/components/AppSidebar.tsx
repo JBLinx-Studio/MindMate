@@ -24,10 +24,14 @@ const navigationItems = [
 ];
 
 export function AppSidebar() {
-  const { collapsed } = useSidebar();
+  const { state } = useSidebar();
+  const isCollapsed = state === 'collapsed';
 
   return (
-    <Sidebar className={collapsed ? 'w-16' : 'w-64'} collapsible>
+    <Sidebar 
+      className={isCollapsed ? 'w-16' : 'w-64'} 
+      collapsible="icon"
+    >
       <SidebarTrigger className="m-2 self-end" />
       
       <SidebarContent>
@@ -37,7 +41,7 @@ export function AppSidebar() {
             <div className="w-8 h-8 bg-amber-800 rounded-lg flex items-center justify-center">
               <span className="text-white font-bold text-lg">♔</span>
             </div>
-            {!collapsed && (
+            {!isCollapsed && (
               <div>
                 <h1 className="text-xl font-bold text-amber-800">ChessMaster</h1>
                 <p className="text-xs text-gray-600">Professional Chess Platform</p>
@@ -61,7 +65,7 @@ export function AppSidebar() {
                       }
                     >
                       <item.icon className="w-5 h-5" />
-                      {!collapsed && <span>{item.title}</span>}
+                      {!isCollapsed && <span>{item.title}</span>}
                     </NavLink>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
