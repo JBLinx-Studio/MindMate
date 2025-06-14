@@ -7,9 +7,10 @@ import { GameState } from '../types/chess';
 import { createInitialGameState } from '../utils/chessLogic';
 import { soundManager } from '../utils/soundManager';
 import { toast } from 'sonner';
-import { Volume2, VolumeX, Settings, BarChart3, History, Users, Clock, Target, BookOpen, Brain, Crown } from 'lucide-react';
+import { Volume2, VolumeX, Settings, BarChart3, History, Users, Clock, Target, BookOpen, Brain, Crown, Play, Pause, RotateCcw, Flag, Zap, Trophy } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 import GameStatsPanel from '../components/GameStatsPanel';
 import MoveHistoryPanel from '../components/MoveHistoryPanel';
 import PlayersPanel from '../components/PlayersPanel';
@@ -23,9 +24,11 @@ const Index = () => {
   const [gameState, setGameState] = useState<GameState>(createInitialGameState());
   const [soundEnabled, setSoundEnabled] = useState(true);
   const [activePanel, setActivePanel] = useState<'stats' | 'history' | 'players' | 'analysis' | 'tools' | 'rules' | 'engine' | null>('stats');
+  const [gameTime, setGameTime] = useState({ white: 900, black: 900 }); // 15 minutes
 
   const handleNewGame = () => {
     setGameState(createInitialGameState());
+    setGameTime({ white: 900, black: 900 });
     toast.success('New game started! Good luck!', {
       duration: 3000,
     });
@@ -71,149 +74,272 @@ const Index = () => {
     setGameState(newState);
   };
 
-  const panelButtons = [
-    { id: 'stats', icon: BarChart3, label: 'Game Status', color: 'bg-blue-500' },
-    { id: 'engine', icon: Brain, label: 'AI Engine', color: 'bg-purple-500' },
-    { id: 'history', icon: History, label: 'Move History', color: 'bg-green-500' },
-    { id: 'analysis', icon: Target, label: 'Analysis', color: 'bg-orange-500' },
-    { id: 'players', icon: Users, label: 'Players', color: 'bg-indigo-500' },
-    { id: 'rules', icon: BookOpen, label: 'Rules & Guide', color: 'bg-red-500' },
-    { id: 'tools', icon: Settings, label: 'Game Tools', color: 'bg-gray-500' },
-  ];
+  const formatTime = (seconds: number) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
+  };
 
   return (
     <SidebarProvider>
-      <div className="min-h-screen flex w-full bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900">
+      <div className="min-h-screen flex w-full bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
         <AppSidebar />
         
         <div className="flex-1 flex flex-col relative">
-          {/* Enhanced Header */}
-          <header className="h-16 flex items-center justify-between px-6 bg-white/10 backdrop-blur-md border-b border-white/20 shadow-lg">
+          {/* Modern Header */}
+          <header className="h-16 flex items-center justify-between px-6 bg-white/90 backdrop-blur-lg border-b border-gray-200 shadow-sm">
             <div className="flex items-center space-x-4">
-              <SidebarTrigger className="lg:hidden text-white" />
+              <SidebarTrigger className="lg:hidden" />
               <div className="flex items-center space-x-3">
-                <Crown className="w-8 h-8 text-yellow-400" />
+                <div className="p-2 bg-gradient-to-br from-orange-400 to-red-500 rounded-xl text-white">
+                  <Crown className="w-6 h-6" />
+                </div>
                 <div>
-                  <h1 className="text-2xl font-bold text-white">ChessMaster Pro</h1>
-                  <div className="text-xs text-gray-300">Advanced Chess Platform</div>
+                  <h1 className="text-xl font-bold text-gray-800">Chess.AI</h1>
+                  <div className="text-xs text-gray-500">Play • Learn • Compete</div>
                 </div>
               </div>
-              <div className="hidden md:flex items-center space-x-2 px-3 py-1 bg-green-500/20 rounded-full">
-                <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
-                <span className="text-green-300 text-sm font-medium">Live Game</span>
-              </div>
+              <Badge className="bg-green-100 text-green-700 border-green-200">
+                <div className="w-2 h-2 bg-green-500 rounded-full mr-2 animate-pulse"></div>
+                Online
+              </Badge>
             </div>
             
-            <div className="flex items-center space-x-3">
+            <div className="flex items-center space-x-2">
               <Button
                 onClick={toggleSound}
                 variant="ghost"
                 size="sm"
-                className="text-white hover:bg-white/10"
+                className="text-gray-600 hover:text-gray-800"
               >
-                {soundEnabled ? <Volume2 className="w-5 h-5" /> : <VolumeX className="w-5 h-5" />}
+                {soundEnabled ? <Volume2 className="w-4 h-4" /> : <VolumeX className="w-4 h-4" />}
               </Button>
               
               <Button
                 onClick={handleNewGame}
-                className="bg-amber-600 hover:bg-amber-700 text-white font-medium"
+                className="bg-green-600 hover:bg-green-700 text-white font-medium shadow-sm"
+                size="sm"
               >
+                <Play className="w-4 h-4 mr-1" />
                 New Game
               </Button>
               
               <Button
                 onClick={handleResign}
-                variant="destructive"
-                className="bg-red-600/80 hover:bg-red-700"
+                variant="outline"
+                className="border-red-200 text-red-600 hover:bg-red-50"
+                size="sm"
                 disabled={gameState.moves.length === 0}
               >
+                <Flag className="w-4 h-4 mr-1" />
                 Resign
               </Button>
             </div>
           </header>
 
           {/* Main Game Area */}
-          <main className="flex-1 p-6 relative">
+          <main className="flex-1 p-6">
             <div className="max-w-7xl mx-auto">
-              <div className="grid grid-cols-1 xl:grid-cols-4 gap-6 h-full">
+              <div className="grid grid-cols-1 xl:grid-cols-12 gap-6">
                 
-                {/* Left Sidebar - Enhanced Game Status */}
-                <div className="xl:col-span-1 space-y-4">
-                  <EnhancedGameStatus gameState={gameState} />
+                {/* Left Sidebar - Player Info & Controls */}
+                <div className="xl:col-span-3 space-y-4">
+                  {/* Black Player */}
+                  <Card className="p-4 bg-white/80 backdrop-blur-sm border-0 shadow-lg">
+                    <div className="flex items-center space-x-3">
+                      <div className="w-10 h-10 bg-gradient-to-br from-gray-700 to-black rounded-lg flex items-center justify-center text-white font-bold">
+                        GM
+                      </div>
+                      <div className="flex-1">
+                        <div className="font-semibold text-gray-800">Magnus Carlsen</div>
+                        <div className="text-sm text-gray-500">2831 • Norway</div>
+                      </div>
+                      <div className="text-right">
+                        <div className={`text-lg font-mono font-bold ${gameState.currentPlayer === 'black' ? 'text-green-600' : 'text-gray-500'}`}>
+                          {formatTime(gameTime.black)}
+                        </div>
+                        {gameState.currentPlayer === 'black' && (
+                          <div className="text-xs text-green-600 font-medium">TO MOVE</div>
+                        )}
+                      </div>
+                    </div>
+                  </Card>
+
+                  {/* Game Controls */}
+                  <Card className="p-4 bg-white/80 backdrop-blur-sm border-0 shadow-lg">
+                    <div className="space-y-3">
+                      <div className="text-center">
+                        <h3 className="font-semibold text-gray-800 mb-1">Game Controls</h3>
+                        <div className="text-sm text-gray-500">
+                          Move #{Math.ceil(gameState.moves.length / 2)}
+                        </div>
+                      </div>
+                      
+                      <div className="grid grid-cols-2 gap-2">
+                        <Button variant="outline" size="sm" className="text-xs">
+                          <Pause className="w-3 h-3 mr-1" />
+                          Pause
+                        </Button>
+                        <Button variant="outline" size="sm" className="text-xs">
+                          <RotateCcw className="w-3 h-3 mr-1" />
+                          Takeback
+                        </Button>
+                      </div>
+                      
+                      <div className="pt-2 border-t">
+                        <div className="text-xs text-gray-500 space-y-1">
+                          <div className="flex justify-between">
+                            <span>Time Control:</span>
+                            <span className="font-medium">15+10</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span>Opening:</span>
+                            <span className="font-medium">Italian Game</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </Card>
+
+                  {/* White Player */}
+                  <Card className="p-4 bg-white/80 backdrop-blur-sm border-0 shadow-lg">
+                    <div className="flex items-center space-x-3">
+                      <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-blue-700 rounded-lg flex items-center justify-center text-white font-bold">
+                        GM
+                      </div>
+                      <div className="flex-1">
+                        <div className="font-semibold text-gray-800">Fabiano Caruana</div>
+                        <div className="text-sm text-gray-500">2820 • USA</div>
+                      </div>
+                      <div className="text-right">
+                        <div className={`text-lg font-mono font-bold ${gameState.currentPlayer === 'white' ? 'text-green-600' : 'text-gray-500'}`}>
+                          {formatTime(gameTime.white)}
+                        </div>
+                        {gameState.currentPlayer === 'white' && (
+                          <div className="text-xs text-green-600 font-medium">TO MOVE</div>
+                        )}
+                      </div>
+                    </div>
+                  </Card>
                 </div>
 
                 {/* Center - Chess Board */}
-                <div className="xl:col-span-2 flex justify-center items-start">
-                  <div className="space-y-4 w-full max-w-2xl">
+                <div className="xl:col-span-6 flex justify-center">
+                  <div className="space-y-4 w-full max-w-xl">
                     <EnhancedChessBoard 
                       gameState={gameState}
                       onGameStateChange={handleGameStateChange}
                     />
                     
-                    {/* Enhanced Move Suggestion */}
-                    <Card className="p-4 bg-white/95 backdrop-blur-md border border-white/30 shadow-lg">
+                    {/* Engine Evaluation Bar */}
+                    <Card className="p-3 bg-white/80 backdrop-blur-sm border-0 shadow-lg">
+                      <div className="flex items-center justify-between mb-2">
+                        <div className="flex items-center space-x-2">
+                          <Brain className="w-4 h-4 text-purple-600" />
+                          <span className="text-sm font-medium text-gray-700">Engine Evaluation</span>
+                        </div>
+                        <Badge variant="outline" className="text-xs">
+                          Depth 20
+                        </Badge>
+                      </div>
+                      
+                      <div className="relative">
+                        <div className="h-3 bg-gray-200 rounded-full overflow-hidden">
+                          <div className="h-full bg-gradient-to-r from-gray-800 to-white w-1/2"></div>
+                        </div>
+                        <div className="absolute top-0 left-1/2 transform -translate-x-1/2 w-0.5 h-3 bg-yellow-500"></div>
+                      </div>
+                      
+                      <div className="flex justify-between mt-2 text-xs">
+                        <span className="text-gray-600">Black</span>
+                        <span className="font-mono font-medium">+0.3</span>
+                        <span className="text-gray-600">White</span>
+                      </div>
+                    </Card>
+
+                    {/* Best Move */}
+                    <Card className="p-4 bg-gradient-to-r from-green-50 to-blue-50 border-0 shadow-lg">
                       <div className="text-center">
                         <div className="flex items-center justify-center space-x-2 mb-2">
-                          <Brain className="w-5 h-5 text-purple-600" />
-                          <span className="text-sm font-medium text-gray-700">AI Suggestion</span>
+                          <Zap className="w-4 h-4 text-green-600" />
+                          <span className="text-sm font-medium text-gray-700">Best Move</span>
                         </div>
-                        <div className="text-2xl font-bold text-purple-700 mb-1">Nf3</div>
-                        <div className="text-sm text-gray-600 mb-2">Develops knight, controls center squares</div>
-                        <div className="text-xs text-purple-600 font-medium">Evaluation: +0.3 (Slightly better for White)</div>
+                        <div className="text-2xl font-bold text-green-700 mb-1">Nf3</div>
+                        <div className="text-sm text-gray-600">
+                          Knight to f3, controlling center squares
+                        </div>
                       </div>
                     </Card>
                   </div>
                 </div>
 
-                {/* Right Sidebar - Enhanced Panel Controls */}
-                <div className="xl:col-span-1 space-y-4">
-                  <Card className="p-4 bg-white/10 backdrop-blur-md border-white/20">
-                    <h3 className="font-semibold text-white mb-3 flex items-center">
-                      <Settings className="w-5 h-5 mr-2" />
-                      Game Panels
+                {/* Right Sidebar - Analysis & History */}
+                <div className="xl:col-span-3 space-y-4">
+                  {/* Quick Analysis */}
+                  <Card className="p-4 bg-white/80 backdrop-blur-sm border-0 shadow-lg">
+                    <h3 className="font-semibold text-gray-800 mb-3 flex items-center">
+                      <Target className="w-4 h-4 mr-2 text-orange-500" />
+                      Quick Analysis
                     </h3>
-                    <div className="grid grid-cols-1 gap-2">
-                      {panelButtons.map((panel) => (
-                        <Button
-                          key={panel.id}
-                          onClick={() => setActivePanel(activePanel === panel.id ? null : panel.id as any)}
-                          variant={activePanel === panel.id ? "default" : "ghost"}
-                          className={`justify-start space-x-2 text-white ${
-                            activePanel === panel.id 
-                              ? `${panel.color} hover:opacity-90` 
-                              : 'hover:bg-white/10'
-                          }`}
-                          size="sm"
-                        >
-                          <panel.icon className="w-4 h-4" />
-                          <span className="text-sm">{panel.label}</span>
-                        </Button>
-                      ))}
+                    <div className="space-y-2 text-sm">
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">Material:</span>
+                        <span className="font-medium">Equal</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">King Safety:</span>
+                        <span className="font-medium text-green-600">Good</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">Development:</span>
+                        <span className="font-medium text-blue-600">Active</span>
+                      </div>
                     </div>
                   </Card>
 
-                  {/* Quick Game Info */}
-                  <Card className="p-4 bg-white/10 backdrop-blur-md border-white/20 text-white">
-                    <h4 className="font-semibold mb-3 flex items-center">
-                      <Clock className="w-4 h-4 mr-2 text-amber-400" />
-                      Quick Info
-                    </h4>
-                    <div className="space-y-2 text-sm">
-                      <div className="flex justify-between">
-                        <span className="text-gray-300">Game Mode:</span>
-                        <span className="font-medium">Classical</span>
+                  {/* Move History */}
+                  <Card className="p-4 bg-white/80 backdrop-blur-sm border-0 shadow-lg">
+                    <h3 className="font-semibold text-gray-800 mb-3 flex items-center">
+                      <History className="w-4 h-4 mr-2 text-blue-500" />
+                      Moves
+                    </h3>
+                    <div className="space-y-1 max-h-48 overflow-y-auto">
+                      {gameState.moves.length === 0 ? (
+                        <div className="text-sm text-gray-500 text-center py-4">
+                          No moves yet
+                        </div>
+                      ) : (
+                        gameState.moves.map((move, index) => (
+                          <div key={index} className="flex items-center justify-between text-sm hover:bg-gray-50 rounded px-2 py-1">
+                            <span className="text-gray-500 w-8">
+                              {Math.ceil((index + 1) / 2)}.
+                            </span>
+                            <span className="font-mono font-medium">
+                              {move.from.x + move.from.y}{move.to.x + move.to.y}
+                            </span>
+                            <span className="text-xs text-gray-400">
+                              {move.captured ? '×' : ''}
+                            </span>
+                          </div>
+                        ))
+                      )}
+                    </div>
+                  </Card>
+
+                  {/* Performance Stats */}
+                  <Card className="p-4 bg-white/80 backdrop-blur-sm border-0 shadow-lg">
+                    <h3 className="font-semibold text-gray-800 mb-3 flex items-center">
+                      <Trophy className="w-4 h-4 mr-2 text-yellow-500" />
+                      Performance
+                    </h3>
+                    <div className="grid grid-cols-2 gap-3 text-center">
+                      <div className="p-2 bg-blue-50 rounded">
+                        <div className="text-lg font-bold text-blue-700">94%</div>
+                        <div className="text-xs text-gray-600">Accuracy</div>
                       </div>
-                      <div className="flex justify-between">
-                        <span className="text-gray-300">Time Control:</span>
-                        <span className="font-medium">30+0</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-gray-300">Rating:</span>
-                        <span className="font-medium">2100 vs 2080</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-gray-300">Opening:</span>
-                        <span className="font-medium">Sicilian Defense</span>
+                      <div className="p-2 bg-green-50 rounded">
+                        <div className="text-lg font-bold text-green-700">0</div>
+                        <div className="text-xs text-gray-600">Blunders</div>
                       </div>
                     </div>
                   </Card>
@@ -221,45 +347,59 @@ const Index = () => {
               </div>
             </div>
 
-            {/* Enhanced Floating Panel Overlay */}
+            {/* Advanced Panel Modal */}
             {activePanel && (
-              <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 flex items-center justify-center p-4">
-                <div className="bg-white/96 backdrop-blur-md rounded-2xl shadow-2xl border border-white/30 max-w-5xl w-full max-h-[85vh] overflow-hidden">
-                  <div className="p-6 border-b border-gray-200 bg-gradient-to-r from-blue-50 to-purple-50">
+              <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+                <div className="bg-white rounded-2xl shadow-2xl max-w-6xl w-full max-h-[90vh] overflow-hidden">
+                  <div className="p-6 border-b bg-gradient-to-r from-blue-50 to-purple-50">
                     <div className="flex items-center justify-between">
-                      <div className="flex items-center space-x-3">
-                        {panelButtons.find(p => p.id === activePanel)?.icon && (
-                          <div className={`p-2 rounded-lg ${panelButtons.find(p => p.id === activePanel)?.color} text-white`}>
-                            {React.createElement(panelButtons.find(p => p.id === activePanel)!.icon, { className: 'w-5 h-5' })}
-                          </div>
-                        )}
-                        <h2 className="text-2xl font-bold text-gray-800">
-                          {panelButtons.find(p => p.id === activePanel)?.label}
-                        </h2>
-                      </div>
+                      <h2 className="text-2xl font-bold text-gray-800">
+                        {activePanel === 'engine' && 'Premium AI Engine'}
+                        {activePanel === 'analysis' && 'Deep Analysis'}
+                        {activePanel === 'players' && 'Player Profiles'}
+                        {activePanel === 'history' && 'Game History'}
+                        {activePanel === 'tools' && 'Game Tools'}
+                        {activePanel === 'rules' && 'Rules & Guide'}
+                      </h2>
                       <Button
                         onClick={() => setActivePanel(null)}
                         variant="ghost"
                         size="sm"
-                        className="text-gray-500 hover:text-gray-700 hover:bg-gray-100"
                       >
-                        <span className="text-xl">×</span>
+                        ×
                       </Button>
                     </div>
                   </div>
                   
                   <div className="p-6 overflow-y-auto max-h-[70vh]">
-                    {activePanel === 'stats' && <EnhancedGameStatus gameState={gameState} />}
                     {activePanel === 'engine' && <PremiumChessEngine gameState={gameState} />}
-                    {activePanel === 'history' && <MoveHistoryPanel gameState={gameState} />}
-                    {activePanel === 'players' && <PlayersPanel gameState={gameState} />}
                     {activePanel === 'analysis' && <AnalysisPanel gameState={gameState} />}
-                    {activePanel === 'rules' && <GameRulesPanel />}
+                    {activePanel === 'players' && <PlayersPanel gameState={gameState} />}
+                    {activePanel === 'history' && <MoveHistoryPanel gameState={gameState} />}
                     {activePanel === 'tools' && <GameToolsPanel gameState={gameState} onGameStateChange={handleGameStateChange} />}
+                    {activePanel === 'rules' && <GameRulesPanel />}
                   </div>
                 </div>
               </div>
             )}
+
+            {/* Floating Action Panel */}
+            <div className="fixed bottom-6 right-6 flex flex-col space-y-2">
+              <Button
+                onClick={() => setActivePanel(activePanel === 'engine' ? null : 'engine')}
+                className="w-12 h-12 rounded-full bg-purple-600 hover:bg-purple-700 shadow-lg"
+                size="sm"
+              >
+                <Brain className="w-5 h-5" />
+              </Button>
+              <Button
+                onClick={() => setActivePanel(activePanel === 'analysis' ? null : 'analysis')}
+                className="w-12 h-12 rounded-full bg-orange-600 hover:bg-orange-700 shadow-lg"
+                size="sm"
+              >
+                <Target className="w-5 h-5" />
+              </Button>
+            </div>
           </main>
         </div>
       </div>

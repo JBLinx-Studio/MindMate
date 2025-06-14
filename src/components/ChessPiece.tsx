@@ -34,13 +34,18 @@ const ChessPiece: React.FC<ChessPieceProps> = ({ piece, isDragging }) => {
   return (
     <div 
       className={`
-        text-4xl cursor-pointer select-none flex items-center justify-center
-        transition-all duration-200 hover:scale-110
-        ${isDragging ? 'opacity-50 scale-110' : ''}
+        text-5xl cursor-pointer select-none flex items-center justify-center
+        transition-all duration-200 hover:scale-110 hover:brightness-110
+        ${isDragging ? 'opacity-60 scale-125 rotate-3' : ''}
+        ${piece.color === 'white' ? 'drop-shadow-lg' : 'drop-shadow-md'}
       `}
       style={{ 
-        textShadow: '1px 1px 2px rgba(0,0,0,0.3)',
-        filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.2))'
+        textShadow: piece.color === 'white' 
+          ? '2px 2px 4px rgba(0,0,0,0.4), 0 0 8px rgba(255,255,255,0.8)' 
+          : '2px 2px 4px rgba(0,0,0,0.6), 0 0 8px rgba(0,0,0,0.3)',
+        filter: `drop-shadow(0 4px 8px rgba(0,0,0,0.3)) ${
+          piece.color === 'white' ? 'brightness(1.1)' : 'brightness(0.95)'
+        }`
       }}
     >
       {getPieceSymbol(piece)}
