@@ -1,10 +1,12 @@
+
 import React, { useState, useCallback } from 'react';
 import { Position, GameState } from '../types/chess';
-import { getValidMoves, makeMove } from '../utils/chessLogic';
+import { getValidMoves, makeMove, isInCheck } from '../utils/chessLogic';
 import ChessSquare from './ChessSquare';
+import GameResultModal from './GameResultModal';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
-import { RotateCcw, Eye, Settings } from 'lucide-react';
+import { RotateCcw, Eye, Settings, Crown, AlertTriangle } from 'lucide-react';
 
 interface EnhancedChessBoardProps {
   gameState: GameState;
@@ -19,8 +21,17 @@ const EnhancedChessBoard: React.FC<EnhancedChessBoardProps> = ({
   const [showCoordinates, setShowCoordinates] = useState(true);
   const [boardFlipped, setBoardFlipped] = useState(false);
   const [showAnalysisArrows, setShowAnalysisArrows] = useState(false);
+  const [showResultModal, setShowResultModal] = useState(false);
 
   const handleSquareClick = useCallback((position: Position) => {
+    // Don't allow moves if game is over
+    if (gameState.isGameOver) {
+      if (!showResultModal) {
+        setShowResultModal(true);
+      }
+      return;
+    }
+
     const piece = gameState.board[position.y][position.x];
     
     if (gameState.selectedSquare) {
@@ -36,15 +47,21 @@ const EnhancedChessBoard: React.FC<EnhancedChessBoardProps> = ({
           });
         }
         
-        // Check for check (simplified)
-        const kingInCheck = false; // TODO: Implement check detection
-        if (kingInCheck) {
+        // Check for special game states
+        if (newGameState.isGameOver) {
+          if (newGameState.winner === 'draw') {
+            toast.info('Game ended in a draw!', { duration: 3000 });
+          } else {
+            toast.success(`${newGameState.winner} wins!`, { duration: 3000 });
+          }
+          setTimeout(() => setShowResultModal(true), 1000);
+        } else if (isInCheck(newGameState.board, newGameState.currentPlayer)) {
           toast.warning('Check!', {
             duration: 3000,
           });
         }
       } else {
-        // Invalid move sound/feedback
+        // Invalid move
         toast.error('Invalid move!', {
           duration: 1000,
         });
@@ -74,9 +91,14 @@ const EnhancedChessBoard: React.FC<EnhancedChessBoardProps> = ({
         validMoves
       });
     }
-  }, [gameState, onGameStateChange]);
+  }, [gameState, onGameStateChange, showResultModal]);
 
   const handleDragStart = useCallback((e: React.DragEvent, position: Position) => {
+    if (gameState.isGameOver) {
+      e.preventDefault();
+      return;
+    }
+
     const piece = gameState.board[position.y][position.x];
     if (piece && piece.color === gameState.currentPlayer) {
       setDraggedPiece({ from: position });
@@ -97,7 +119,7 @@ const EnhancedChessBoard: React.FC<EnhancedChessBoardProps> = ({
   const handleDrop = useCallback((e: React.DragEvent, position: Position) => {
     e.preventDefault();
     
-    if (draggedPiece) {
+    if (draggedPiece && !gameState.isGameOver) {
       const newGameState = makeMove(gameState, draggedPiece.from, position);
       if (newGameState) {
         onGameStateChange(newGameState);
@@ -124,6 +146,14 @@ const EnhancedChessBoard: React.FC<EnhancedChessBoardProps> = ({
   const displayBoard = boardFlipped ? 
     [...gameState.board].reverse().map(row => [...row].reverse()) : 
     gameState.board;
+
+  const handleNewGame = () => {
+    setShowResultModal(false);
+    // This will be handled by parent component
+  };
+
+  // Check if current player is in check
+  const currentPlayerInCheck = isInCheck(gameState.board, gameState.currentPlayer);
 
   return (
     <div className="space-y-4">
@@ -157,6 +187,29 @@ const EnhancedChessBoard: React.FC<EnhancedChessBoardProps> = ({
           Analysis
         </Button>
       </div>
+
+      {/* Game Status Alert */}
+      {(currentPlayerInCheck || gameState.isGameOver) && (
+        <div className="flex justify-center">
+          <div className={`px-4 py-2 rounded-lg font-medium flex items-center space-x-2 ${
+            gameState.isGameOver 
+              ? 'bg-red-100 text-red-800 border border-red-200'
+              : 'bg-yellow-100 text-yellow-800 border border-yellow-200'
+          }`}>
+            {gameState.isGameOver ? (
+              <>
+                <Crown className="w-4 h-4" />
+                <span>Game Over - {gameState.winner === 'draw' ? 'Draw' : `${gameState.winner} wins!`}</span>
+              </>
+            ) : (
+              <>
+                <AlertTriangle className="w-4 h-4" />
+                <span>Check! {gameState.currentPlayer} king is under attack</span>
+              </>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* Premium Chess Board */}
       <div className="relative">
@@ -208,7 +261,6 @@ const EnhancedChessBoard: React.FC<EnhancedChessBoardProps> = ({
         {showAnalysisArrows && (
           <div className="absolute inset-0 pointer-events-none">
             <svg className="w-full h-full">
-              {/* Mock analysis arrows */}
               <defs>
                 <marker id="arrowhead" markerWidth="10" markerHeight="7" 
                         refX="10" refY="3.5" orient="auto">
@@ -229,9 +281,22 @@ const EnhancedChessBoard: React.FC<EnhancedChessBoardProps> = ({
       {/* Move Suggestion */}
       <div className="text-center bg-white/90 backdrop-blur-sm rounded-xl p-3 shadow-lg border border-white/30">
         <div className="text-sm text-gray-600 mb-1">Engine Suggestion</div>
-        <div className="text-lg font-bold text-blue-600">Nf3</div>
-        <div className="text-xs text-gray-500">Develops knight, controls center</div>
+        <div className="text-lg font-bold text-blue-600">
+          {gameState.isGameOver ? 'Game Over' : 'Nf3'}
+        </div>
+        <div className="text-xs text-gray-500">
+          {gameState.isGameOver ? 'Review your game' : 'Develops knight, controls center'}
+        </div>
       </div>
+
+      {/* Game Result Modal */}
+      {showResultModal && gameState.isGameOver && (
+        <GameResultModal
+          gameState={gameState}
+          onNewGame={handleNewGame}
+          onClose={() => setShowResultModal(false)}
+        />
+      )}
     </div>
   );
 };
