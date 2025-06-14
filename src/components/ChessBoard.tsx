@@ -1,3 +1,4 @@
+
 import React, { useState, useCallback } from 'react';
 import { Position, GameState } from '../types/chess';
 import { getValidMoves, makeMove } from '../utils/chessLogic';
@@ -90,7 +91,10 @@ const ChessBoard: React.FC<ChessBoardProps> = ({ gameState, onGameStateChange })
       <div className="inline-block border-8 border-amber-900/30 rounded-2xl shadow-2xl bg-gradient-to-br from-amber-100 to-orange-200 p-6 relative overflow-hidden">
         {/* Board texture overlay */}
         <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent pointer-events-none" />
-        <div className="absolute inset-0 bg-[url('data:image/svg+xml,%3Csvg width="60" height="60" viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg"%3E%3Cg fill="none" fill-rule="evenodd"%3E%3Cg fill="%23d4a574" fill-opacity="0.05"%3E%3Ccircle cx="30" cy="30" r="1"/%3E%3C/g%3E%3C/g%3E%3C/svg%3E')] pointer-events-none" />
+        <div className="absolute inset-0 pointer-events-none" 
+             style={{
+               backgroundImage: `url('data:image/svg+xml,%3Csvg width="60" height="60" viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg"%3E%3Cg fill="none" fill-rule="evenodd"%3E%3Cg fill="%23d4a574" fill-opacity="0.05"%3E%3Ccircle cx="30" cy="30" r="1"/%3E%3C/g%3E%3C/g%3E%3C/svg%3E')`
+             }} />
         
         {/* Chess board grid */}
         <div className="grid grid-cols-8 gap-0 relative z-10 bg-white/10 backdrop-blur-sm rounded-xl p-2 shadow-inner">
