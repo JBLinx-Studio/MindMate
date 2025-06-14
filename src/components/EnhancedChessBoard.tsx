@@ -173,29 +173,20 @@ const EnhancedChessBoard: React.FC<EnhancedChessBoardProps> = ({
   const getBoardSize = () => {
     switch (settings.boardSize) {
       case 'small': return 'w-full max-w-md';
-      case 'large': return 'w-full max-w-4xl';
-      default: return 'w-full max-w-2xl';
-    }
-  };
-
-  const getAnimationSpeed = () => {
-    switch (settings.animationSpeed) {
-      case 'slow': return 'duration-500';
-      case 'fast': return 'duration-150';
-      default: return 'duration-300';
+      case 'large': return 'w-full max-w-2xl';
+      default: return 'w-full max-w-lg';
     }
   };
 
   return (
-    <div className={`${getBoardSize()} mx-auto transition-all ${getAnimationSpeed()}`}>
-      {/* Enhanced Board Controls */}
+    <div className={`${getBoardSize()} mx-auto transition-all duration-300`}>
+      {/* Board Controls */}
       <div className="flex justify-between items-center mb-4 px-2">
         <div className="flex space-x-2">
           <Button
             onClick={() => updateSetting('autoRotateBoard', !settings.autoRotateBoard)}
             variant="outline"
             size="sm"
-            className="bg-white/95 backdrop-blur-sm shadow-md hover:shadow-lg transition-all"
           >
             <RotateCcw className="w-4 h-4" />
           </Button>
@@ -203,7 +194,6 @@ const EnhancedChessBoard: React.FC<EnhancedChessBoardProps> = ({
             onClick={() => updateSetting('showCoordinates', !settings.showCoordinates)}
             variant="outline"
             size="sm"
-            className="bg-white/95 backdrop-blur-sm shadow-md hover:shadow-lg transition-all"
           >
             <Eye className="w-4 h-4" />
           </Button>
@@ -211,7 +201,6 @@ const EnhancedChessBoard: React.FC<EnhancedChessBoardProps> = ({
             onClick={() => setIsFullscreen(!isFullscreen)}
             variant="outline"
             size="sm"
-            className="bg-white/95 backdrop-blur-sm shadow-md hover:shadow-lg transition-all"
           >
             {isFullscreen ? <Minimize className="w-4 h-4" /> : <Maximize className="w-4 h-4" />}
           </Button>
@@ -229,7 +218,6 @@ const EnhancedChessBoard: React.FC<EnhancedChessBoardProps> = ({
             onClick={() => setShowQuickSettings(!showQuickSettings)}
             variant="ghost"
             size="sm"
-            className="text-gray-600"
           >
             <Settings className="w-4 h-4" />
           </Button>
@@ -238,7 +226,6 @@ const EnhancedChessBoard: React.FC<EnhancedChessBoardProps> = ({
             onClick={() => updateSetting('soundEnabled', !settings.soundEnabled)}
             variant="ghost"
             size="sm"
-            className="text-gray-600"
           >
             {settings.soundEnabled ? <Volume2 className="w-4 h-4" /> : <VolumeX className="w-4 h-4" />}
           </Button>
@@ -247,7 +234,7 @@ const EnhancedChessBoard: React.FC<EnhancedChessBoardProps> = ({
 
       {/* Quick Settings Panel */}
       {showQuickSettings && (
-        <Card className="mb-4 p-4 bg-white/95 backdrop-blur-sm shadow-lg animate-fade-in">
+        <Card className="mb-4 p-4">
           <h4 className="font-semibold mb-3 flex items-center">
             <Zap className="w-4 h-4 mr-2" />
             Quick Settings
@@ -280,17 +267,11 @@ const EnhancedChessBoard: React.FC<EnhancedChessBoardProps> = ({
         </Card>
       )}
 
-      {/* Enhanced Chess Board Container */}
+      {/* Chess Board Container */}
       <div className={`relative ${isFullscreen ? 'fixed inset-0 z-50 bg-black/90 flex items-center justify-center' : ''}`}>
-        <div className="bg-gradient-to-br from-amber-100 via-amber-50 to-orange-100 p-6 rounded-2xl shadow-2xl border-4 border-amber-800/20 relative overflow-hidden">
-          {/* Advanced Background Effects */}
-          <div className="absolute inset-0 opacity-5 rounded-2xl" 
-               style={{
-                 backgroundImage: `url('data:image/svg+xml,%3Csvg width="40" height="40" viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg"%3E%3Cg fill="%23d4a574" fill-opacity="0.4"%3E%3Cpath d="M0 0h20v20H0V0zm20 20h20v20H20V20z"/%3E%3C/g%3E%3C/svg%3E')`
-               }} />
-          
-          {/* Enhanced Chess Board Grid */}
-          <div className="relative grid grid-cols-8 gap-0 rounded-xl overflow-hidden shadow-inner bg-white/10 backdrop-blur-sm border border-white/20">
+        <div className="w-full aspect-square border-4 border-amber-800 rounded-lg shadow-lg bg-amber-200 p-4">
+          {/* Chess Board Grid */}
+          <div className="w-full h-full grid grid-cols-8 gap-0 rounded">
             {displayBoard.map((row, y) =>
               row.map((piece, x) => {
                 const actualX = (settings.autoRotateBoard && gameState.currentPlayer === 'black') ? 7 - x : x;
@@ -316,36 +297,30 @@ const EnhancedChessBoard: React.FC<EnhancedChessBoardProps> = ({
               })
             )}
           </div>
-          
-          {/* Enhanced Decorative Elements */}
-          <div className="absolute top-3 left-3 w-6 h-6 border-l-3 border-t-3 border-amber-700/40 rounded-tl-lg"></div>
-          <div className="absolute top-3 right-3 w-6 h-6 border-r-3 border-t-3 border-amber-700/40 rounded-tr-lg"></div>
-          <div className="absolute bottom-3 left-3 w-6 h-6 border-l-3 border-b-3 border-amber-700/40 rounded-bl-lg"></div>
-          <div className="absolute bottom-3 right-3 w-6 h-6 border-r-3 border-b-3 border-amber-700/40 rounded-br-lg"></div>
         </div>
 
-        {/* Enhanced Position Evaluation Bar */}
-        <Card className="mt-4 p-3 bg-white/95 backdrop-blur-sm shadow-lg">
+        {/* Position Evaluation Bar */}
+        <Card className="mt-4 p-3">
           <div className="flex items-center justify-between mb-2">
-            <span className="text-sm font-medium text-gray-700">Position Evaluation</span>
-            <Badge variant="outline" className="text-xs">Neural Engine</Badge>
+            <span className="text-sm font-medium">Position Evaluation</span>
+            <Badge variant="outline" className="text-xs">Engine</Badge>
           </div>
           <div className="relative h-3 bg-gradient-to-r from-gray-800 via-gray-400 to-gray-100 rounded-full overflow-hidden">
             <div 
-              className="h-full bg-gradient-to-r from-black via-gray-500 to-white transition-all duration-1000 shadow-inner"
+              className="h-full bg-gradient-to-r from-black via-gray-500 to-white transition-all duration-1000"
               style={{ width: '52%' }}
             />
-            <div className="absolute top-0 left-1/2 transform -translate-x-1/2 w-0.5 h-full bg-yellow-400 shadow-sm"></div>
+            <div className="absolute top-0 left-1/2 transform -translate-x-1/2 w-0.5 h-full bg-yellow-400"></div>
           </div>
           <div className="flex justify-between mt-2 text-xs text-gray-600">
-            <span className="font-medium">Black</span>
-            <span className="font-mono font-bold text-green-600">+0.3</span>
-            <span className="font-medium">White</span>
+            <span>Black</span>
+            <span className="font-mono text-green-600">+0.3</span>
+            <span>White</span>
           </div>
         </Card>
       </div>
 
-      {/* Enhanced Game Result Modal */}
+      {/* Game Result Modal */}
       {showResultModal && gameState.isGameOver && (
         <GameResultModal
           gameState={gameState}

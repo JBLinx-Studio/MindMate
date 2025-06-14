@@ -86,42 +86,31 @@ const ChessBoard: React.FC<ChessBoardProps> = ({ gameState, onGameStateChange })
   }, [gameState.moves]);
 
   return (
-    <div className="relative">
-      {/* Enhanced board container with modern styling */}
-      <div className="inline-block border-8 border-amber-900/30 rounded-2xl shadow-2xl bg-gradient-to-br from-amber-100 to-orange-200 p-6 relative overflow-hidden">
-        {/* Board texture overlay */}
-        <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent pointer-events-none" />
-        <div className="absolute inset-0 pointer-events-none" 
-             style={{
-               backgroundImage: `url('data:image/svg+xml,%3Csvg width="60" height="60" viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg"%3E%3Cg fill="none" fill-rule="evenodd"%3E%3Cg fill="%23d4a574" fill-opacity="0.05"%3E%3Ccircle cx="30" cy="30" r="1"/%3E%3C/g%3E%3C/g%3E%3C/svg%3E')`
-             }} />
-        
-        {/* Chess board grid */}
-        <div className="grid grid-cols-8 gap-0 relative z-10 bg-white/10 backdrop-blur-sm rounded-xl p-2 shadow-inner">
-          {gameState.board.map((row, y) =>
-            row.map((piece, x) => (
-              <ChessSquare
-                key={`${x}-${y}`}
-                position={{ x, y }}
-                piece={piece}
-                isLight={(x + y) % 2 === 0}
-                isSelected={gameState.selectedSquare?.x === x && gameState.selectedSquare?.y === y}
-                isValidMove={isValidMove({ x, y })}
-                isLastMove={isLastMove({ x, y })}
-                onClick={() => handleSquareClick({ x, y })}
-                onDragStart={(e) => handleDragStart(e, { x, y })}
-                onDragOver={handleDragOver}
-                onDrop={(e) => handleDrop(e, { x, y })}
-              />
-            ))
-          )}
+    <div className="flex justify-center">
+      <div className="w-full max-w-lg aspect-square">
+        {/* Chess board container */}
+        <div className="w-full h-full border-4 border-amber-800 rounded-lg shadow-lg bg-amber-200 p-3">
+          {/* Chess board grid */}
+          <div className="w-full h-full grid grid-cols-8 gap-0 rounded">
+            {gameState.board.map((row, y) =>
+              row.map((piece, x) => (
+                <ChessSquare
+                  key={`${x}-${y}`}
+                  position={{ x, y }}
+                  piece={piece}
+                  isLight={(x + y) % 2 === 0}
+                  isSelected={gameState.selectedSquare?.x === x && gameState.selectedSquare?.y === y}
+                  isValidMove={isValidMove({ x, y })}
+                  isLastMove={isLastMove({ x, y })}
+                  onClick={() => handleSquareClick({ x, y })}
+                  onDragStart={(e) => handleDragStart(e, { x, y })}
+                  onDragOver={handleDragOver}
+                  onDrop={(e) => handleDrop(e, { x, y })}
+                />
+              ))
+            )}
+          </div>
         </div>
-        
-        {/* Decorative corner elements */}
-        <div className="absolute top-2 left-2 w-4 h-4 border-l-2 border-t-2 border-amber-800/30 rounded-tl" />
-        <div className="absolute top-2 right-2 w-4 h-4 border-r-2 border-t-2 border-amber-800/30 rounded-tr" />
-        <div className="absolute bottom-2 left-2 w-4 h-4 border-l-2 border-b-2 border-amber-800/30 rounded-bl" />
-        <div className="absolute bottom-2 right-2 w-4 h-4 border-r-2 border-b-2 border-amber-800/30 rounded-br" />
       </div>
     </div>
   );
