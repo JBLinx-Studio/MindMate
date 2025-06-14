@@ -1,9 +1,10 @@
-
 import React, { useState, useCallback } from 'react';
 import { Position, GameState } from '../types/chess';
 import { getValidMoves, makeMove } from '../utils/chessLogic';
 import ChessSquare from './ChessSquare';
 import { toast } from 'sonner';
+import { Button } from '@/components/ui/button';
+import { RotateCcw, Eye, Settings } from 'lucide-react';
 
 interface EnhancedChessBoardProps {
   gameState: GameState;
@@ -17,6 +18,7 @@ const EnhancedChessBoard: React.FC<EnhancedChessBoardProps> = ({
   const [draggedPiece, setDraggedPiece] = useState<{ from: Position } | null>(null);
   const [showCoordinates, setShowCoordinates] = useState(true);
   const [boardFlipped, setBoardFlipped] = useState(false);
+  const [showAnalysisArrows, setShowAnalysisArrows] = useState(false);
 
   const handleSquareClick = useCallback((position: Position) => {
     const piece = gameState.board[position.y][position.x];
@@ -125,60 +127,110 @@ const EnhancedChessBoard: React.FC<EnhancedChessBoardProps> = ({
 
   return (
     <div className="space-y-4">
-      {/* Board Controls */}
-      <div className="flex justify-center space-x-4">
-        <button
+      {/* Enhanced Board Controls */}
+      <div className="flex justify-center space-x-3">
+        <Button
           onClick={() => setBoardFlipped(!boardFlipped)}
-          className="px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-lg transition-colors"
+          variant="outline"
+          size="sm"
+          className="bg-white/90 backdrop-blur-sm border-white/30 hover:bg-white/80"
         >
+          <RotateCcw className="w-4 h-4 mr-1" />
           Flip Board
-        </button>
-        <button
+        </Button>
+        <Button
           onClick={() => setShowCoordinates(!showCoordinates)}
-          className="px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-lg transition-colors"
+          variant="outline"
+          size="sm"
+          className="bg-white/90 backdrop-blur-sm border-white/30 hover:bg-white/80"
         >
-          {showCoordinates ? 'Hide' : 'Show'} Coordinates
-        </button>
+          <Eye className="w-4 h-4 mr-1" />
+          {showCoordinates ? 'Hide' : 'Show'} Coords
+        </Button>
+        <Button
+          onClick={() => setShowAnalysisArrows(!showAnalysisArrows)}
+          variant="outline"
+          size="sm"
+          className="bg-white/90 backdrop-blur-sm border-white/30 hover:bg-white/80"
+        >
+          <Settings className="w-4 h-4 mr-1" />
+          Analysis
+        </Button>
       </div>
 
-      {/* Enhanced Chess Board */}
-      <div className="inline-block border-4 border-amber-900 rounded-xl shadow-2xl bg-amber-50 p-2">
-        <div className="grid grid-cols-8 gap-0 rounded-lg overflow-hidden">
-          {displayBoard.map((row, y) =>
-            row.map((piece, x) => {
-              const actualX = boardFlipped ? 7 - x : x;
-              const actualY = boardFlipped ? 7 - y : y;
-              
-              return (
-                <ChessSquare
-                  key={`${actualX}-${actualY}`}
-                  position={{ x: actualX, y: actualY }}
-                  piece={piece}
-                  isLight={(actualX + actualY) % 2 === 0}
-                  isSelected={gameState.selectedSquare?.x === actualX && gameState.selectedSquare?.y === actualY}
-                  isValidMove={isValidMove({ x: actualX, y: actualY })}
-                  isLastMove={isLastMove({ x: actualX, y: actualY })}
-                  onClick={() => handleSquareClick({ x: actualX, y: actualY })}
-                  onDragStart={(e) => handleDragStart(e, { x: actualX, y: actualY })}
-                  onDragOver={handleDragOver}
-                  onDrop={(e) => handleDrop(e, { x: actualX, y: actualY })}
-                  showCoordinates={showCoordinates}
-                />
-              );
-            })
-          )}
+      {/* Premium Chess Board */}
+      <div className="relative">
+        <div className="inline-block border-8 border-amber-900 rounded-2xl shadow-2xl bg-gradient-to-br from-amber-100 to-amber-200 p-4">
+          {/* Board Decoration */}
+          <div className="absolute -top-2 -left-2 -right-2 -bottom-2 bg-gradient-to-br from-amber-800 to-amber-900 rounded-2xl opacity-50"></div>
+          
+          <div className="relative grid grid-cols-8 gap-0 rounded-xl overflow-hidden shadow-inner">
+            {displayBoard.map((row, y) =>
+              row.map((piece, x) => {
+                const actualX = boardFlipped ? 7 - x : x;
+                const actualY = boardFlipped ? 7 - y : y;
+                
+                return (
+                  <ChessSquare
+                    key={`${actualX}-${actualY}`}
+                    position={{ x: actualX, y: actualY }}
+                    piece={piece}
+                    isLight={(actualX + actualY) % 2 === 0}
+                    isSelected={gameState.selectedSquare?.x === actualX && gameState.selectedSquare?.y === actualY}
+                    isValidMove={isValidMove({ x: actualX, y: actualY })}
+                    isLastMove={isLastMove({ x: actualX, y: actualY })}
+                    onClick={() => handleSquareClick({ x: actualX, y: actualY })}
+                    onDragStart={(e) => handleDragStart(e, { x: actualX, y: actualY })}
+                    onDragOver={handleDragOver}
+                    onDrop={(e) => handleDrop(e, { x: actualX, y: actualY })}
+                    showCoordinates={showCoordinates}
+                  />
+                );
+              })
+            )}
+          </div>
+          
+          {/* Enhanced Board evaluation bar */}
+          <div className="mt-6 h-4 bg-gradient-to-r from-red-900 via-gray-300 to-green-900 rounded-full overflow-hidden shadow-inner">
+            <div 
+              className="h-full bg-gradient-to-r from-red-500 to-green-500 transition-all duration-1000 relative"
+              style={{ width: '52%' }}
+            >
+              <div className="absolute top-0 left-1/2 transform -translate-x-1/2 w-1 h-full bg-white shadow-lg"></div>
+            </div>
+          </div>
+          <div className="text-center text-sm text-gray-700 mt-2 font-medium">
+            Position: <span className="text-green-600 font-semibold">+0.3 (White is slightly better)</span>
+          </div>
         </div>
-        
-        {/* Board evaluation bar */}
-        <div className="mt-4 h-3 bg-gray-300 rounded-full overflow-hidden">
-          <div 
-            className="h-full bg-gradient-to-r from-gray-800 to-white transition-all duration-1000"
-            style={{ width: '50%' }} // This would be dynamic based on position evaluation
-          />
-        </div>
-        <div className="text-center text-xs text-gray-600 mt-1">
-          Position Evaluation: Equal
-        </div>
+
+        {/* Analysis Arrows Overlay */}
+        {showAnalysisArrows && (
+          <div className="absolute inset-0 pointer-events-none">
+            <svg className="w-full h-full">
+              {/* Mock analysis arrows */}
+              <defs>
+                <marker id="arrowhead" markerWidth="10" markerHeight="7" 
+                        refX="10" refY="3.5" orient="auto">
+                  <polygon points="0 0, 10 3.5, 0 7" fill="#10b981" />
+                </marker>
+              </defs>
+              <line x1="25%" y1="75%" x2="35%" y2="55%" 
+                    stroke="#10b981" strokeWidth="4" 
+                    markerEnd="url(#arrowhead)" opacity="0.8" />
+              <text x="30%" y="50%" fill="#10b981" fontSize="12" fontWeight="bold">
+                Best
+              </text>
+            </svg>
+          </div>
+        )}
+      </div>
+
+      {/* Move Suggestion */}
+      <div className="text-center bg-white/90 backdrop-blur-sm rounded-xl p-3 shadow-lg border border-white/30">
+        <div className="text-sm text-gray-600 mb-1">Engine Suggestion</div>
+        <div className="text-lg font-bold text-blue-600">Nf3</div>
+        <div className="text-xs text-gray-500">Develops knight, controls center</div>
       </div>
     </div>
   );
