@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -54,9 +53,9 @@ const PremiumChessEngine: React.FC<PremiumChessEngineProps> = ({ gameState }) =>
     }, 100);
   };
 
-  const getEvaluationColor = (eval: number) => {
-    if (eval > 0.5) return 'text-green-600';
-    if (eval < -0.5) return 'text-red-600';
+  const getEvaluationColor = (evaluation: number) => {
+    if (evaluation > 0.5) return 'text-green-600';
+    if (evaluation < -0.5) return 'text-red-600';
     return 'text-gray-600';
   };
 
