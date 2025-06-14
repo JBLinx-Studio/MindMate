@@ -1,4 +1,3 @@
-
 import { Piece, Position, GameState, Move } from '../types/chess';
 
 export const initializeBoard = (): (Piece | null)[][] => {
@@ -341,7 +340,7 @@ export const makeMove = (gameState: GameState, from: Position, to: Position): Ga
   }
   
   const capturedPiece = newBoard[to.y][to.x];
-  let specialMove = '';
+  let specialMove: 'castle' | 'enPassant' | 'promotion' | undefined = undefined;
   
   // Handle special moves
   if (piece.type === 'king' && Math.abs(to.x - from.x) === 2) {
@@ -419,6 +418,15 @@ export const makeMove = (gameState: GameState, from: Position, to: Position): Ga
     winner: isCheckmate(newBoard, nextPlayer, gameState) ? gameState.currentPlayer : 
            isStalemate(newBoard, nextPlayer, gameState) ? 'draw' : undefined
   };
+  
+  // Set game result for better UX
+  if (newGameState.isGameOver) {
+    newGameState.gameResult = {
+      type: isCheckmate(newBoard, nextPlayer, gameState) ? 'checkmate' : 'stalemate',
+      winner: newGameState.winner !== 'draw' ? newGameState.winner : undefined,
+      reason: isCheckmate(newBoard, nextPlayer, gameState) ? 'Checkmate' : 'Stalemate'
+    };
+  }
   
   return newGameState;
 };
