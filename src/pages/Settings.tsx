@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
 import { AppSidebar } from '../components/AppSidebar';
@@ -8,6 +7,7 @@ import { Slider } from '@/components/ui/slider';
 import { Settings as SettingsIcon, Bell, Palette, Volume2, Save, RotateCcw, Zap, Gamepad2, Monitor, Globe } from 'lucide-react';
 import { useEnhancedGameSettings } from '../hooks/useEnhancedGameSettings';
 import ThemeSelector from '../components/ThemeSelector';
+import EnhancedPieceStyleSelector from '../components/EnhancedPieceStyleSelector';
 import { toast } from 'sonner';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -224,6 +224,14 @@ const Settings = () => {
                     </select>
                   </div>
                 </div>
+              </Card>
+
+              {/* Enhanced Piece Styles */}
+              <Card className="lg:col-span-2 p-6 shadow-lg">
+                <EnhancedPieceStyleSelector
+                  currentStyle={settings.pieceStyle}
+                  onStyleChange={(style) => updateSetting('pieceStyle', style as any)}
+                />
               </Card>
 
               {/* Board Theme */}
