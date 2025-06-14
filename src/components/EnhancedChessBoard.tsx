@@ -1,14 +1,16 @@
-
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { Position, GameState } from '../types/chess';
 import { getValidMoves, makeMove, isInCheck } from '../utils/chessLogic';
 import ChessSquare from './ChessSquare';
 import GameResultModal from './GameResultModal';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
-import { RotateCcw, Eye, Settings, Crown, AlertTriangle, Volume2, VolumeX } from 'lucide-react';
+import { RotateCcw, Eye, Settings, Crown, AlertTriangle, Volume2, VolumeX, Maximize, Minimize, Zap } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
+import { Slider } from '@/components/ui/slider';
+import { useEnhancedGameSettings } from '../hooks/useEnhancedGameSettings';
+import { enhancedSoundManager } from '../utils/enhancedSoundManager';
 
 interface EnhancedChessBoardProps {
   gameState: GameState;
@@ -19,11 +21,18 @@ const EnhancedChessBoard: React.FC<EnhancedChessBoardProps> = ({
   gameState, 
   onGameStateChange 
 }) => {
+  const { settings, updateSetting } = useEnhancedGameSettings();
   const [draggedPiece, setDraggedPiece] = useState<{ from: Position } | null>(null);
-  const [showCoordinates, setShowCoordinates] = useState(true);
-  const [boardFlipped, setBoardFlipped] = useState(false);
   const [showResultModal, setShowResultModal] = useState(false);
-  const [soundEnabled, setSoundEnabled] = useState(true);
+  const [isFullscreen, setIsFullscreen] = useState(false);
+  const [showQuickSettings, setShowQuickSettings] = useState(false);
+
+  // Apply haptic feedback
+  const hapticFeedback = useCallback(() => {
+    if (settings.enableHapticFeedback && 'vibrate' in navigator) {
+      navigator.vibrate(50);
+    }
+  }, [settings.enableHapticFeedback]);
 
   const handleSquareClick = useCallback((position: Position) => {
     if (gameState.isGameOver) {
@@ -40,19 +49,37 @@ const EnhancedChessBoard: React.FC<EnhancedChessBoardProps> = ({
       if (newGameState) {
         onGameStateChange(newGameState);
         
+        // Enhanced audio feedback
         if (piece && piece.color !== gameState.currentPlayer) {
+          enhancedSoundManager.playMove(true);
           toast.success(`${piece.type} captured!`, {
             duration: 2000,
+            action: {
+              label: "Undo",
+              onClick: () => console.log("Undo move"),
+            },
           });
+        } else {
+          enhancedSoundManager.playMove(false);
         }
         
+        hapticFeedback();
+        
         if (newGameState.isGameOver) {
+          enhancedSoundManager.playCheckmate();
           setTimeout(() => setShowResultModal(true), 1000);
         } else if (isInCheck(newGameState.board, newGameState.currentPlayer)) {
-          toast.warning('Check!', { duration: 3000 });
+          enhancedSoundManager.playCheck();
+          toast.warning('Check!', { 
+            duration: 3000,
+            description: `${newGameState.currentPlayer} king is in check!`
+          });
         }
       } else {
-        toast.error('Invalid move!', { duration: 1000 });
+        toast.error('Invalid move!', { 
+          duration: 1000,
+          description: 'That move is not allowed'
+        });
         
         if (piece && piece.color === gameState.currentPlayer) {
           const validMoves = getValidMoves(piece, gameState.board, gameState);
@@ -61,6 +88,7 @@ const EnhancedChessBoard: React.FC<EnhancedChessBoardProps> = ({
             selectedSquare: position,
             validMoves
           });
+          enhancedSoundManager.playSelect();
         } else {
           onGameStateChange({
             ...gameState,
@@ -76,8 +104,10 @@ const EnhancedChessBoard: React.FC<EnhancedChessBoardProps> = ({
         selectedSquare: position,
         validMoves
       });
+      enhancedSoundManager.playSelect();
+      hapticFeedback();
     }
-  }, [gameState, onGameStateChange, showResultModal]);
+  }, [gameState, onGameStateChange, showResultModal, hapticFeedback]);
 
   const handleDragStart = useCallback((e: React.DragEvent, position: Position) => {
     if (gameState.isGameOver) {
@@ -108,41 +138,61 @@ const EnhancedChessBoard: React.FC<EnhancedChessBoardProps> = ({
       const newGameState = makeMove(gameState, draggedPiece.from, position);
       if (newGameState) {
         onGameStateChange(newGameState);
+        enhancedSoundManager.playMove();
+        hapticFeedback();
         toast.success('Nice move!', { duration: 1500 });
       }
       setDraggedPiece(null);
     }
-  }, [draggedPiece, gameState, onGameStateChange]);
+  }, [draggedPiece, gameState, onGameStateChange, hapticFeedback]);
 
   const isValidMove = useCallback((position: Position): boolean => {
-    return gameState.validMoves.some(move => move.x === position.x && move.y === position.y);
-  }, [gameState.validMoves]);
+    return settings.showLegalMoves && gameState.validMoves.some(move => move.x === position.x && move.y === position.y);
+  }, [gameState.validMoves, settings.showLegalMoves]);
 
   const isLastMove = useCallback((position: Position): boolean => {
+    if (!settings.highlightLastMove) return false;
     const lastMove = gameState.moves[gameState.moves.length - 1];
     return lastMove && (
       (lastMove.from.x === position.x && lastMove.from.y === position.y) ||
       (lastMove.to.x === position.x && lastMove.to.y === position.y)
     );
-  }, [gameState.moves]);
+  }, [gameState.moves, settings.highlightLastMove]);
 
-  const displayBoard = boardFlipped ? 
+  const displayBoard = settings.autoRotateBoard && gameState.currentPlayer === 'black' ? 
     [...gameState.board].reverse().map(row => [...row].reverse()) : 
     gameState.board;
 
   const handleNewGame = () => {
     setShowResultModal(false);
+    enhancedSoundManager.playGameStart();
   };
 
   const currentPlayerInCheck = isInCheck(gameState.board, gameState.currentPlayer);
 
+  const getBoardSize = () => {
+    switch (settings.boardSize) {
+      case 'small': return 'w-full max-w-md';
+      case 'large': return 'w-full max-w-4xl';
+      default: return 'w-full max-w-2xl';
+    }
+  };
+
+  const getAnimationSpeed = () => {
+    switch (settings.animationSpeed) {
+      case 'slow': return 'duration-500';
+      case 'fast': return 'duration-150';
+      default: return 'duration-300';
+    }
+  };
+
   return (
-    <div className="w-full max-w-2xl mx-auto">
-      {/* Board Controls */}
+    <div className={`${getBoardSize()} mx-auto transition-all ${getAnimationSpeed()}`}>
+      {/* Enhanced Board Controls */}
       <div className="flex justify-between items-center mb-4 px-2">
         <div className="flex space-x-2">
           <Button
-            onClick={() => setBoardFlipped(!boardFlipped)}
+            onClick={() => updateSetting('autoRotateBoard', !settings.autoRotateBoard)}
             variant="outline"
             size="sm"
             className="bg-white/95 backdrop-blur-sm shadow-md hover:shadow-lg transition-all"
@@ -150,12 +200,20 @@ const EnhancedChessBoard: React.FC<EnhancedChessBoardProps> = ({
             <RotateCcw className="w-4 h-4" />
           </Button>
           <Button
-            onClick={() => setShowCoordinates(!showCoordinates)}
+            onClick={() => updateSetting('showCoordinates', !settings.showCoordinates)}
             variant="outline"
             size="sm"
             className="bg-white/95 backdrop-blur-sm shadow-md hover:shadow-lg transition-all"
           >
             <Eye className="w-4 h-4" />
+          </Button>
+          <Button
+            onClick={() => setIsFullscreen(!isFullscreen)}
+            variant="outline"
+            size="sm"
+            className="bg-white/95 backdrop-blur-sm shadow-md hover:shadow-lg transition-all"
+          >
+            {isFullscreen ? <Minimize className="w-4 h-4" /> : <Maximize className="w-4 h-4" />}
           </Button>
         </div>
         
@@ -168,31 +226,75 @@ const EnhancedChessBoard: React.FC<EnhancedChessBoardProps> = ({
           )}
           
           <Button
-            onClick={() => setSoundEnabled(!soundEnabled)}
+            onClick={() => setShowQuickSettings(!showQuickSettings)}
             variant="ghost"
             size="sm"
             className="text-gray-600"
           >
-            {soundEnabled ? <Volume2 className="w-4 h-4" /> : <VolumeX className="w-4 h-4" />}
+            <Settings className="w-4 h-4" />
+          </Button>
+          
+          <Button
+            onClick={() => updateSetting('soundEnabled', !settings.soundEnabled)}
+            variant="ghost"
+            size="sm"
+            className="text-gray-600"
+          >
+            {settings.soundEnabled ? <Volume2 className="w-4 h-4" /> : <VolumeX className="w-4 h-4" />}
           </Button>
         </div>
       </div>
 
-      {/* Chess Board Container */}
-      <div className="relative">
-        <div className="bg-gradient-to-br from-amber-100 via-amber-50 to-orange-100 p-6 rounded-2xl shadow-2xl border-4 border-amber-800/20">
-          {/* Board Background Pattern */}
+      {/* Quick Settings Panel */}
+      {showQuickSettings && (
+        <Card className="mb-4 p-4 bg-white/95 backdrop-blur-sm shadow-lg animate-fade-in">
+          <h4 className="font-semibold mb-3 flex items-center">
+            <Zap className="w-4 h-4 mr-2" />
+            Quick Settings
+          </h4>
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <span className="text-sm">Sound Volume</span>
+              <div className="w-24">
+                <Slider
+                  value={[settings.soundVolume * 100]}
+                  onValueChange={([value]) => updateSetting('soundVolume', value / 100)}
+                  max={100}
+                  step={10}
+                />
+              </div>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-sm">Animation Speed</span>
+              <select
+                value={settings.animationSpeed}
+                onChange={(e) => updateSetting('animationSpeed', e.target.value as any)}
+                className="text-sm border rounded px-2 py-1"
+              >
+                <option value="slow">Slow</option>
+                <option value="normal">Normal</option>
+                <option value="fast">Fast</option>
+              </select>
+            </div>
+          </div>
+        </Card>
+      )}
+
+      {/* Enhanced Chess Board Container */}
+      <div className={`relative ${isFullscreen ? 'fixed inset-0 z-50 bg-black/90 flex items-center justify-center' : ''}`}>
+        <div className="bg-gradient-to-br from-amber-100 via-amber-50 to-orange-100 p-6 rounded-2xl shadow-2xl border-4 border-amber-800/20 relative overflow-hidden">
+          {/* Advanced Background Effects */}
           <div className="absolute inset-0 opacity-5 rounded-2xl" 
                style={{
                  backgroundImage: `url('data:image/svg+xml,%3Csvg width="40" height="40" viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg"%3E%3Cg fill="%23d4a574" fill-opacity="0.4"%3E%3Cpath d="M0 0h20v20H0V0zm20 20h20v20H20V20z"/%3E%3C/g%3E%3C/svg%3E')`
                }} />
           
-          {/* Chess Board Grid */}
+          {/* Enhanced Chess Board Grid */}
           <div className="relative grid grid-cols-8 gap-0 rounded-xl overflow-hidden shadow-inner bg-white/10 backdrop-blur-sm border border-white/20">
             {displayBoard.map((row, y) =>
               row.map((piece, x) => {
-                const actualX = boardFlipped ? 7 - x : x;
-                const actualY = boardFlipped ? 7 - y : y;
+                const actualX = (settings.autoRotateBoard && gameState.currentPlayer === 'black') ? 7 - x : x;
+                const actualY = (settings.autoRotateBoard && gameState.currentPlayer === 'black') ? 7 - y : y;
                 
                 return (
                   <ChessSquare
@@ -207,42 +309,43 @@ const EnhancedChessBoard: React.FC<EnhancedChessBoardProps> = ({
                     onDragStart={(e) => handleDragStart(e, { x: actualX, y: actualY })}
                     onDragOver={handleDragOver}
                     onDrop={(e) => handleDrop(e, { x: actualX, y: actualY })}
-                    showCoordinates={showCoordinates}
+                    showCoordinates={settings.showCoordinates}
+                    boardTheme={settings.boardTheme}
                   />
                 );
               })
             )}
           </div>
           
-          {/* Decorative Corner Elements */}
+          {/* Enhanced Decorative Elements */}
           <div className="absolute top-3 left-3 w-6 h-6 border-l-3 border-t-3 border-amber-700/40 rounded-tl-lg"></div>
           <div className="absolute top-3 right-3 w-6 h-6 border-r-3 border-t-3 border-amber-700/40 rounded-tr-lg"></div>
           <div className="absolute bottom-3 left-3 w-6 h-6 border-l-3 border-b-3 border-amber-700/40 rounded-bl-lg"></div>
           <div className="absolute bottom-3 right-3 w-6 h-6 border-r-3 border-b-3 border-amber-700/40 rounded-br-lg"></div>
         </div>
 
-        {/* Position Evaluation Bar */}
+        {/* Enhanced Position Evaluation Bar */}
         <Card className="mt-4 p-3 bg-white/95 backdrop-blur-sm shadow-lg">
           <div className="flex items-center justify-between mb-2">
             <span className="text-sm font-medium text-gray-700">Position Evaluation</span>
-            <Badge variant="outline" className="text-xs">Engine</Badge>
+            <Badge variant="outline" className="text-xs">Neural Engine</Badge>
           </div>
-          <div className="relative h-3 bg-gray-200 rounded-full overflow-hidden">
+          <div className="relative h-3 bg-gradient-to-r from-gray-800 via-gray-400 to-gray-100 rounded-full overflow-hidden">
             <div 
-              className="h-full bg-gradient-to-r from-black via-gray-500 to-white transition-all duration-1000"
+              className="h-full bg-gradient-to-r from-black via-gray-500 to-white transition-all duration-1000 shadow-inner"
               style={{ width: '52%' }}
             />
             <div className="absolute top-0 left-1/2 transform -translate-x-1/2 w-0.5 h-full bg-yellow-400 shadow-sm"></div>
           </div>
           <div className="flex justify-between mt-2 text-xs text-gray-600">
-            <span>Black</span>
-            <span className="font-mono font-medium">+0.3</span>
-            <span>White</span>
+            <span className="font-medium">Black</span>
+            <span className="font-mono font-bold text-green-600">+0.3</span>
+            <span className="font-medium">White</span>
           </div>
         </Card>
       </div>
 
-      {/* Game Result Modal */}
+      {/* Enhanced Game Result Modal */}
       {showResultModal && gameState.isGameOver && (
         <GameResultModal
           gameState={gameState}
