@@ -1,4 +1,3 @@
-
 import { StoredGame } from './gameDatabase';
 
 export const sampleGames: StoredGame[] = [
@@ -8,15 +7,78 @@ export const sampleGames: StoredGame[] = [
     playerBlack: 'Hikaru Nakamura',
     result: 'white',
     moves: [
-      { from: { x: 4, y: 6 }, to: { x: 4, y: 4 }, notation: 'e4', captured: null },
-      { from: { x: 4, y: 1 }, to: { x: 4, y: 3 }, notation: 'e5', captured: null },
-      { from: { x: 6, y: 7 }, to: { x: 5, y: 5 }, notation: 'Nf3', captured: null },
-      { from: { x: 1, y: 0 }, to: { x: 2, y: 2 }, notation: 'Nc6', captured: null },
-      { from: { x: 5, y: 7 }, to: { x: 2, y: 4 }, notation: 'Bc4', captured: null },
-      { from: { x: 5, y: 0 }, to: { x: 2, y: 3 }, notation: 'Bc5', captured: null },
-      { from: { x: 3, y: 7 }, to: { x: 5, y: 5 }, notation: 'Qh5', captured: null },
-      { from: { x: 6, y: 0 }, to: { x: 5, y: 2 }, notation: 'Nf6', captured: null },
-      { from: { x: 5, y: 5 }, to: { x: 5, y: 1 }, notation: 'Qxf7#', captured: { type: 'pawn', color: 'black' } }
+      { 
+        from: { x: 4, y: 6 }, 
+        to: { x: 4, y: 4 }, 
+        notation: 'e4', 
+        captured: null,
+        piece: { type: 'pawn', color: 'white', position: { x: 4, y: 6 } },
+        timestamp: new Date('2024-01-15T10:00:01Z')
+      },
+      { 
+        from: { x: 4, y: 1 }, 
+        to: { x: 4, y: 3 }, 
+        notation: 'e5', 
+        captured: null,
+        piece: { type: 'pawn', color: 'black', position: { x: 4, y: 1 } },
+        timestamp: new Date('2024-01-15T10:00:03Z')
+      },
+      { 
+        from: { x: 6, y: 7 }, 
+        to: { x: 5, y: 5 }, 
+        notation: 'Nf3', 
+        captured: null,
+        piece: { type: 'knight', color: 'white', position: { x: 6, y: 7 } },
+        timestamp: new Date('2024-01-15T10:00:05Z')
+      },
+      { 
+        from: { x: 1, y: 0 }, 
+        to: { x: 2, y: 2 }, 
+        notation: 'Nc6', 
+        captured: null,
+        piece: { type: 'knight', color: 'black', position: { x: 1, y: 0 } },
+        timestamp: new Date('2024-01-15T10:00:07Z')
+      },
+      { 
+        from: { x: 5, y: 7 }, 
+        to: { x: 2, y: 4 }, 
+        notation: 'Bc4', 
+        captured: null,
+        piece: { type: 'bishop', color: 'white', position: { x: 5, y: 7 } },
+        timestamp: new Date('2024-01-15T10:00:09Z')
+      },
+      { 
+        from: { x: 5, y: 0 }, 
+        to: { x: 2, y: 3 }, 
+        notation: 'Bc5', 
+        captured: null,
+        piece: { type: 'bishop', color: 'black', position: { x: 5, y: 0 } },
+        timestamp: new Date('2024-01-15T10:00:11Z')
+      },
+      { 
+        from: { x: 3, y: 7 }, 
+        to: { x: 5, y: 5 }, 
+        notation: 'Qh5', 
+        captured: null,
+        piece: { type: 'queen', color: 'white', position: { x: 3, y: 7 } },
+        timestamp: new Date('2024-01-15T10:00:13Z')
+      },
+      { 
+        from: { x: 6, y: 0 }, 
+        to: { x: 5, y: 2 }, 
+        notation: 'Nf6', 
+        captured: null,
+        piece: { type: 'knight', color: 'black', position: { x: 6, y: 0 } },
+        timestamp: new Date('2024-01-15T10:00:15Z')
+      },
+      { 
+        from: { x: 5, y: 5 }, 
+        to: { x: 5, y: 1 }, 
+        notation: 'Qxf7#', 
+        captured: { type: 'pawn', color: 'black', position: { x: 5, y: 1 } },
+        piece: { type: 'queen', color: 'white', position: { x: 5, y: 5 } },
+        timestamp: new Date('2024-01-15T10:00:17Z')
+      }
     ],
     pgn: '[Event "Speed Chess Championship"]\n[Site "Chess.com"]\n[Date "2024.01.15"]\n[Round "1"]\n[White "Magnus Carlsen"]\n[Black "Hikaru Nakamura"]\n[Result "1-0"]\n[TimeControl "180+2"]\n[Opening "Italian Game"]\n[ECO "C50"]\n\n1. e4 e5 2. Nf3 Nc6 3. Bc4 Bc5 4. Qh5 Nf6 5. Qxf7# 1-0',
     fen: 'r1bqk2r/pppp1Qpp/2n2n2/2b1p3/2B1P3/5N2/PPPP1PPP/RNB1K2R b KQkq - 0 5',
@@ -41,12 +103,54 @@ export const sampleGames: StoredGame[] = [
     playerBlack: 'Fabiano Caruana',
     result: 'draw',
     moves: [
-      { from: { x: 3, y: 6 }, to: { x: 3, y: 4 }, notation: 'd4', captured: null },
-      { from: { x: 6, y: 1 }, to: { x: 5, y: 2 }, notation: 'Nf6', captured: null },
-      { from: { x: 2, y: 7 }, to: { x: 5, y: 4 }, notation: 'Bf4', captured: null },
-      { from: { x: 4, y: 1 }, to: { x: 4, y: 2 }, notation: 'e6', captured: null },
-      { from: { x: 6, y: 7 }, to: { x: 5, y: 5 }, notation: 'Nf3', captured: null },
-      { from: { x: 2, y: 1 }, to: { x: 2, y: 3 }, notation: 'c5', captured: null }
+      { 
+        from: { x: 3, y: 6 }, 
+        to: { x: 3, y: 4 }, 
+        notation: 'd4', 
+        captured: null,
+        piece: { type: 'pawn', color: 'white', position: { x: 3, y: 6 } },
+        timestamp: new Date('2024-02-10T14:00:01Z')
+      },
+      { 
+        from: { x: 6, y: 1 }, 
+        to: { x: 5, y: 2 }, 
+        notation: 'Nf6', 
+        captured: null,
+        piece: { type: 'knight', color: 'black', position: { x: 6, y: 1 } },
+        timestamp: new Date('2024-02-10T14:00:03Z')
+      },
+      { 
+        from: { x: 2, y: 7 }, 
+        to: { x: 5, y: 4 }, 
+        notation: 'Bf4', 
+        captured: null,
+        piece: { type: 'bishop', color: 'white', position: { x: 2, y: 7 } },
+        timestamp: new Date('2024-02-10T14:00:05Z')
+      },
+      { 
+        from: { x: 4, y: 1 }, 
+        to: { x: 4, y: 2 }, 
+        notation: 'e6', 
+        captured: null,
+        piece: { type: 'pawn', color: 'black', position: { x: 4, y: 1 } },
+        timestamp: new Date('2024-02-10T14:00:07Z')
+      },
+      { 
+        from: { x: 6, y: 7 }, 
+        to: { x: 5, y: 5 }, 
+        notation: 'Nf3', 
+        captured: null,
+        piece: { type: 'knight', color: 'white', position: { x: 6, y: 7 } },
+        timestamp: new Date('2024-02-10T14:00:09Z')
+      },
+      { 
+        from: { x: 2, y: 1 }, 
+        to: { x: 2, y: 3 }, 
+        notation: 'c5', 
+        captured: null,
+        piece: { type: 'pawn', color: 'black', position: { x: 2, y: 1 } },
+        timestamp: new Date('2024-02-10T14:00:11Z')
+      }
     ],
     pgn: '[Event "Candidates Tournament"]\n[Site "Madrid"]\n[Date "2024.02.10"]\n[Round "8"]\n[White "Ding Liren"]\n[Black "Fabiano Caruana"]\n[Result "1/2-1/2"]\n[TimeControl "7200+30"]\n[Opening "Queen\'s Pawn Game"]\n[ECO "D02"]\n\n1. d4 Nf6 2. Bf4 e6 3. Nf3 c5 1/2-1/2',
     fen: 'rnbqkb1r/pp1p1ppp/4pn2/2p5/3P1B2/5N2/PPP1PPPP/RN1QKB1R w KQkq - 0 4',
@@ -71,12 +175,54 @@ export const sampleGames: StoredGame[] = [
     playerBlack: 'Ian Nepomniachtchi',
     result: 'black',
     moves: [
-      { from: { x: 4, y: 6 }, to: { x: 4, y: 4 }, notation: 'e4', captured: null },
-      { from: { x: 2, y: 1 }, to: { x: 2, y: 3 }, notation: 'c5', captured: null },
-      { from: { x: 6, y: 7 }, to: { x: 5, y: 5 }, notation: 'Nf3', captured: null },
-      { from: { x: 3, y: 1 }, to: { x: 3, y: 2 }, notation: 'd6', captured: null },
-      { from: { x: 3, y: 6 }, to: { x: 3, y: 4 }, notation: 'd4', captured: null },
-      { from: { x: 2, y: 3 }, to: { x: 3, y: 4 }, notation: 'cxd4', captured: { type: 'pawn', color: 'white' } }
+      { 
+        from: { x: 4, y: 6 }, 
+        to: { x: 4, y: 4 }, 
+        notation: 'e4', 
+        captured: null,
+        piece: { type: 'pawn', color: 'white', position: { x: 4, y: 6 } },
+        timestamp: new Date('2024-01-28T16:00:01Z')
+      },
+      { 
+        from: { x: 2, y: 1 }, 
+        to: { x: 2, y: 3 }, 
+        notation: 'c5', 
+        captured: null,
+        piece: { type: 'pawn', color: 'black', position: { x: 2, y: 1 } },
+        timestamp: new Date('2024-01-28T16:00:03Z')
+      },
+      { 
+        from: { x: 6, y: 7 }, 
+        to: { x: 5, y: 5 }, 
+        notation: 'Nf3', 
+        captured: null,
+        piece: { type: 'knight', color: 'white', position: { x: 6, y: 7 } },
+        timestamp: new Date('2024-01-28T16:00:05Z')
+      },
+      { 
+        from: { x: 3, y: 1 }, 
+        to: { x: 3, y: 2 }, 
+        notation: 'd6', 
+        captured: null,
+        piece: { type: 'pawn', color: 'black', position: { x: 3, y: 1 } },
+        timestamp: new Date('2024-01-28T16:00:07Z')
+      },
+      { 
+        from: { x: 3, y: 6 }, 
+        to: { x: 3, y: 4 }, 
+        notation: 'd4', 
+        captured: null,
+        piece: { type: 'pawn', color: 'white', position: { x: 3, y: 6 } },
+        timestamp: new Date('2024-01-28T16:00:09Z')
+      },
+      { 
+        from: { x: 2, y: 3 }, 
+        to: { x: 3, y: 4 }, 
+        notation: 'cxd4', 
+        captured: { type: 'pawn', color: 'white', position: { x: 3, y: 4 } },
+        piece: { type: 'pawn', color: 'black', position: { x: 2, y: 3 } },
+        timestamp: new Date('2024-01-28T16:00:11Z')
+      }
     ],
     pgn: '[Event "Tata Steel Tournament"]\n[Site "Wijk aan Zee"]\n[Date "2024.01.28"]\n[Round "12"]\n[White "Alireza Firouzja"]\n[Black "Ian Nepomniachtchi"]\n[Result "0-1"]\n[TimeControl "6000+30"]\n[Opening "Sicilian Defense"]\n[ECO "B50"]\n\n1. e4 c5 2. Nf3 d6 3. d4 cxd4 0-1',
     fen: 'rnbqkbnr/pp2pppp/3p4/8/3pP3/5N2/PPP2PPP/RNBQKB1R w KQkq - 0 4',
