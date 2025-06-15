@@ -140,8 +140,9 @@ export const EnhancedGameCoordinator: React.FC<EnhancedGameCoordinatorProps> = (
     toast.success('Game reset to starting position');
   };
 
+  // --- SUGGESTION SYSTEM: handler with right signature! ---
   const handleSuggestionMove = (from: Position, to: Position) => {
-    // Deep copy the board
+    // Deep copy the board for immutability
     const newBoard = gameState.board.map(row => row.map(piece => piece ? { ...piece } : null));
     const movingPiece = newBoard[from.y][from.x];
 
@@ -149,7 +150,8 @@ export const EnhancedGameCoordinator: React.FC<EnhancedGameCoordinatorProps> = (
       toast.error("No piece to move!");
       return;
     }
-    // Simple move logic (not handling special moves/captures/promotions)
+
+    // Simple move (no capture/promotion/castle) for now
     newBoard[to.y][to.x] = { ...movingPiece, position: { x: to.x, y: to.y }, hasMoved: true };
     newBoard[from.y][from.x] = null;
 
@@ -157,7 +159,7 @@ export const EnhancedGameCoordinator: React.FC<EnhancedGameCoordinatorProps> = (
       from,
       to,
       piece: movingPiece,
-      notation: '', // Could generate notation
+      notation: '', // Could be extended to generate notation
       timestamp: new Date()
     };
 
@@ -220,7 +222,6 @@ export const EnhancedGameCoordinator: React.FC<EnhancedGameCoordinatorProps> = (
 
   const renderAnalysisPanel = () => {
     if (!settings.autoAnalysis) return null;
-
     switch (analysisMode) {
       case 'realtime':
         return (
@@ -248,7 +249,7 @@ export const EnhancedGameCoordinator: React.FC<EnhancedGameCoordinatorProps> = (
         return (
           <MoveSuggestionSystem
             gameState={gameState}
-            onMoveSelected={handleSuggestionMove}
+            onMoveSelected={handleSuggestionMove} // <-- FIX: Pass correct function signature here
             isActive={isGameActive && gameMode !== 'puzzles'}
             skillLevel={playerSkillLevel}
           />
@@ -258,6 +259,7 @@ export const EnhancedGameCoordinator: React.FC<EnhancedGameCoordinatorProps> = (
     }
   };
 
+  // --- ENHANCEMENT: Better game mode selector, working button feedback, descriptions, etc ---
   return (
     <div className="w-full max-w-sm space-y-4">
       {/* Game Controls */}
@@ -268,52 +270,55 @@ export const EnhancedGameCoordinator: React.FC<EnhancedGameCoordinatorProps> = (
             onClick={() => setShowSettings(true)}
             variant="outline"
             size="sm"
+            aria-label="Show settings"
           >
             <Settings className="w-4 h-4" />
           </Button>
         </div>
-        
         <div className="grid grid-cols-3 gap-2 mb-4">
           <Button
             onClick={handleGamePause}
             variant={isGameActive ? "default" : "secondary"}
             size="sm"
+            aria-label={isGameActive ? "Pause game" : "Resume game"}
           >
             {isGameActive ? <Pause className="w-3 h-3" /> : <Play className="w-3 h-3" />}
           </Button>
-          
           <Button
             onClick={handleGameReset}
             variant="outline"
             size="sm"
+            aria-label="Reset game"
           >
             <RotateCcw className="w-3 h-3" />
           </Button>
-          
           <Badge variant="outline" className="flex items-center justify-center">
             {gameState.moves.length}
           </Badge>
         </div>
-        
         {/* Game Mode Selection */}
         <div className="space-y-2">
           <label className="text-sm font-medium">Game Mode</label>
           <div className="grid grid-cols-2 gap-1">
-            {(['practice', 'ai', 'analysis', 'puzzles'] as const).map((mode) => (
+            {(['practice', 'ai', 'analysis', 'puzzles', 'training'] as const).map((mode) => (
               <Button
                 key={mode}
                 onClick={() => handleModeChange(mode)}
                 variant={gameMode === mode ? "default" : "outline"}
                 size="sm"
-                className="text-xs"
+                className="text-xs flex items-center"
+                aria-pressed={gameMode === mode}
+                aria-label={`Switch to ${mode} mode`}
               >
                 {getModeIcon(mode)}
                 <span className="ml-1 capitalize">{mode}</span>
               </Button>
             ))}
           </div>
+          <div className="mt-1 text-xs text-gray-500">
+            {getModeDescription(gameMode)}
+          </div>
         </div>
-        
         {/* Analysis Mode Selection */}
         {gameMode === 'analysis' && (
           <div className="space-y-2 mt-4">
@@ -325,17 +330,73 @@ export const EnhancedGameCoordinator: React.FC<EnhancedGameCoordinatorProps> = (
                   onClick={() => handleAnalysisModeChange(mode)}
                   variant={analysisMode === mode ? "default" : "outline"}
                   size="sm"
-                  className="text-xs"
+                  className="text-xs flex items-center"
+                  aria-pressed={analysisMode === mode}
+                  aria-label={`Switch to ${mode} analysis`}
                 >
                   {getAnalysisIcon(mode)}
                   <span className="ml-1 capitalize">{mode}</span>
                 </Button>
               ))}
             </div>
+            <div className="mt-1 text-xs text-gray-500">
+              {getAnalysisModeDescription(analysisMode)}
+            </div>
+          </div>
+        )}
+        {/* AI Difficulty Selector (when in AI mode) */}
+        {gameMode === "ai" && (
+          <div className="space-y-2 mt-4">
+            <label className="text-sm font-medium">AI Difficulty</label>
+            <div className="flex gap-2">
+              {(['easy', 'medium', 'hard', 'expert'] as const).map(difficulty => (
+                <Button
+                  key={difficulty}
+                  size="sm"
+                  variant={aiDifficulty === difficulty ? "default" : "outline"}
+                  className="text-xs capitalize"
+                  onClick={() => {
+                    setAiDifficulty(difficulty);
+                    toast.success(`AI difficulty set to ${difficulty}`);
+                  }}
+                  aria-label={`Set AI difficulty to ${difficulty}`}
+                >
+                  {difficulty}
+                </Button>
+              ))}
+            </div>
+            <div className="mt-1 text-xs text-gray-500">
+              {`You’re playing against the ${aiDifficulty} AI.`}
+            </div>
+          </div>
+        )}
+        {/* Player skill selection (when in Suggestions) */}
+        {gameMode === "analysis" && analysisMode === "suggestions" && (
+          <div className="space-y-2 mt-4">
+            <label className="text-sm font-medium">Your Skill</label>
+            <div className="flex gap-2">
+              {(['beginner', 'intermediate', 'advanced', 'expert'] as const).map(lvl => (
+                <Button
+                  key={lvl}
+                  size="sm"
+                  variant={playerSkillLevel === lvl ? "default" : "outline"}
+                  className="text-xs capitalize"
+                  onClick={() => {
+                    setPlayerSkillLevel(lvl);
+                    toast.success(`Skill level set to ${lvl}`);
+                  }}
+                  aria-label={`Set skill level to ${lvl}`}
+                >
+                  {lvl}
+                </Button>
+              ))}
+            </div>
+            <div className="mt-1 text-xs text-gray-500">
+              {`Suggestions match ${playerSkillLevel} level.`}
+            </div>
           </div>
         )}
       </Card>
-
       {/* AI Opponent */}
       {gameMode === 'ai' && (
         <ChessAIOpponent
@@ -346,7 +407,6 @@ export const EnhancedGameCoordinator: React.FC<EnhancedGameCoordinatorProps> = (
           isEnabled={isGameActive}
         />
       )}
-
       {/* Puzzle System */}
       {gameMode === 'puzzles' && (
         <ChessPuzzleSystem
@@ -354,10 +414,8 @@ export const EnhancedGameCoordinator: React.FC<EnhancedGameCoordinatorProps> = (
           isActive={true}
         />
       )}
-
       {/* Analysis Panels */}
       {(gameMode === 'analysis' || gameMode === 'practice') && renderAnalysisPanel()}
-
       {/* Settings Panel */}
       <EnhancedSettingsPanel
         isOpen={showSettings}
