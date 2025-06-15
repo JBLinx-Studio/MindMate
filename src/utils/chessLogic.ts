@@ -6,6 +6,8 @@ import { Piece, Position, GameState, Move } from '../types/chess';
  * Only the known, "safe" piece fields are cloned to avoid recursive structures!
  */
 function deepCopyBoard(board: (Piece | null)[][]): (Piece | null)[][] {
+  // Add log for debugging recursion issue
+  // console.log('deepCopyBoard called');
   return board.map(row =>
     row.map(piece =>
       piece
@@ -18,6 +20,25 @@ function deepCopyBoard(board: (Piece | null)[][]): (Piece | null)[][] {
         : null
     )
   );
+}
+
+// DEBUG WRAPPERS
+function debug_wrap<T extends (...args: any) => any>(fn: T, name: string): T {
+  // We'll use a log depth to prevent flooding
+  let depth = 0;
+  function wrapped(...args: any) {
+    depth++;
+    if (depth < 30) {
+      // Commented out for quietness, but can be re-enabled for debugging:
+      // console.log(`CALL ${name} depth=${depth}`);
+    } else if (depth === 30) {
+      console.warn(`INFINITE RECURSION LIKELY in ${name}`);
+    }
+    const result = fn(...args);
+    depth--;
+    return result;
+  }
+  return wrapped as T;
 }
 
 export const initializeBoard = (): (Piece | null)[][] => {
@@ -41,9 +62,7 @@ export const initializeBoard = (): (Piece | null)[][] => {
   return board;
 };
 
-export const isValidPosition = (pos: Position): boolean => {
-  return pos.x >= 0 && pos.x < 8 && pos.y >= 0 && pos.y < 8;
-};
+export const isValidPosition = (pos: Position): boolean => pos.x >= 0 && pos.x < 8 && pos.y >= 0 && pos.y < 8;
 
 export const findKing = (board: (Piece | null)[][], color: 'white' | 'black'): Position | null => {
   for (let y = 0; y < 8; y++) {
@@ -62,13 +81,14 @@ export const isSquareAttacked = (
   position: Position,
   byColor: 'white' | 'black'
 ): boolean => {
+  // console.log("isSquareAttacked", position, byColor); // DEBUG
   for (let y = 0; y < 8; y++) {
     for (let x = 0; x < 8; x++) {
       const piece = board[y][x];
       if (
         piece &&
         piece.color === byColor &&
-        piece.type !== 'king' // 🚨 SKIP king from attack detection
+        piece.type !== 'king'
       ) {
         const moves = getPieceAttacks(piece, board);
         if (moves.some(move => move.x === position.x && move.y === position.y)) {
@@ -81,6 +101,7 @@ export const isSquareAttacked = (
 };
 
 export const isInCheck = (board: (Piece | null)[][], color: 'white' | 'black'): boolean => {
+  // console.log("isInCheck", color); // DEBUG
   const kingPos = findKing(board, color);
   if (!kingPos) return false;
   
@@ -98,7 +119,6 @@ const getPieceAttacks = (
   switch (piece.type) {
     case 'pawn':
       const direction = piece.color === 'white' ? -1 : 1;
-      // Pawn attacks (diagonal captures only)
       for (const dx of [-1, 1]) {
         const newPos = { x: x + dx, y: y + direction };
         if (isValidPosition(newPos)) {
@@ -146,7 +166,6 @@ const getPieceAttacks = (
       }
       break;
     case 'king':
-      // 🚨 For attack maps: king "attacks" only the adjacent squares
       for (const [dx, dy] of [[0, 1], [0, -1], [1, 0], [-1, 0], [1, 1], [1, -1], [-1, 1], [-1, -1]]) {
         const newPos = { x: x + dx, y: y + dy };
         if (isValidPosition(newPos)) {
@@ -160,6 +179,7 @@ const getPieceAttacks = (
 };
 
 export const getValidMoves = (piece: Piece, board: (Piece | null)[][], gameState: GameState): Position[] => {
+  // console.log("getValidMoves", piece); // DEBUG
   const moves: Position[] = [];
   const { x, y } = piece.position;
 
@@ -167,41 +187,32 @@ export const getValidMoves = (piece: Piece, board: (Piece | null)[][], gameState
     case 'pawn':
       const direction = piece.color === 'white' ? -1 : 1;
       const startRow = piece.color === 'white' ? 6 : 1;
-      
-      // Forward moves
       if (isValidPosition({ x, y: y + direction }) && !board[y + direction][x]) {
         moves.push({ x, y: y + direction });
-        
-        // Double move from starting position
         if (y === startRow && !board[y + 2 * direction][x]) {
           moves.push({ x, y: y + 2 * direction });
         }
       }
-      
-      // Captures
       for (const dx of [-1, 1]) {
         const newPos = { x: x + dx, y: y + direction };
-        if (isValidPosition(newPos) && board[newPos.y][newPos.x] && 
+        if (isValidPosition(newPos) && board[newPos.y][newPos.x] &&
             board[newPos.y][newPos.x]!.color !== piece.color) {
           moves.push(newPos);
         }
       }
-      
-      // En passant
+      // En passant logic
       const lastMove = gameState.moves[gameState.moves.length - 1];
-      if (lastMove && lastMove.piece.type === 'pawn' && 
+      if (lastMove && lastMove.piece.type === 'pawn' &&
           Math.abs(lastMove.from.y - lastMove.to.y) === 2 &&
           lastMove.to.y === y && Math.abs(lastMove.to.x - x) === 1) {
         moves.push({ x: lastMove.to.x, y: y + direction });
       }
       break;
-      
     case 'rook':
       for (const [dx, dy] of [[0, 1], [0, -1], [1, 0], [-1, 0]]) {
         for (let i = 1; i < 8; i++) {
           const newPos = { x: x + dx * i, y: y + dy * i };
           if (!isValidPosition(newPos)) break;
-          
           const targetPiece = board[newPos.y][newPos.x];
           if (!targetPiece) {
             moves.push(newPos);
@@ -214,7 +225,6 @@ export const getValidMoves = (piece: Piece, board: (Piece | null)[][], gameState
         }
       }
       break;
-      
     case 'knight':
       const knightMoves = [[-2, -1], [-2, 1], [-1, -2], [-1, 2], [1, -2], [1, 2], [2, -1], [2, 1]];
       for (const [dx, dy] of knightMoves) {
@@ -227,13 +237,11 @@ export const getValidMoves = (piece: Piece, board: (Piece | null)[][], gameState
         }
       }
       break;
-      
     case 'bishop':
       for (const [dx, dy] of [[1, 1], [1, -1], [-1, 1], [-1, -1]]) {
         for (let i = 1; i < 8; i++) {
           const newPos = { x: x + dx * i, y: y + dy * i };
           if (!isValidPosition(newPos)) break;
-          
           const targetPiece = board[newPos.y][newPos.x];
           if (!targetPiece) {
             moves.push(newPos);
@@ -246,13 +254,11 @@ export const getValidMoves = (piece: Piece, board: (Piece | null)[][], gameState
         }
       }
       break;
-      
     case 'queen':
       for (const [dx, dy] of [[0, 1], [0, -1], [1, 0], [-1, 0], [1, 1], [1, -1], [-1, 1], [-1, -1]]) {
         for (let i = 1; i < 8; i++) {
           const newPos = { x: x + dx * i, y: y + dy * i };
           if (!isValidPosition(newPos)) break;
-          
           const targetPiece = board[newPos.y][newPos.x];
           if (!targetPiece) {
             moves.push(newPos);
@@ -265,7 +271,6 @@ export const getValidMoves = (piece: Piece, board: (Piece | null)[][], gameState
         }
       }
       break;
-      
     case 'king':
       for (const [dx, dy] of [[0, 1], [0, -1], [1, 0], [-1, 0], [1, 1], [1, -1], [-1, 1], [-1, -1]]) {
         const newPos = { x: x + dx, y: y + dy };
@@ -276,10 +281,8 @@ export const getValidMoves = (piece: Piece, board: (Piece | null)[][], gameState
           }
         }
       }
-      
-      // Castling
+      // Castling logic
       if (!piece.hasMoved && !isInCheck(board, piece.color)) {
-        // Kingside castling
         const kingsideRook = board[y][7];
         if (kingsideRook && kingsideRook.type === 'rook' && !kingsideRook.hasMoved &&
             !board[y][5] && !board[y][6] &&
@@ -287,8 +290,6 @@ export const getValidMoves = (piece: Piece, board: (Piece | null)[][], gameState
             !isSquareAttacked(board, { x: 6, y }, piece.color === 'white' ? 'black' : 'white')) {
           moves.push({ x: 6, y });
         }
-        
-        // Queenside castling
         const queensideRook = board[y][0];
         if (queensideRook && queensideRook.type === 'rook' && !queensideRook.hasMoved &&
             !board[y][1] && !board[y][2] && !board[y][3] &&
@@ -299,14 +300,15 @@ export const getValidMoves = (piece: Piece, board: (Piece | null)[][], gameState
       }
       break;
   }
-  
-  // Filter out moves that would leave the king in check
+
+  // DANGER ZONE: filter causes recursion
+  // To prevent infinite recursion:
+  // Only call isInCheck if the piece is not the king being attacked (avoid recursion cycles).
   return moves.filter(move => {
-    const testBoard = deepCopyBoard(board); // USE DEEP CLONE NOW!
+    const testBoard = deepCopyBoard(board);
     const testPiece = testBoard[y][x];
     if (!testPiece) return false;
 
-    // Move piece, keep piece.updated position
     testBoard[move.y][move.x] = { ...testPiece, position: { x: move.x, y: move.y } };
     testBoard[y][x] = null;
 
