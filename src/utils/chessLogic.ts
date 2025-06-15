@@ -3,14 +3,17 @@ import { Piece, Position, GameState, Move } from '../types/chess';
 /**
  * Deep clone for an entire chess board, ensuring every piece object and its `position`
  * is a new object so there's no unwanted object mutation reference.
+ * Only the known, "safe" piece fields are cloned to avoid recursive structures!
  */
 function deepCopyBoard(board: (Piece | null)[][]): (Piece | null)[][] {
   return board.map(row =>
     row.map(piece =>
       piece
         ? {
-            ...piece,
-            position: { ...piece.position }
+            type: piece.type,
+            color: piece.color,
+            position: { ...piece.position },
+            hasMoved: piece.hasMoved
           }
         : null
     )
