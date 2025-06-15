@@ -37,6 +37,7 @@ export const findKing = (board: (Piece | null)[][], color: 'white' | 'black'): P
   return null;
 };
 
+// Use getPieceAttacks for pure attack detection, avoiding recursion into getValidMoves
 export const isSquareAttacked = (
   board: (Piece | null)[][],
   position: Position,
@@ -46,9 +47,8 @@ export const isSquareAttacked = (
     for (let x = 0; x < 8; x++) {
       const piece = board[y][x];
       if (piece && piece.color === byColor) {
-        // When generating attacks, we don't care about king legality, just pseudo-legal moves.
-        // Pass true to skip the king check recursion!
-        const moves = getValidMoves(piece, board, undefined, true);
+        // Use pseudo-legal attack map only!
+        const moves = getPieceAttacks(piece, board); // << USE "getPieceAttacks" instead of getValidMoves!
         if (moves.some(move => move.x === position.x && move.y === position.y)) {
           return true;
         }
@@ -140,6 +140,7 @@ const getPieceAttacks = (piece: Piece, board: (Piece | null)[][]): Position[] =>
   return moves;
 };
 
+// getValidMoves updated: only run legal move filter when skipKingSafetyCheck === false
 export const getValidMoves = (
   piece: Piece,
   board: (Piece | null)[][],
@@ -299,16 +300,9 @@ export const getValidMoves = (
       break;
 
     case 'king': {
-      // Always generate standard 1-square king moves
+      // 1-square king moves (never call isInCheck/isSquareAttacked when skipKingSafetyCheck is true!)
       for (const [dx, dy] of [
-        [0, 1],
-        [0, -1],
-        [1, 0],
-        [-1, 0],
-        [1, 1],
-        [1, -1],
-        [-1, 1],
-        [-1, -1],
+        [0, 1],[0, -1],[1, 0],[-1, 0],[1, 1],[1, -1],[-1, 1],[-1, -1]
       ]) {
         const newPos = { x: x + dx, y: y + dy };
         if (isValidPosition(newPos)) {
@@ -319,9 +313,9 @@ export const getValidMoves = (
         }
       }
 
-      // === << CRITICAL POINT: Only check for castling when NOT generating attacking info (i.e., only for legal moves) >>
+      // Only offer castling when NOT skipping king safety checks!
       if (
-        !skipKingSafetyCheck && // Only for legal move gen, not pseudo-legal
+        !skipKingSafetyCheck &&
         gameState &&
         !piece.hasMoved &&
         !isInCheck(board, piece.color)
@@ -334,7 +328,6 @@ export const getValidMoves = (
           !kingsideRook.hasMoved &&
           !board[y][5] &&
           !board[y][6] &&
-          // The following two checks MUST NOT run during attack map generation!
           !isSquareAttacked(board, { x: 5, y }, piece.color === 'white' ? 'black' : 'white') &&
           !isSquareAttacked(board, { x: 6, y }, piece.color === 'white' ? 'black' : 'white')
         ) {
@@ -359,19 +352,19 @@ export const getValidMoves = (
     }
   }
 
-  // ====== Filter: Only check for "leaving king in check" when generating fully legal moves ======
-  // If skipKingSafetyCheck=true, we are _only_ generating an attack map and must return as-is
+  // Filter out moves that leave the king in check (legal move filter),
+  // but ONLY when not in attack ("pseudo-legal") mode.
   if (!skipKingSafetyCheck) {
     return moves.filter(move => {
       if (!gameState) return true;
-      // Simulate the move: it is CRITICAL that we do NOT re-enter isInCheck unless we are legalizing moves!
+      // Simulate the move. Do *NOT* recurse into full king safety for attack maps!
       const testBoard = board.map(row => [...row]);
       testBoard[move.y][move.x] = { ...piece, position: { ...move } };
       testBoard[y][x] = null;
       return !isInCheck(testBoard, piece.color);
     });
   } else {
-    // Return all moves if generating attacks
+    // For pseudo-legal moves (used for attack/defense map), return as-is
     return moves;
   }
 };
