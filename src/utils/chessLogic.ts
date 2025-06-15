@@ -133,37 +133,7 @@ const getPieceAttacks = (piece: Piece, board: (Piece | null)[][]): Position[] =>
           moves.push(newPos);
         }
       }
-      
-      // Only offer castling when not skipping king safety checks
-      if (!gameState || !piece.hasMoved && !isInCheck(board, piece.color)) {
-        // Kingside castling
-        const kingsideRook = board[y][7];
-        if (
-          kingsideRook &&
-          kingsideRook.type === 'rook' &&
-          !kingsideRook.hasMoved &&
-          !board[y][5] &&
-          !board[y][6] &&
-          !isSquareAttacked(board, { x: 5, y }, piece.color === 'white' ? 'black' : 'white') &&
-          !isSquareAttacked(board, { x: 6, y }, piece.color === 'white' ? 'black' : 'white')
-        ) {
-          moves.push({ x: 6, y });
-        }
-        // Queenside castling
-        const queensideRook = board[y][0];
-        if (
-          queensideRook &&
-          queensideRook.type === 'rook' &&
-          !queensideRook.hasMoved &&
-          !board[y][1] &&
-          !board[y][2] &&
-          !board[y][3] &&
-          !isSquareAttacked(board, { x: 2, y }, piece.color === 'white' ? 'black' : 'white') &&
-          !isSquareAttacked(board, { x: 3, y }, piece.color === 'white' ? 'black' : 'white')
-        ) {
-          moves.push({ x: 2, y });
-        }
-      }
+      // Note: No castling moves for pure attack map!
       break;
   }
   
