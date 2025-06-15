@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { GameState } from '../types/chess';
+import { GameState, Position } from '../types/chess';
 import { useEnhancedGameSettings } from '../hooks/useEnhancedGameSettings';
 import { RealTimeAnalysisPanel } from './RealTimeAnalysisPanel';
 import { ChessAIOpponent } from './ChessAIOpponent';
@@ -93,12 +93,9 @@ export const EnhancedGameCoordinator: React.FC<EnhancedGameCoordinatorProps> = (
 
   const handleGameReset = () => {
     const initialBoard: (any | null)[][] = Array(8).fill(null).map(() => Array(8).fill(null));
-    
-    // Set up initial chess position
     const pieces = [
       'rook', 'knight', 'bishop', 'queen', 'king', 'bishop', 'knight', 'rook'
     ];
-    
     // Black pieces
     for (let x = 0; x < 8; x++) {
       initialBoard[0][x] = {
@@ -114,7 +111,6 @@ export const EnhancedGameCoordinator: React.FC<EnhancedGameCoordinatorProps> = (
         hasMoved: false
       };
     }
-    
     // White pieces
     for (let x = 0; x < 8; x++) {
       initialBoard[7][x] = {
@@ -130,23 +126,22 @@ export const EnhancedGameCoordinator: React.FC<EnhancedGameCoordinatorProps> = (
         hasMoved: false
       };
     }
-    
+
     const newGameState: GameState = {
       board: initialBoard,
-      currentPlayer: 'white',
+      currentPlayer: 'white', // <-- this must be 'white' or 'black'
       moves: [],
       isGameOver: false,
       validMoves: [],
       selectedSquare: undefined
     };
-    
     onGameStateChange(newGameState);
     setIsGameActive(true);
     toast.success('Game reset to starting position');
   };
 
-  const handleSuggestionMove = (from: { x: number, y: number }, to: { x: number, y: number }) => {
-    // Defensive: deep clone board to avoid mutating state
+  const handleSuggestionMove = (from: Position, to: Position) => {
+    // Deep copy the board
     const newBoard = gameState.board.map(row => row.map(piece => piece ? { ...piece } : null));
     const movingPiece = newBoard[from.y][from.x];
 
@@ -154,24 +149,24 @@ export const EnhancedGameCoordinator: React.FC<EnhancedGameCoordinatorProps> = (
       toast.error("No piece to move!");
       return;
     }
-
     // Simple move logic (not handling special moves/captures/promotions)
     newBoard[to.y][to.x] = { ...movingPiece, position: { x: to.x, y: to.y }, hasMoved: true };
     newBoard[from.y][from.x] = null;
 
-    // Add to move history (notation only shows move, not detailed PGN)
     const newMove = {
       from,
       to,
       piece: movingPiece,
-      notation: '', // Could be generated with ChessNotation.moveToNotation
+      notation: '', // Could generate notation
       timestamp: new Date()
     };
 
-    const newGameState = {
+    const nextPlayer: 'white' | 'black' = gameState.currentPlayer === 'white' ? 'black' : 'white';
+
+    const newGameState: GameState = {
       ...gameState,
       board: newBoard,
-      currentPlayer: gameState.currentPlayer === 'white' ? 'black' : 'white',
+      currentPlayer: nextPlayer,
       moves: [...gameState.moves, newMove],
       lastMoveHighlight: { from, to },
       selectedSquare: undefined
