@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import Games from './pages/Games';
@@ -8,11 +7,9 @@ import Profile from './pages/Profile';
 import Settings from './pages/Settings';
 import NotFound from './pages/NotFound';
 import { Toaster } from 'sonner';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { QueryClient } from 'react-query';
 import { useLocalAuth, AuthProvider } from './hooks/useLocalAuth';
 import Auth from './pages/Auth';
-
-const queryClient = new QueryClient();
 
 const AppContent = () => {
   const { authState } = useLocalAuth();
@@ -47,12 +44,12 @@ function App() {
   const authProviderValue = useLocalAuth();
 
   return (
-    <QueryClientProvider client={queryClient}>
+    <QueryClient>
       <AuthProvider value={authProviderValue}>
         <Toaster />
         <AppContent />
       </AuthProvider>
-    </QueryClientProvider>
+    </QueryClient>
   );
 }
 
