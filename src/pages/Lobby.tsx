@@ -5,15 +5,19 @@ import { TopNavigationMenu } from '../components/TopNavigationMenu';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Clock, Users, Trophy, Star, Play, Zap, Target } from 'lucide-react';
+import { Clock, Users, Trophy, Star, Play, Zap, Target, Settings } from 'lucide-react';
 import LiveGameCard from '../components/LiveGameCard';
+import QuickPairingPanel from '../components/QuickPairingPanel';
+import GameModeSelector from '../components/GameModeSelector';
 import { createLiveGamePool, updateLiveGame, generateLiveGame, LiveGame } from '../utils/liveGameGenerator';
 import { toast } from 'sonner';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 const Lobby = () => {
   const [liveGames, setLiveGames] = useState<LiveGame[]>(() => createLiveGamePool(6));
   const [onlineCount, setOnlineCount] = useState(47892);
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
+  const [activeTab, setActiveTab] = useState('quick');
 
   // Real-time game updates
   useEffect(() => {
@@ -84,7 +88,7 @@ const Lobby = () => {
             <div className="max-w-6xl mx-auto">
               <div className="mb-6">
                 <h1 className="text-3xl font-bold text-white mb-2">Game Lobby</h1>
-                <p className="text-[#b8b8b8]">Watch live games and find opponents</p>
+                <p className="text-[#b8b8b8]">Find opponents, watch live games, and customize your play</p>
               </div>
 
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -149,55 +153,34 @@ const Lobby = () => {
                 </div>
 
                 <div className="space-y-6">
-                  <Card className="bg-[#2c2c28] border-[#4a4a46] p-6">
-                    <h3 className="text-lg font-semibold text-white mb-4">Quick Pairing</h3>
-                    <div className="space-y-3">
-                      <Button 
-                        className="w-full bg-[#759900] hover:bg-[#6a8700]"
-                        onClick={() => handleQuickPairing()}
-                      >
-                        <Play className="w-4 h-4 mr-2" />
-                        Play Now
-                      </Button>
-                      <div className="grid grid-cols-2 gap-2">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="border-[#4a4a46] text-[#b8b8b8] hover:bg-[#4a4a46]"
-                          onClick={() => handleQuickPairing('bullet')}
-                        >
-                          <Zap className="w-4 h-4 mr-1 text-red-400" />
-                          Bullet
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="border-[#4a4a46] text-[#b8b8b8] hover:bg-[#4a4a46]"
-                          onClick={() => handleQuickPairing('blitz')}
-                        >
-                          <Zap className="w-4 h-4 mr-1 text-yellow-400" />
-                          Blitz
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="border-[#4a4a46] text-[#b8b8b8] hover:bg-[#4a4a46]"
-                          onClick={() => handleQuickPairing('rapid')}
-                        >
-                          <Clock className="w-4 h-4 mr-1 text-green-400" />
-                          Rapid
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="border-[#4a4a46] text-[#b8b8b8] hover:bg-[#4a4a46]"
-                        >
-                          <Users className="w-4 h-4 mr-1" />
-                          Custom
-                        </Button>
-                      </div>
-                    </div>
-                  </Card>
+                  {/* Enhanced Pairing Section */}
+                  <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+                    <TabsList className="grid w-full grid-cols-2 bg-[#2c2c28]">
+                      <TabsTrigger value="quick" className="text-[#b8b8b8] data-[state=active]:bg-[#4a4a46] data-[state=active]:text-white">
+                        <Zap className="w-4 h-4 mr-1" />
+                        Quick Play
+                      </TabsTrigger>
+                      <TabsTrigger value="custom" className="text-[#b8b8b8] data-[state=active]:bg-[#4a4a46] data-[state=active]:text-white">
+                        <Settings className="w-4 h-4 mr-1" />
+                        Custom
+                      </TabsTrigger>
+                    </TabsList>
+
+                    <TabsContent value="quick" className="mt-4">
+                      <QuickPairingPanel />
+                    </TabsContent>
+
+                    <TabsContent value="custom" className="mt-4">
+                      <GameModeSelector
+                        onConfigChange={(config) => console.log('Config changed:', config)}
+                        onStartGame={(config) => {
+                          toast.success('Starting custom game...', {
+                            description: `${config.opponent} opponent • ${config.timeControl}`
+                          });
+                        }}
+                      />
+                    </TabsContent>
+                  </Tabs>
 
                   <Card className="bg-[#2c2c28] border-[#4a4a46] p-6">
                     <h3 className="text-lg font-semibold text-white mb-4">Online Players</h3>

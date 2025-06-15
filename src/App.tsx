@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -11,6 +10,7 @@ import Profile from "./pages/Profile";
 import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
 import Lobby from "./pages/Lobby";
+import GameWindow from "./pages/GameWindow";
 import Puzzles from "./pages/Puzzles";
 import PuzzleThemes from "./pages/PuzzleThemes";
 import PuzzleDashboard from "./pages/PuzzleDashboard";
@@ -48,7 +48,7 @@ const App = () => (
         <Routes>
           <Route path="/" element={<Index />} />
           <Route path="/lobby" element={<Lobby />} />
-          <Route path="/tournaments" element={<Tournaments />} />
+          <Route path="/game" element={<GameWindow />} />
           <Route path="/simuls" element={<Simuls />} />
           <Route path="/swiss" element={<Swiss />} />
           <Route path="/analysis" element={<Analysis />} />
