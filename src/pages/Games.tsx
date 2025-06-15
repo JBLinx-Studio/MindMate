@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { SidebarProvider } from '@/components/ui/sidebar';
 import { AppSidebar } from '../components/AppSidebar';
@@ -10,7 +11,6 @@ import { Search, Filter, RefreshCw } from 'lucide-react';
 import LiveGameCard from '../components/LiveGameCard';
 import { createLiveGamePool, updateLiveGame, generateLiveGame, LiveGame } from '../utils/liveGameGenerator';
 import { toast } from 'sonner';
-import { searchHistoryManager } from '../utils/searchHistory';
 
 const Games = () => {
   const [searchFilter, setSearchFilter] = useState('');
@@ -18,7 +18,6 @@ const Games = () => {
   const [ratingFilter, setRatingFilter] = useState('all');
   const [liveGames, setLiveGames] = useState<LiveGame[]>(() => createLiveGamePool(15));
   const [isLoading, setIsLoading] = useState(false);
-  const [searchHistory, setSearchHistory] = useState(searchHistoryManager.getRecentSearches('player', 5));
 
   // Update games periodically to simulate live updates
   useEffect(() => {
@@ -42,19 +41,9 @@ const Games = () => {
     return () => clearInterval(interval);
   }, []);
 
-  const handleSearch = (query: string) => {
-    if (query.trim()) {
-      searchHistoryManager.addSearchQuery(query.trim(), 'player', filteredGames.length);
-      setSearchHistory(searchHistoryManager.getRecentSearches('player', 5));
-    }
-  };
-
   const handleWatchGame = (gameId: number) => {
     const game = liveGames.find(g => g.id === gameId);
     if (game) {
-      // Add to search history as a viewed game
-      searchHistoryManager.addSearchQuery(`${game.white.name} vs ${game.black.name}`, 'game');
-      
       toast.success(`Joining ${game.white.name} vs ${game.black.name}`, {
         description: `Move ${game.moves} • ${game.viewers} viewers watching`,
         duration: 3000,
@@ -111,31 +100,9 @@ const Games = () => {
                   <Input
                     placeholder="Search players..."
                     value={searchFilter}
-                    onChange={(e) => {
-                      setSearchFilter(e.target.value);
-                      if (e.target.value) {
-                        handleSearch(e.target.value);
-                      }
-                    }}
+                    onChange={(e) => setSearchFilter(e.target.value)}
                     className="pl-10 bg-[#2c2c28] border-[#4a4a46] text-white placeholder:text-[#b8b8b8]"
                   />
-                  {/* Search History Dropdown */}
-                  {searchHistory.length > 0 && !searchFilter && (
-                    <div className="absolute top-full left-0 right-0 mt-1 bg-[#2c2c28] border border-[#4a4a46] rounded-md shadow-lg z-10">
-                      <div className="p-2">
-                        <div className="text-xs text-[#b8b8b8] mb-2">Recent searches:</div>
-                        {searchHistory.map((item) => (
-                          <button
-                            key={item.id}
-                            onClick={() => setSearchFilter(item.query)}
-                            className="w-full text-left px-2 py-1 text-sm text-[#b8b8b8] hover:bg-[#4a4a46] rounded"
-                          >
-                            {item.query}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                  )}
                 </div>
                 
                 <Select value={timeFilter} onValueChange={setTimeFilter}>
