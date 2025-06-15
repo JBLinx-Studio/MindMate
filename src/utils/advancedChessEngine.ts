@@ -1,4 +1,3 @@
-
 import { Position, Piece, GameState } from '../types/chess';
 
 export interface EngineAnalysis {
@@ -132,7 +131,7 @@ class AdvancedChessEngine {
 
   private evaluatePosition(gameState: GameState): number {
     if (gameState.isGameOver) {
-      if (gameState.result === 'checkmate') {
+      if (gameState.gameResult?.type === 'checkmate') {
         return gameState.currentPlayer === 'white' ? -9999 : 9999;
       }
       return 0; // Draw
