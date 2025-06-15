@@ -1,5 +1,22 @@
 import { Piece, Position, GameState, Move } from '../types/chess';
 
+/**
+ * Deep clone for an entire chess board, ensuring every piece object and its `position`
+ * is a new object so there's no unwanted object mutation reference.
+ */
+function deepCopyBoard(board: (Piece | null)[][]): (Piece | null)[][] {
+  return board.map(row =>
+    row.map(piece =>
+      piece
+        ? {
+            ...piece,
+            position: { ...piece.position }
+          }
+        : null
+    )
+  );
+}
+
 export const initializeBoard = (): (Piece | null)[][] => {
   const board: (Piece | null)[][] = Array(8).fill(null).map(() => Array(8).fill(null));
   
@@ -278,10 +295,14 @@ export const getValidMoves = (piece: Piece, board: (Piece | null)[][], gameState
   
   // Filter out moves that would leave the king in check
   return moves.filter(move => {
-    const testBoard = board.map(row => [...row]);
-    testBoard[move.y][move.x] = testBoard[y][x];
+    const testBoard = deepCopyBoard(board); // USE DEEP CLONE NOW!
+    const testPiece = testBoard[y][x];
+    if (!testPiece) return false;
+
+    // Move piece, keep piece.updated position
+    testBoard[move.y][move.x] = { ...testPiece, position: { x: move.x, y: move.y } };
     testBoard[y][x] = null;
-    
+
     return !isInCheck(testBoard, piece.color);
   });
 };
@@ -325,7 +346,8 @@ export const isStalemate = (board: (Piece | null)[][], color: 'white' | 'black',
 };
 
 export const makeMove = (gameState: GameState, from: Position, to: Position): GameState | null => {
-  const newBoard = gameState.board.map(row => [...row]);
+  // Use deep copy for the board to avoid mutating references
+  const newBoard = deepCopyBoard(gameState.board);
   const piece = newBoard[from.y][from.x];
   
   if (!piece || piece.color !== gameState.currentPlayer) {
