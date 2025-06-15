@@ -34,6 +34,8 @@ import OpeningExplorer from "./pages/OpeningExplorer";
 import BoardEditor from "./pages/BoardEditor";
 import ImportGame from "./pages/ImportGame";
 import AdvancedSearch from "./pages/AdvancedSearch";
+import Simuls from "./pages/Simuls";
+import Swiss from "./pages/Swiss";
 
 const queryClient = new QueryClient();
 
@@ -47,6 +49,8 @@ const App = () => (
           <Route path="/" element={<Index />} />
           <Route path="/lobby" element={<Lobby />} />
           <Route path="/tournaments" element={<Tournaments />} />
+          <Route path="/simuls" element={<Simuls />} />
+          <Route path="/swiss" element={<Swiss />} />
           <Route path="/analysis" element={<Analysis />} />
           <Route path="/puzzles" element={<Puzzles />} />
           <Route path="/puzzle-themes" element={<PuzzleThemes />} />
