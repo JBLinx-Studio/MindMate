@@ -1,4 +1,5 @@
-import { GameState, Piece, Position, Move } from '../types/chess';
+
+import { GameState, Piece, Position } from '../types/chess';
 
 export class ChessNotation {
   static fenToBoard(fen: string): { board: (Piece | null)[][], currentPlayer: 'white' | 'black' } {
@@ -89,80 +90,6 @@ export class ChessNotation {
     fen += ' 0 1';
     
     return fen;
-  }
-  
-  static boardToFEN(gameState: GameState): string {
-    return this.boardToFen(gameState);
-  }
-  
-  static movesToPGN(moves: Move[], result: string = '*'): string {
-    let pgn = '';
-    
-    // Add PGN headers
-    pgn += '[Event "Chess Game"]\n';
-    pgn += '[Site "Lovable Chess App"]\n';
-    pgn += `[Date "${new Date().toISOString().split('T')[0]}"]\n`;
-    pgn += '[Round "1"]\n';
-    pgn += '[White "Player 1"]\n';
-    pgn += '[Black "Player 2"]\n';
-    pgn += `[Result "${result}"]\n\n`;
-    
-    // Add moves
-    for (let i = 0; i < moves.length; i += 2) {
-      const moveNumber = Math.floor(i / 2) + 1;
-      pgn += `${moveNumber}. ${moves[i].notation}`;
-      
-      if (i + 1 < moves.length) {
-        pgn += ` ${moves[i + 1].notation}`;
-      }
-      
-      pgn += ' ';
-    }
-    
-    pgn += result;
-    
-    return pgn;
-  }
-  
-  static pgnToMoves(pgn: string): Move[] {
-    // Simple PGN parser - extract move notation
-    const moves: Move[] = [];
-    
-    // Remove headers and get moves section
-    const movesSection = pgn.split('\n\n').pop() || '';
-    
-    // Remove result notation
-    const cleanMoves = movesSection.replace(/\s*(1-0|0-1|1\/2-1\/2|\*)\s*$/, '');
-    
-    // Extract move notation
-    const movePattern = /\d+\.\s*([^\s]+)(?:\s+([^\s]+))?/g;
-    let match;
-    
-    while ((match = movePattern.exec(cleanMoves)) !== null) {
-      // Add white move
-      if (match[1]) {
-        moves.push({
-          from: { x: 0, y: 0 }, // Placeholder - would need full parsing
-          to: { x: 0, y: 0 }, // Placeholder - would need full parsing
-          piece: { type: 'pawn', color: 'white', position: { x: 0, y: 0 } }, // Placeholder
-          notation: match[1],
-          timestamp: new Date()
-        });
-      }
-      
-      // Add black move if exists
-      if (match[2]) {
-        moves.push({
-          from: { x: 0, y: 0 }, // Placeholder - would need full parsing
-          to: { x: 0, y: 0 }, // Placeholder - would need full parsing
-          piece: { type: 'pawn', color: 'black', position: { x: 0, y: 0 } }, // Placeholder
-          notation: match[2],
-          timestamp: new Date()
-        });
-      }
-    }
-    
-    return moves;
   }
   
   static moveToNotation(

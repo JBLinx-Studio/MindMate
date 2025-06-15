@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { GameState, Position } from '../types/chess';
 import { enhancedChessEngine } from '../utils/enhancedChessEngine';
@@ -121,8 +122,8 @@ export const MoveSuggestionSystem: React.FC<MoveSuggestionSystemProps> = ({
     return moves.slice(0, 10); // Limit for demo
   };
 
-  const simulateMove = (gameState: GameState, from: Position, to: Position): GameState | null => {
-    // Fix the type issue by ensuring currentPlayer is properly typed
+  const simulateMove = (gameState: GameState, from: Position, to: Position) => {
+    // Simplified move simulation
     const newBoard = gameState.board.map(row => [...row]);
     const piece = newBoard[from.y][from.x];
     if (piece) {

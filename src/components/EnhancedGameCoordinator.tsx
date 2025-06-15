@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { GameState } from '../types/chess';
 import { useEnhancedGameSettings } from '../hooks/useEnhancedGameSettings';
@@ -218,7 +219,7 @@ export const EnhancedGameCoordinator: React.FC<EnhancedGameCoordinatorProps> = (
           <MoveSuggestionSystem
             gameState={gameState}
             onMoveSelected={(from, to) => {
-              // Handle move selection logic here - this is the correct signature
+              // Handle move selection logic here
               console.log('Move selected:', from, to);
             }}
             isActive={isGameActive && gameMode !== 'puzzles'}
