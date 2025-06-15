@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { GameState, Position } from '../types/chess';
 import { useEnhancedGameSettings } from '../hooks/useEnhancedGameSettings';
@@ -279,7 +278,6 @@ export const EnhancedGameCoordinator: React.FC<EnhancedGameCoordinatorProps> = (
         );
       case 'suggestions':
         return (
-          // FIXED: Don't put a comment inside the prop assignment – JSX comments must be a node!
           <MoveSuggestionSystem
             gameState={gameState}
             onMoveSelected={handleSuggestionMove}
