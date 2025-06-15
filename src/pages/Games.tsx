@@ -1,91 +1,95 @@
-
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { SidebarProvider } from '@/components/ui/sidebar';
 import { AppSidebar } from '../components/AppSidebar';
 import { TopNavigationMenu } from '../components/TopNavigationMenu';
 import { Card } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Eye, Clock, Crown, Search, Filter, Users, Zap, Target } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Search, Filter, RefreshCw } from 'lucide-react';
+import LiveGameCard from '../components/LiveGameCard';
+import { createLiveGamePool, updateLiveGame, generateLiveGame, LiveGame } from '../utils/liveGameGenerator';
+import { toast } from 'sonner';
+import { searchHistoryManager } from '../utils/searchHistory';
 
 const Games = () => {
   const [searchFilter, setSearchFilter] = useState('');
   const [timeFilter, setTimeFilter] = useState('all');
   const [ratingFilter, setRatingFilter] = useState('all');
+  const [liveGames, setLiveGames] = useState<LiveGame[]>(() => createLiveGamePool(15));
+  const [isLoading, setIsLoading] = useState(false);
+  const [searchHistory, setSearchHistory] = useState(searchHistoryManager.getRecentSearches('player', 5));
 
-  const liveGames = [
-    { 
-      white: { name: 'Hikaru', rating: 2847, title: 'GM' }, 
-      black: { name: 'Magnus', rating: 2831, title: 'GM' }, 
-      timeControl: '3+0', 
-      viewers: 2341, 
-      moves: 23, 
-      category: 'bullet',
-      isTopGame: true 
-    },
-    { 
-      white: { name: 'Fabiano', rating: 2804, title: 'GM' }, 
-      black: { name: 'Ding', rating: 2799, title: 'GM' }, 
-      timeControl: '5+0', 
-      viewers: 1823, 
-      moves: 15, 
-      category: 'blitz' 
-    },
-    { 
-      white: { name: 'Alireza', rating: 2793, title: 'GM' }, 
-      black: { name: 'Nepo', rating: 2792, title: 'GM' }, 
-      timeControl: '3+2', 
-      viewers: 1456, 
-      moves: 31, 
-      category: 'blitz' 
-    },
-    { 
-      white: { name: 'Anish', rating: 2781, title: 'IM' }, 
-      black: { name: 'Rapport', rating: 2763, title: 'GM' }, 
-      timeControl: '10+0', 
-      viewers: 987, 
-      moves: 12, 
-      category: 'rapid' 
-    },
-    { 
-      white: { name: 'Wesley', rating: 2773, title: 'GM' }, 
-      black: { name: 'Arjun', rating: 2755, title: 'GM' }, 
-      timeControl: '15+10', 
-      viewers: 756, 
-      moves: 8, 
-      category: 'rapid' 
-    },
-    { 
-      white: { name: 'Gukesh', rating: 2743, title: 'GM' }, 
-      black: { name: 'Pragg', rating: 2739, title: 'GM' }, 
-      timeControl: '1+0', 
-      viewers: 543, 
-      moves: 18, 
-      category: 'bullet' 
-    }
-  ];
+  // Update games periodically to simulate live updates
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setLiveGames(prevGames => {
+        const updatedGames = prevGames.map(updateLiveGame);
+        
+        // Add new games occasionally
+        if (Math.random() > 0.8 && updatedGames.length < 20) {
+          const newGame = generateLiveGame();
+          updatedGames.push(newGame);
+        }
+        
+        // Remove finished games after some time
+        return updatedGames.filter(game => 
+          game.gameStatus === 'active' || Math.random() > 0.1
+        );
+      });
+    }, 5000);
 
-  const getCategoryIcon = (category: string) => {
-    switch (category) {
-      case 'bullet': return Zap;
-      case 'blitz': return Zap;
-      case 'rapid': return Clock;
-      case 'classical': return Target;
-      default: return Clock;
+    return () => clearInterval(interval);
+  }, []);
+
+  const handleSearch = (query: string) => {
+    if (query.trim()) {
+      searchHistoryManager.addSearchQuery(query.trim(), 'player', filteredGames.length);
+      setSearchHistory(searchHistoryManager.getRecentSearches('player', 5));
     }
   };
 
-  const getCategoryColor = (category: string) => {
-    switch (category) {
-      case 'bullet': return 'text-red-400 border-red-400';
-      case 'blitz': return 'text-yellow-400 border-yellow-400';
-      case 'rapid': return 'text-green-400 border-green-400';
-      case 'classical': return 'text-blue-400 border-blue-400';
-      default: return 'text-[#b8b8b8] border-[#4a4a46]';
+  const handleWatchGame = (gameId: number) => {
+    const game = liveGames.find(g => g.id === gameId);
+    if (game) {
+      // Add to search history as a viewed game
+      searchHistoryManager.addSearchQuery(`${game.white.name} vs ${game.black.name}`, 'game');
+      
+      toast.success(`Joining ${game.white.name} vs ${game.black.name}`, {
+        description: `Move ${game.moves} • ${game.viewers} viewers watching`,
+        duration: 3000,
+      });
     }
   };
+
+  const handleRefresh = () => {
+    setIsLoading(true);
+    setTimeout(() => {
+      setLiveGames(createLiveGamePool(15));
+      setIsLoading(false);
+      toast.success('Games refreshed!', {
+        description: 'Loaded latest live games'
+      });
+    }, 1000);
+  };
+
+  const filteredGames = liveGames.filter(game => {
+    if (searchFilter && 
+        !game.white.name.toLowerCase().includes(searchFilter.toLowerCase()) && 
+        !game.black.name.toLowerCase().includes(searchFilter.toLowerCase())) {
+      return false;
+    }
+    if (timeFilter !== 'all' && game.category !== timeFilter) {
+      return false;
+    }
+    if (ratingFilter !== 'all') {
+      const minRating = parseInt(ratingFilter.replace('+', ''));
+      if (Math.max(game.white.rating, game.black.rating) < minRating) {
+        return false;
+      }
+    }
+    return true;
+  });
 
   return (
     <SidebarProvider>
@@ -100,16 +104,38 @@ const Games = () => {
                 <p className="text-[#b8b8b8]">Watch live games happening right now</p>
               </div>
 
-              {/* Filters */}
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+              {/* Enhanced Filters */}
+              <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-6">
                 <div className="relative">
                   <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-[#b8b8b8] w-4 h-4" />
                   <Input
                     placeholder="Search players..."
                     value={searchFilter}
-                    onChange={(e) => setSearchFilter(e.target.value)}
+                    onChange={(e) => {
+                      setSearchFilter(e.target.value);
+                      if (e.target.value) {
+                        handleSearch(e.target.value);
+                      }
+                    }}
                     className="pl-10 bg-[#2c2c28] border-[#4a4a46] text-white placeholder:text-[#b8b8b8]"
                   />
+                  {/* Search History Dropdown */}
+                  {searchHistory.length > 0 && !searchFilter && (
+                    <div className="absolute top-full left-0 right-0 mt-1 bg-[#2c2c28] border border-[#4a4a46] rounded-md shadow-lg z-10">
+                      <div className="p-2">
+                        <div className="text-xs text-[#b8b8b8] mb-2">Recent searches:</div>
+                        {searchHistory.map((item) => (
+                          <button
+                            key={item.id}
+                            onClick={() => setSearchFilter(item.query)}
+                            className="w-full text-left px-2 py-1 text-sm text-[#b8b8b8] hover:bg-[#4a4a46] rounded"
+                          >
+                            {item.query}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
                 
                 <Select value={timeFilter} onValueChange={setTimeFilter}>
@@ -131,12 +157,23 @@ const Games = () => {
                   </SelectTrigger>
                   <SelectContent className="bg-[#2c2c28] border-[#4a4a46]">
                     <SelectItem value="all">All ratings</SelectItem>
-                    <SelectItem value="2500+">2500+</SelectItem>
-                    <SelectItem value="2400+">2400+</SelectItem>
-                    <SelectItem value="2300+">2300+</SelectItem>
-                    <SelectItem value="2200+">2200+</SelectItem>
+                    <SelectItem value="2700">2700+</SelectItem>
+                    <SelectItem value="2600">2600+</SelectItem>
+                    <SelectItem value="2500">2500+</SelectItem>
+                    <SelectItem value="2400">2400+</SelectItem>
+                    <SelectItem value="2300">2300+</SelectItem>
                   </SelectContent>
                 </Select>
+
+                <Button 
+                  variant="outline" 
+                  className="border-[#4a4a46] text-[#b8b8b8] hover:bg-[#4a4a46]"
+                  onClick={handleRefresh}
+                  disabled={isLoading}
+                >
+                  <RefreshCw className={`w-4 h-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
+                  Refresh
+                </Button>
 
                 <Button variant="outline" className="border-[#4a4a46] text-[#b8b8b8] hover:bg-[#4a4a46]">
                   <Filter className="w-4 h-4 mr-2" />
@@ -145,77 +182,64 @@ const Games = () => {
               </div>
 
               {/* Games List */}
-              <div className="space-y-3">
-                {liveGames.map((game, index) => {
-                  const CategoryIcon = getCategoryIcon(game.category);
-                  
-                  return (
-                    <Card key={index} className={`bg-[#2c2c28] border-[#4a4a46] p-4 hover:bg-[#3d3d37] transition-colors cursor-pointer ${game.isTopGame ? 'ring-1 ring-[#759900]' : ''}`}>
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center space-x-4 flex-1">
-                          {/* White Player */}
-                          <div className="flex items-center space-x-2 min-w-0 flex-1">
-                            <div className="w-8 h-8 bg-[#4a4a46] rounded-full flex items-center justify-center flex-shrink-0">
-                              <span className="text-white text-xs font-medium">{game.white.title}</span>
-                            </div>
-                            <div className="min-w-0">
-                              <div className="text-white font-medium truncate">{game.white.name}</div>
-                              <div className="text-[#b8b8b8] text-sm">({game.white.rating})</div>
-                            </div>
-                          </div>
+              <div className="space-y-4">
+                <div className="flex items-center justify-between mb-4">
+                  <span className="text-[#b8b8b8] text-sm">
+                    {filteredGames.length} games found
+                  </span>
+                  <div className="flex items-center space-x-4">
+                    <span className="text-xs text-[#b8b8b8]">
+                      Updates every 5 seconds
+                    </span>
+                    <div className="flex items-center space-x-1">
+                      <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                      <span className="text-sm text-[#759900]">Live</span>
+                    </div>
+                  </div>
+                </div>
 
-                          {/* VS */}
-                          <div className="text-[#b8b8b8] text-sm px-2">vs</div>
+                {filteredGames.length === 0 ? (
+                  <Card className="bg-[#2c2c28] border-[#4a4a46] p-12 text-center">
+                    <div className="text-[#b8b8b8] mb-4">
+                      <Search className="w-16 h-16 mx-auto mb-4 opacity-50" />
+                      <h3 className="text-lg font-medium mb-2">No games found</h3>
+                      <p>Try adjusting your search filters or refresh the page</p>
+                    </div>
+                    <Button 
+                      onClick={handleRefresh}
+                      className="bg-[#759900] hover:bg-[#6a8700]"
+                    >
+                      Refresh Games
+                    </Button>
+                  </Card>
+                ) : (
+                  <div className="space-y-3">
+                    {filteredGames.map((game) => (
+                      <LiveGameCard
+                        key={game.id}
+                        game={game}
+                        onWatch={handleWatchGame}
+                      />
+                    ))}
+                  </div>
+                )}
 
-                          {/* Black Player */}
-                          <div className="flex items-center space-x-2 min-w-0 flex-1">
-                            <div className="min-w-0">
-                              <div className="text-white font-medium truncate">{game.black.name}</div>
-                              <div className="text-[#b8b8b8] text-sm">({game.black.rating})</div>
-                            </div>
-                            <div className="w-8 h-8 bg-[#4a4a46] rounded-full flex items-center justify-center flex-shrink-0">
-                              <span className="text-white text-xs font-medium">{game.black.title}</span>
-                            </div>
-                          </div>
-                        </div>
-
-                        {/* Game Info */}
-                        <div className="flex items-center space-x-4">
-                          <div className="text-center">
-                            <div className="flex items-center space-x-1 text-sm">
-                              <CategoryIcon className="w-4 h-4 text-[#b8b8b8]" />
-                              <span className="text-[#b8b8b8]">{game.timeControl}</span>
-                            </div>
-                            <Badge variant="outline" className={`text-xs mt-1 ${getCategoryColor(game.category)}`}>
-                              {game.category}
-                            </Badge>
-                          </div>
-                          
-                          <div className="text-center">
-                            <div className="text-white text-sm font-medium">{game.moves} moves</div>
-                            <div className="flex items-center space-x-1 text-sm">
-                              <Eye className="w-4 h-4 text-[#b8b8b8]" />
-                              <span className="text-[#b8b8b8]">{game.viewers}</span>
-                            </div>
-                          </div>
-
-                          {game.isTopGame && (
-                            <div className="flex items-center">
-                              <Crown className="w-5 h-5 text-[#759900]" />
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    </Card>
-                  );
-                })}
-              </div>
-
-              {/* Load More */}
-              <div className="mt-6 text-center">
-                <Button variant="outline" className="border-[#4a4a46] text-[#b8b8b8] hover:bg-[#4a4a46]">
-                  Load more games
-                </Button>
+                {/* Load More */}
+                {filteredGames.length > 0 && (
+                  <div className="mt-6 text-center">
+                    <Button 
+                      variant="outline" 
+                      className="border-[#4a4a46] text-[#b8b8b8] hover:bg-[#4a4a46]"
+                      onClick={() => {
+                        const newGames = createLiveGamePool(8);
+                        setLiveGames(prev => [...prev, ...newGames]);
+                        toast.success('Loaded more games!');
+                      }}
+                    >
+                      Load more games
+                    </Button>
+                  </div>
+                )}
               </div>
             </div>
           </main>
