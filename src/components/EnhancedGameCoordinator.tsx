@@ -279,9 +279,10 @@ export const EnhancedGameCoordinator: React.FC<EnhancedGameCoordinatorProps> = (
         );
       case 'suggestions':
         return (
+          // FIXED: Don't put a comment inside the prop assignment – JSX comments must be a node!
           <MoveSuggestionSystem
             gameState={gameState}
-            onMoveSelected={handleSuggestionMove} {/* FIXED: Must match (from: Position, to: Position) => void */}
+            onMoveSelected={handleSuggestionMove}
             isActive={isGameActive && gameMode !== 'puzzles'}
             skillLevel={playerSkillLevel}
           />
@@ -292,6 +293,7 @@ export const EnhancedGameCoordinator: React.FC<EnhancedGameCoordinatorProps> = (
   };
 
   // --- ENHANCEMENT: Better game mode selector, working button feedback, descriptions, etc ---
+  // TODO: This file is over 450 lines and should be split into smaller components for maintainability!
   return (
     <div className="w-full max-w-sm space-y-4">
       {/* Game Controls */}
