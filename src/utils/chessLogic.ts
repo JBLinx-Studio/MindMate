@@ -234,7 +234,7 @@ export const getValidMoves = (
   piece: Piece,
   board: (Piece | null)[][],
   gameState: GameState,
-  skipCheckTest: boolean = false // <- added param
+  skipCheckTest: boolean = false
 ): Position[] => {
   const moves: Position[] = [];
   const { x, y } = piece.position;
@@ -256,12 +256,14 @@ export const getValidMoves = (
           moves.push(newPos);
         }
       }
-      // En passant logic
-      const lastMove = gameState.moves[gameState.moves.length - 1];
-      if (lastMove && lastMove.piece.type === 'pawn' &&
-          Math.abs(lastMove.from.y - lastMove.to.y) === 2 &&
-          lastMove.to.y === y && Math.abs(lastMove.to.x - x) === 1) {
-        moves.push({ x: lastMove.to.x, y: y + direction });
+      // En passant logic (only for move generation, not for attack map)
+      if (!skipCheckTest) {
+        const lastMove = gameState.moves[gameState.moves.length - 1];
+        if (lastMove && lastMove.piece.type === 'pawn' &&
+            Math.abs(lastMove.from.y - lastMove.to.y) === 2 &&
+            lastMove.to.y === y && Math.abs(lastMove.to.x - x) === 1) {
+          moves.push({ x: lastMove.to.x, y: y + direction });
+        }
       }
       break;
     case 'rook':
@@ -338,9 +340,8 @@ export const getValidMoves = (
           }
         }
       }
-      // Only consider castling if NOT in attack-detection (i.e., not skipCheckTest)
+      // Castling only if NOT in attack check mode!
       if (!skipCheckTest && !piece.hasMoved && !isInCheck(board, piece.color)) {
-        // Castling logic (same as before)
         const kingsideRook = board[y][7];
         if (kingsideRook && kingsideRook.type === 'rook' && !kingsideRook.hasMoved &&
             !board[y][5] && !board[y][6] &&
@@ -359,8 +360,10 @@ export const getValidMoves = (
       break;
   }
 
-  // Only call isInCheck when not in attack-detection mode to avoid infinite recursion!
+  // ** CRITICAL: If in "skipCheckTest" mode (attack detection), RETURN immediately with pseudolegal moves. **
   if (skipCheckTest) return moves;
+
+  // Remove moves that leave or put the king in check (true legal moves only)
   return moves.filter(move => {
     const testBoard = deepCopyBoard(board);
     const testPiece = testBoard[y][x];
