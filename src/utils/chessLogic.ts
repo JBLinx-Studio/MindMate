@@ -328,6 +328,7 @@ export const getValidMoves = (
       }
       break;
     case 'king':
+      // Always add basic king moves (adjacent squares)
       for (const [dx, dy] of [[0, 1], [0, -1], [1, 0], [-1, 0], [1, 1], [1, -1], [-1, 1], [-1, -1]]) {
         const newPos = { x: x + dx, y: y + dy };
         if (isValidPosition(newPos)) {
@@ -337,7 +338,7 @@ export const getValidMoves = (
           }
         }
       }
-      // When skipCheckTest, do NOT check for checks; we simply return adjacent squares (pseudo-legal king moves)
+      // Only consider castling if NOT in attack-detection (i.e., not skipCheckTest)
       if (!skipCheckTest && !piece.hasMoved && !isInCheck(board, piece.color)) {
         // Castling logic (same as before)
         const kingsideRook = board[y][7];
