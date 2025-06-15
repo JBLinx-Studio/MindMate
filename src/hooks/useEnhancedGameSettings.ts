@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { enhancedSoundManager } from '../utils/enhancedSoundManager';
 
@@ -21,6 +20,8 @@ export interface EnhancedGameSettings {
   enableKeyboardShortcuts: boolean;
   boardSize: 'small' | 'medium' | 'large';
   language: 'en' | 'es' | 'fr' | 'de' | 'ru';
+  autoAnalysis: boolean;
+  showMoveAnalysis: boolean;
 }
 
 const defaultSettings: EnhancedGameSettings = {
@@ -30,18 +31,20 @@ const defaultSettings: EnhancedGameSettings = {
   boardTheme: 'classic',
   pieceStyle: 'classic',
   showCoordinates: true,
-  autoRotateBoard: false, // Disabled by default to prevent flipping
+  autoRotateBoard: false,
   animationSpeed: 'normal',
   showMoveHints: true,
   highlightLastMove: true,
   showLegalMoves: true,
-  enableHapticFeedback: false, // Disabled to prevent browser vibration issues
+  enableHapticFeedback: false,
   autoPromoteToQueen: false,
   confirmResignation: true,
   showMoveHistory: true,
   enableKeyboardShortcuts: true,
   boardSize: 'medium',
   language: 'en',
+  autoAnalysis: true,
+  showMoveAnalysis: true,
 };
 
 export const useEnhancedGameSettings = () => {
