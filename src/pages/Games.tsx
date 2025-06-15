@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { SidebarProvider } from '@/components/ui/sidebar';
 import { AppSidebar } from '../components/AppSidebar';
 import { TopNavigationMenu } from '../components/TopNavigationMenu';
@@ -9,63 +9,33 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Eye, Clock, Crown, Search, Filter, Users, Zap, Target } from 'lucide-react';
+import { getRandomLiveGame } from '../utils/sampleGames';
 
 const Games = () => {
   const [searchFilter, setSearchFilter] = useState('');
   const [timeFilter, setTimeFilter] = useState('all');
   const [ratingFilter, setRatingFilter] = useState('all');
+  const [liveGames, setLiveGames] = useState(() => {
+    return Array.from({ length: 12 }, () => ({ 
+      id: Math.random(), 
+      ...getRandomLiveGame() 
+    }));
+  });
 
-  const liveGames = [
-    { 
-      white: { name: 'Hikaru', rating: 2847, title: 'GM' }, 
-      black: { name: 'Magnus', rating: 2831, title: 'GM' }, 
-      timeControl: '3+0', 
-      viewers: 2341, 
-      moves: 23, 
-      category: 'bullet',
-      isTopGame: true 
-    },
-    { 
-      white: { name: 'Fabiano', rating: 2804, title: 'GM' }, 
-      black: { name: 'Ding', rating: 2799, title: 'GM' }, 
-      timeControl: '5+0', 
-      viewers: 1823, 
-      moves: 15, 
-      category: 'blitz' 
-    },
-    { 
-      white: { name: 'Alireza', rating: 2793, title: 'GM' }, 
-      black: { name: 'Nepo', rating: 2792, title: 'GM' }, 
-      timeControl: '3+2', 
-      viewers: 1456, 
-      moves: 31, 
-      category: 'blitz' 
-    },
-    { 
-      white: { name: 'Anish', rating: 2781, title: 'IM' }, 
-      black: { name: 'Rapport', rating: 2763, title: 'GM' }, 
-      timeControl: '10+0', 
-      viewers: 987, 
-      moves: 12, 
-      category: 'rapid' 
-    },
-    { 
-      white: { name: 'Wesley', rating: 2773, title: 'GM' }, 
-      black: { name: 'Arjun', rating: 2755, title: 'GM' }, 
-      timeControl: '15+10', 
-      viewers: 756, 
-      moves: 8, 
-      category: 'rapid' 
-    },
-    { 
-      white: { name: 'Gukesh', rating: 2743, title: 'GM' }, 
-      black: { name: 'Pragg', rating: 2739, title: 'GM' }, 
-      timeControl: '1+0', 
-      viewers: 543, 
-      moves: 18, 
-      category: 'bullet' 
-    }
-  ];
+  // Update games periodically to simulate live updates
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setLiveGames(prevGames => {
+        return prevGames.map(game => ({
+          ...game,
+          viewers: Math.max(50, game.viewers + Math.floor(Math.random() * 41) - 20),
+          moves: game.moves + (Math.random() > 0.6 ? 1 : 0)
+        }));
+      });
+    }, 8000);
+
+    return () => clearInterval(interval);
+  }, []);
 
   const getCategoryIcon = (category: string) => {
     switch (category) {
@@ -86,6 +56,23 @@ const Games = () => {
       default: return 'text-[#b8b8b8] border-[#4a4a46]';
     }
   };
+
+  const filteredGames = liveGames.filter(game => {
+    if (searchFilter && !game.white.name.toLowerCase().includes(searchFilter.toLowerCase()) && 
+        !game.black.name.toLowerCase().includes(searchFilter.toLowerCase())) {
+      return false;
+    }
+    if (timeFilter !== 'all' && game.category !== timeFilter) {
+      return false;
+    }
+    if (ratingFilter !== 'all') {
+      const minRating = parseInt(ratingFilter.replace('+', ''));
+      if (Math.max(game.white.rating, game.black.rating) < minRating) {
+        return false;
+      }
+    }
+    return true;
+  });
 
   return (
     <SidebarProvider>
@@ -131,10 +118,10 @@ const Games = () => {
                   </SelectTrigger>
                   <SelectContent className="bg-[#2c2c28] border-[#4a4a46]">
                     <SelectItem value="all">All ratings</SelectItem>
-                    <SelectItem value="2500+">2500+</SelectItem>
-                    <SelectItem value="2400+">2400+</SelectItem>
-                    <SelectItem value="2300+">2300+</SelectItem>
-                    <SelectItem value="2200+">2200+</SelectItem>
+                    <SelectItem value="2500">2500+</SelectItem>
+                    <SelectItem value="2400">2400+</SelectItem>
+                    <SelectItem value="2300">2300+</SelectItem>
+                    <SelectItem value="2200">2200+</SelectItem>
                   </SelectContent>
                 </Select>
 
@@ -146,11 +133,21 @@ const Games = () => {
 
               {/* Games List */}
               <div className="space-y-3">
-                {liveGames.map((game, index) => {
+                <div className="flex items-center justify-between mb-4">
+                  <span className="text-[#b8b8b8] text-sm">
+                    {filteredGames.length} games found
+                  </span>
+                  <div className="flex items-center space-x-1">
+                    <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                    <span className="text-sm text-[#759900]">Live updates</span>
+                  </div>
+                </div>
+
+                {filteredGames.map((game) => {
                   const CategoryIcon = getCategoryIcon(game.category);
                   
                   return (
-                    <Card key={index} className={`bg-[#2c2c28] border-[#4a4a46] p-4 hover:bg-[#3d3d37] transition-colors cursor-pointer ${game.isTopGame ? 'ring-1 ring-[#759900]' : ''}`}>
+                    <Card key={game.id} className={`bg-[#2c2c28] border-[#4a4a46] p-4 hover:bg-[#3d3d37] transition-colors cursor-pointer ${game.isTopGame ? 'ring-1 ring-[#759900]' : ''}`}>
                       <div className="flex items-center justify-between">
                         <div className="flex items-center space-x-4 flex-1">
                           {/* White Player */}
@@ -195,7 +192,7 @@ const Games = () => {
                             <div className="text-white text-sm font-medium">{game.moves} moves</div>
                             <div className="flex items-center space-x-1 text-sm">
                               <Eye className="w-4 h-4 text-[#b8b8b8]" />
-                              <span className="text-[#b8b8b8]">{game.viewers}</span>
+                              <span className="text-[#b8b8b8]">{game.viewers.toLocaleString()}</span>
                             </div>
                           </div>
 
@@ -204,6 +201,10 @@ const Games = () => {
                               <Crown className="w-5 h-5 text-[#759900]" />
                             </div>
                           )}
+                          
+                          <Button size="sm" className="bg-[#759900] hover:bg-[#6a8700]">
+                            Watch
+                          </Button>
                         </div>
                       </div>
                     </Card>
@@ -213,7 +214,17 @@ const Games = () => {
 
               {/* Load More */}
               <div className="mt-6 text-center">
-                <Button variant="outline" className="border-[#4a4a46] text-[#b8b8b8] hover:bg-[#4a4a46]">
+                <Button 
+                  variant="outline" 
+                  className="border-[#4a4a46] text-[#b8b8b8] hover:bg-[#4a4a46]"
+                  onClick={() => {
+                    const newGames = Array.from({ length: 6 }, () => ({ 
+                      id: Math.random(), 
+                      ...getRandomLiveGame() 
+                    }));
+                    setLiveGames(prev => [...prev, ...newGames]);
+                  }}
+                >
                   Load more games
                 </Button>
               </div>
