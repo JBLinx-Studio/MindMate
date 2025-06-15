@@ -62,9 +62,12 @@ export const isSquareAttacked = (
   for (let y = 0; y < 8; y++) {
     for (let x = 0; x < 8; x++) {
       const piece = board[y][x];
-      if (piece && piece.color === byColor) {
-        // Pass {forAttackDetection: true}
-        const moves = getPieceAttacks(piece, board, { forAttackDetection: true });
+      if (
+        piece &&
+        piece.color === byColor &&
+        piece.type !== 'king' // 🚨 SKIP king from attack detection
+      ) {
+        const moves = getPieceAttacks(piece, board);
         if (moves.some(move => move.x === position.x && move.y === position.y)) {
           return true;
         }
@@ -84,8 +87,7 @@ export const isInCheck = (board: (Piece | null)[][], color: 'white' | 'black'): 
 
 const getPieceAttacks = (
   piece: Piece,
-  board: (Piece | null)[][],
-  opts?: { forAttackDetection?: boolean }
+  board: (Piece | null)[][]
 ): Position[] => {
   const moves: Position[] = [];
   const { x, y } = piece.position;
@@ -101,7 +103,6 @@ const getPieceAttacks = (
         }
       }
       break;
-
     case 'rook':
       for (const [dx, dy] of [[0, 1], [0, -1], [1, 0], [-1, 0]]) {
         for (let i = 1; i < 8; i++) {
@@ -112,7 +113,6 @@ const getPieceAttacks = (
         }
       }
       break;
-
     case 'knight':
       const knightMoves = [[-2, -1], [-2, 1], [-1, -2], [-1, 2], [1, -2], [1, 2], [2, -1], [2, 1]];
       for (const [dx, dy] of knightMoves) {
@@ -122,7 +122,6 @@ const getPieceAttacks = (
         }
       }
       break;
-
     case 'bishop':
       for (const [dx, dy] of [[1, 1], [1, -1], [-1, 1], [-1, -1]]) {
         for (let i = 1; i < 8; i++) {
@@ -133,7 +132,6 @@ const getPieceAttacks = (
         }
       }
       break;
-
     case 'queen':
       for (const [dx, dy] of [[0, 1], [0, -1], [1, 0], [-1, 0], [1, 1], [1, -1], [-1, 1], [-1, -1]]) {
         for (let i = 1; i < 8; i++) {
@@ -144,18 +142,13 @@ const getPieceAttacks = (
         }
       }
       break;
-
     case 'king':
+      // 🚨 For attack maps: king "attacks" only the adjacent squares
       for (const [dx, dy] of [[0, 1], [0, -1], [1, 0], [-1, 0], [1, 1], [1, -1], [-1, 1], [-1, -1]]) {
         const newPos = { x: x + dx, y: y + dy };
-        if (!isValidPosition(newPos)) continue;
-
-        // PATCH: If forAttackDetection, skip returning king attacks
-        if (opts?.forAttackDetection) {
-          // Don't include king moves for attack detection
-          continue;
+        if (isValidPosition(newPos)) {
+          moves.push(newPos);
         }
-        moves.push(newPos);
       }
       break;
   }
