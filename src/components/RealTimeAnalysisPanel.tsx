@@ -47,20 +47,20 @@ export const RealTimeAnalysisPanel: React.FC<RealTimeAnalysisPanelProps> = ({
     await new Promise(resolve => setTimeout(resolve, 800));
     
     try {
-      const engineEval = enhancedChessEngine.evaluatePosition(gameState);
+      const engineEvaluation = enhancedChessEngine.evaluatePosition(gameState);
       
       const newAnalysis: PositionAnalysis = {
-        evaluation: engineEval.centipawns,
-        bestMove: engineEval.bestMove,
-        depth: engineEval.depth,
-        principalVariation: engineEval.principalVariation,
-        positionType: engineEval.positionType,
-        tacticalThemes: engineEval.tacticalThemes,
+        evaluation: engineEvaluation.centipawns,
+        bestMove: engineEvaluation.bestMove,
+        depth: engineEvaluation.depth,
+        principalVariation: engineEvaluation.principalVariation,
+        positionType: engineEvaluation.positionType,
+        tacticalThemes: engineEvaluation.tacticalThemes,
         materialBalance: calculateMaterialBalance(),
         mobilityScore: calculateMobility(),
         kingSafety: calculateKingSafety(),
         pawnStructure: calculatePawnStructure(),
-        timeAnalyzed: engineEval.time
+        timeAnalyzed: engineEvaluation.time
       };
       
       setAnalysis(newAnalysis);
@@ -106,20 +106,20 @@ export const RealTimeAnalysisPanel: React.FC<RealTimeAnalysisPanelProps> = ({
     return Math.floor(Math.random() * 20) - 10;
   };
 
-  const getEvaluationColor = (eval: number) => {
-    if (eval > 100) return 'text-green-600';
-    if (eval < -100) return 'text-red-600';
+  const getEvaluationColor = (evaluation: number) => {
+    if (evaluation > 100) return 'text-green-600';
+    if (evaluation < -100) return 'text-red-600';
     return 'text-gray-600';
   };
 
-  const getEvaluationIcon = (eval: number) => {
-    if (eval > 50) return <TrendingUp className="w-4 h-4" />;
-    if (eval < -50) return <TrendingDown className="w-4 h-4" />;
+  const getEvaluationIcon = (evaluation: number) => {
+    if (evaluation > 50) return <TrendingUp className="w-4 h-4" />;
+    if (evaluation < -50) return <TrendingDown className="w-4 h-4" />;
     return <Minus className="w-4 h-4" />;
   };
 
-  const getAdvantageBar = (eval: number) => {
-    const normalized = Math.max(-300, Math.min(300, eval));
+  const getAdvantageBar = (evaluation: number) => {
+    const normalized = Math.max(-300, Math.min(300, evaluation));
     const percentage = ((normalized + 300) / 600) * 100;
     return percentage;
   };
