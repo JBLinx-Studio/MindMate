@@ -19,7 +19,8 @@
       // then set pathSegmentsToKeep to 1 (enterprise users may need to set it to > 1).
       // This way the code will only replace the route part and not the real directory.
       // This MUST be set correctly according to your project name!
-      var pathSegmentsToKeep = 1;
+      // For /MindMate/ we need to keep 2 segments: ['', 'MindMate']
+      var pathSegmentsToKeep = 2;
 
       var l = window.location;
       l.replace(
