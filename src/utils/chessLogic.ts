@@ -117,8 +117,9 @@ const getPieceAttacks = (
   const { x, y } = piece.position;
 
   switch (piece.type) {
-    case 'pawn':
+    case 'pawn': {
       const direction = piece.color === 'white' ? -1 : 1;
+      // Pawn captures only, for attack map
       for (const dx of [-1, 1]) {
         const newPos = { x: x + dx, y: y + direction };
         if (isValidPosition(newPos)) {
@@ -126,51 +127,59 @@ const getPieceAttacks = (
         }
       }
       break;
-    case 'rook':
-      for (const [dx, dy] of [[0, 1], [0, -1], [1, 0], [-1, 0]]) {
-        for (let i = 1; i < 8; i++) {
-          const newPos = { x: x + dx * i, y: y + dy * i };
-          if (!isValidPosition(newPos)) break;
-          moves.push(newPos);
-          if (board[newPos.y][newPos.x]) break;
-        }
-      }
-      break;
-    case 'knight':
-      const knightMoves = [[-2, -1], [-2, 1], [-1, -2], [-1, 2], [1, -2], [1, 2], [2, -1], [2, 1]];
-      for (const [dx, dy] of knightMoves) {
-        const newPos = { x: x + dx, y: y + dy };
-        if (isValidPosition(newPos)) {
-          moves.push(newPos);
-        }
-      }
-      break;
-    case 'bishop':
-      for (const [dx, dy] of [[1, 1], [1, -1], [-1, 1], [-1, -1]]) {
-        for (let i = 1; i < 8; i++) {
-          const newPos = { x: x + dx * i, y: y + dy * i };
-          if (!isValidPosition(newPos)) break;
-          moves.push(newPos);
-          if (board[newPos.y][newPos.x]) break;
-        }
-      }
-      break;
-    case 'queen':
-      for (const [dx, dy] of [[0, 1], [0, -1], [1, 0], [-1, 0], [1, 1], [1, -1], [-1, 1], [-1, -1]]) {
-        for (let i = 1; i < 8; i++) {
-          const newPos = { x: x + dx * i, y: y + dy * i };
-          if (!isValidPosition(newPos)) break;
-          moves.push(newPos);
-          if (board[newPos.y][newPos.x]) break;
-        }
-      }
-      break;
-    case 'king':
-      for (const [dx, dy] of [[0, 1], [0, -1], [1, 0], [-1, 0], [1, 1], [1, -1], [-1, 1], [-1, -1]]) {
-        const newPos = { x: x + dx, y: y + dy };
-        if (isValidPosition(newPos)) {
-          moves.push(newPos);
-        }
+    }
+    default:
+      // ... same as your current code for attack patterns ...
+      // (no "check" legality handled here)
+      switch (piece.type) {
+        case 'rook':
+          // ... existing rook logic ...
+          for (const [dx, dy] of [[0, 1], [0, -1], [1, 0], [-1, 0]]) {
+            for (let i = 1; i < 8; i++) {
+              const newPos = { x: x + dx * i, y: y + dy * i };
+              if (!isValidPosition(newPos)) break;
+              moves.push(newPos);
+              if (board[newPos.y][newPos.x]) break;
+            }
+          }
+          break;
+        case 'knight':
+          const knightMoves = [[-2, -1], [-2, 1], [-1, -2], [-1, 2], [1, -2], [1, 2], [2, -1], [2, 1]];
+          for (const [dx, dy] of knightMoves) {
+            const newPos = { x: x + dx, y: y + dy };
+            if (isValidPosition(newPos)) {
+              moves.push(newPos);
+            }
+          }
+          break;
+        case 'bishop':
+          for (const [dx, dy] of [[1, 1], [1, -1], [-1, 1], [-1, -1]]) {
+            for (let i = 1; i < 8; i++) {
+              const newPos = { x: x + dx * i, y: y + dy * i };
+              if (!isValidPosition(newPos)) break;
+              moves.push(newPos);
+              if (board[newPos.y][newPos.x]) break;
+            }
+          }
+          break;
+        case 'queen':
+          for (const [dx, dy] of [[0, 1], [0, -1], [1, 0], [-1, 0], [1, 1], [1, -1], [-1, 1], [-1, -1]]) {
+            for (let i = 1; i < 8; i++) {
+              const newPos = { x: x + dx * i, y: y + dy * i };
+              if (!isValidPosition(newPos)) break;
+              moves.push(newPos);
+              if (board[newPos.y][newPos.x]) break;
+            }
+          }
+          break;
+        case 'king':
+          for (const [dx, dy] of [[0, 1], [0, -1], [1, 0], [-1, 0], [1, 1], [1, -1], [-1, 1], [-1, -1]]) {
+            const newPos = { x: x + dx, y: y + dy };
+            if (isValidPosition(newPos)) {
+              moves.push(newPos);
+            }
+          }
+          break;
       }
       break;
   }
@@ -178,8 +187,12 @@ const getPieceAttacks = (
   return moves;
 };
 
-export const getValidMoves = (piece: Piece, board: (Piece | null)[][], gameState: GameState): Position[] => {
-  // console.log("getValidMoves", piece); // DEBUG
+export const getValidMoves = (
+  piece: Piece,
+  board: (Piece | null)[][],
+  gameState: GameState,
+  skipCheckTest: boolean = false // <- added param
+): Position[] => {
   const moves: Position[] = [];
   const { x, y } = piece.position;
 
@@ -303,7 +316,8 @@ export const getValidMoves = (piece: Piece, board: (Piece | null)[][], gameState
 
   // DANGER ZONE: filter causes recursion
   // To prevent infinite recursion:
-  // Only call isInCheck if the piece is not the king being attacked (avoid recursion cycles).
+  // Only call isInCheck if skipCheckTest is false (i.e., not for attack map generation)
+  if (skipCheckTest) return moves;
   return moves.filter(move => {
     const testBoard = deepCopyBoard(board);
     const testPiece = testBoard[y][x];
