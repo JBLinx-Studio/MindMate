@@ -1,4 +1,3 @@
-
 import { Piece, Position, GameState, Move } from '../types/chess';
 
 export const initializeBoard = (): (Piece | null)[][] => {
@@ -299,6 +298,7 @@ export const getValidMoves = (
       break;
 
     case 'king': {
+      // Standard 1-square king moves (no castling in attack mode)
       for (const [dx, dy] of [
         [0, 1],
         [0, -1],
@@ -319,6 +319,7 @@ export const getValidMoves = (
       }
 
       // Only offer castling when not skipping king safety checks
+      // i.e., only if pseudo-legal move generation is OFF
       if (
         !skipKingSafetyCheck &&
         gameState &&
@@ -357,18 +358,19 @@ export const getValidMoves = (
     }
   }
 
-  // CRITICAL: Filter out moves that leave king in check unless we are only generating an "attack map"
+  // Filter out moves that leave the king in check (legal move filter),
+  // but ONLY when not in attack ("pseudo-legal") mode.
   if (!skipKingSafetyCheck) {
     return moves.filter(move => {
       if (!gameState) return true; // Defensive
       // Create a minimal clone for the purposes of move testing
       const testBoard = board.map(row => [...row]);
-      testBoard[move.y][move.x] = testBoard[y][x];
+      testBoard[move.y][move.x] = { ...piece, position: { ...move } };
       testBoard[y][x] = null;
       return !isInCheck(testBoard, piece.color);
     });
   } else {
-    // Pseudo-legal moves only for attack mapping
+    // For pseudo-legal moves (used for attack/defense map), return as-is
     return moves;
   }
 };
