@@ -1,5 +1,5 @@
+
 import { GameState, Move } from '../types/chess';
-import { sampleGames } from './sampleGames';
 
 export interface StoredGame {
   id: string;
@@ -54,18 +54,6 @@ export class GameDatabase {
   
   constructor() {
     this.loadFromStorage();
-    this.initializeSampleData();
-  }
-
-  private initializeSampleData(): void {
-    // Only add sample data if the database is empty
-    if (this.games.size === 0) {
-      sampleGames.forEach(game => {
-        this.games.set(game.id, game);
-        this.updatePlayerStats(game);
-      });
-      this.saveToStorage();
-    }
   }
 
   saveGame(gameState: GameState, gameInfo: Partial<StoredGame>): string {

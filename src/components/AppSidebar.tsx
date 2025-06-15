@@ -149,10 +149,10 @@ export function AppSidebar() {
         {/* Logo */}
         <div className="p-4 border-b border-[#3d3d37]">
           <div className="flex items-center space-x-2">
-            <div className="text-2xl font-bold text-white">MindMate</div>
-            <div className="text-[#759900] text-2xl">♞</div>
+            <div className="text-2xl font-bold text-white">lichess</div>
+            <div className="text-[#b8b8b8] text-2xl">♞</div>
           </div>
-          <div className="text-xs text-[#b8b8b8] mt-1">master your chess skills</div>
+          <div className="text-xs text-[#b8b8b8] mt-1">free online chess</div>
         </div>
 
         {/* Scrollable Content */}
