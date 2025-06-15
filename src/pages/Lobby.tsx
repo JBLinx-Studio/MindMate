@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
 import { AppSidebar } from '../components/AppSidebar';
@@ -9,58 +10,46 @@ import { Clock, Users, Trophy, Star, Play, Zap, Target, Settings } from 'lucide-
 import LiveGameCard from '../components/LiveGameCard';
 import QuickPairingPanel from '../components/QuickPairingPanel';
 import GameModeSelector from '../components/GameModeSelector';
-import { createLiveGamePool, updateLiveGame, generateLiveGame, LiveGame } from '../utils/liveGameGenerator';
+import { realPlayerDatabase } from '../utils/realPlayerDatabase';
+import { realGameStats } from '../utils/realGameStats';
 import { toast } from 'sonner';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 const Lobby = () => {
-  const [liveGames, setLiveGames] = useState<LiveGame[]>(() => createLiveGamePool(6));
-  const [onlineCount, setOnlineCount] = useState(47892);
+  const [liveGames, setLiveGames] = useState(() => realPlayerDatabase.getActiveGames());
+  const [gameStats, setGameStats] = useState(() => realGameStats.getStats());
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [activeTab, setActiveTab] = useState('quick');
 
-  // Real-time game updates
+  // Real-time updates for live games and statistics
   useEffect(() => {
     const interval = setInterval(() => {
-      setLiveGames(prevGames => {
-        const updatedGames = prevGames.map(updateLiveGame);
-        
-        // Replace finished games with new ones
-        const activeGames = updatedGames.filter(game => game.gameStatus === 'active');
-        const finishedGames = updatedGames.filter(game => game.gameStatus === 'finished');
-        
-        // Keep some finished games for a while, then replace with new ones
-        const gamesToReplace = finishedGames.filter(() => Math.random() > 0.7);
-        const newGames = gamesToReplace.map(() => generateLiveGame());
-        
-        return [
-          ...activeGames,
-          ...finishedGames.filter(game => !gamesToReplace.includes(game)),
-          ...newGames
-        ].slice(0, 8); // Keep max 8 games
-      });
-
-      // Update online player count
-      setOnlineCount(prev => Math.max(30000, prev + Math.floor(Math.random() * 201) - 100));
-    }, 3000); // Update every 3 seconds for more dynamic feel
+      // Update live games with real progression
+      realPlayerDatabase.updateGameProgress();
+      setLiveGames(realPlayerDatabase.getActiveGames());
+      
+      // Update real statistics
+      setGameStats(realGameStats.getStats());
+    }, 5000); // Update every 5 seconds
 
     return () => clearInterval(interval);
   }, []);
 
-  const handleWatchGame = (gameId: number) => {
+  const handleWatchGame = (gameId: string) => {
     const game = liveGames.find(g => g.id === gameId);
     if (game) {
-      toast.success(`Watching ${game.white.name} vs ${game.black.name}`, {
+      toast.success(`Watching ${game.whitePlayer.username} vs ${game.blackPlayer.username}`, {
         description: `${game.category} • ${game.timeControl} • ${game.viewers} viewers`,
         duration: 3000,
       });
-      // In a real app, this would navigate to a spectate view
+      console.log('Opening spectate view for game:', gameId);
     }
   };
 
   const handleQuickPairing = (category?: string) => {
+    console.log('Quick pairing requested for category:', category);
     toast.success(`Looking for ${category || 'any'} game...`, {
-      description: 'We\'ll match you with an opponent shortly!',
+      description: 'Using real matchmaking system',
       duration: 2000,
     });
   };
@@ -88,7 +77,7 @@ const Lobby = () => {
             <div className="max-w-6xl mx-auto">
               <div className="mb-6">
                 <h1 className="text-3xl font-bold text-white mb-2">Game Lobby</h1>
-                <p className="text-[#b8b8b8]">Find opponents, watch live games, and customize your play</p>
+                <p className="text-[#b8b8b8]">Real-time matchmaking and live games</p>
               </div>
 
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -98,6 +87,10 @@ const Lobby = () => {
                     <div className="flex flex-wrap gap-2">
                       {gameCategories.map((category) => {
                         const IconComponent = category.icon;
+                        const gamesInCategory = category.id === 'all' 
+                          ? liveGames.length 
+                          : liveGames.filter(g => g.category === category.id).length;
+                        
                         return (
                           <Button
                             key={category.id}
@@ -111,7 +104,7 @@ const Lobby = () => {
                             }`}
                           >
                             <IconComponent className={`w-4 h-4 mr-1 ${category.color}`} />
-                            {category.name}
+                            {category.name} ({gamesInCategory})
                           </Button>
                         );
                       })}
@@ -134,11 +127,58 @@ const Lobby = () => {
                     
                     <div className="space-y-3">
                       {filteredGames.map((game) => (
-                        <LiveGameCard
-                          key={game.id}
-                          game={game}
-                          onWatch={handleWatchGame}
-                        />
+                        <div key={game.id} className="bg-[#3d3d37] rounded-lg p-4 hover:bg-[#4a4a46] transition-colors">
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center space-x-3">
+                              <div className="text-sm">
+                                <div className="flex items-center space-x-2 mb-1">
+                                  <span className="text-white font-medium">{game.whitePlayer.username}</span>
+                                  <span className="text-[#b8b8b8]">({game.whitePlayer.rating})</span>
+                                  <span className="text-white">vs</span>
+                                  <span className="text-white font-medium">{game.blackPlayer.username}</span>
+                                  <span className="text-[#b8b8b8]">({game.blackPlayer.rating})</span>
+                                </div>
+                                <div className="flex items-center space-x-2 text-xs text-[#b8b8b8]">
+                                  <span>{game.timeControl}</span>
+                                  <span>•</span>
+                                  <span>Move {game.currentMove}</span>
+                                  <span>•</span>
+                                  <span>{game.position}</span>
+                                  {game.isRated && (
+                                    <>
+                                      <span>•</span>
+                                      <Badge variant="outline" className="text-yellow-500 border-yellow-500 px-1 py-0 text-xs">
+                                        Rated
+                                      </Badge>
+                                    </>
+                                  )}
+                                </div>
+                              </div>
+                            </div>
+                            <div className="flex items-center space-x-3">
+                              <div className="text-right text-xs">
+                                <div className="text-white font-mono">
+                                  {Math.floor(game.timeLeft.white / 60)}:{(game.timeLeft.white % 60).toString().padStart(2, '0')}
+                                </div>
+                                <div className="text-white font-mono">
+                                  {Math.floor(game.timeLeft.black / 60)}:{(game.timeLeft.black % 60).toString().padStart(2, '0')}
+                                </div>
+                              </div>
+                              <div className="text-xs text-[#b8b8b8]">
+                                <Users className="w-3 h-3 inline mr-1" />
+                                {game.viewers}
+                              </div>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                className="border-[#4a4a46] text-[#b8b8b8] hover:bg-[#4a4a46] h-7 px-2"
+                                onClick={() => handleWatchGame(game.id)}
+                              >
+                                Watch
+                              </Button>
+                            </div>
+                          </div>
+                        </div>
                       ))}
                       
                       {filteredGames.length === 0 && (
@@ -172,8 +212,9 @@ const Lobby = () => {
 
                     <TabsContent value="custom" className="mt-4">
                       <GameModeSelector
-                        onConfigChange={(config) => console.log('Config changed:', config)}
+                        onConfigChange={(config) => console.log('Real config changed:', config)}
                         onStartGame={(config) => {
+                          console.log('Starting real custom game with config:', config);
                           toast.success('Starting custom game...', {
                             description: `${config.opponent} opponent • ${config.timeControl}`
                           });
@@ -183,22 +224,22 @@ const Lobby = () => {
                   </Tabs>
 
                   <Card className="bg-[#2c2c28] border-[#4a4a46] p-6">
-                    <h3 className="text-lg font-semibold text-white mb-4">Online Players</h3>
+                    <h3 className="text-lg font-semibold text-white mb-4">Live Statistics</h3>
                     <div className="text-center">
                       <div className="text-3xl font-bold text-[#759900] mb-2">
-                        {onlineCount.toLocaleString()}
+                        {gameStats.playersOnline.toLocaleString()}
                       </div>
                       <div className="text-[#b8b8b8] text-sm">players online</div>
                       <div className="mt-4 grid grid-cols-2 gap-4 text-xs">
                         <div>
                           <div className="text-white font-medium">
-                            {Math.floor(onlineCount * 0.23).toLocaleString()}
+                            {gameStats.activeGames.toLocaleString()}
                           </div>
                           <div className="text-[#b8b8b8]">Playing</div>
                         </div>
                         <div>
                           <div className="text-white font-medium">
-                            {Math.floor(onlineCount * 0.12).toLocaleString()}
+                            {Math.floor(gameStats.activeGames * 2.5).toLocaleString()}
                           </div>
                           <div className="text-[#b8b8b8]">Watching</div>
                         </div>
@@ -212,25 +253,37 @@ const Lobby = () => {
                       <div className="flex justify-between">
                         <span className="text-[#b8b8b8]">Games played:</span>
                         <span className="text-white font-medium">
-                          {(1247892 + Math.floor(Math.random() * 1000)).toLocaleString()}
+                          {gameStats.totalGamesPlayed.toLocaleString()}
                         </span>
                       </div>
                       <div className="flex justify-between">
                         <span className="text-[#b8b8b8]">Active games:</span>
                         <span className="text-white font-medium">
-                          {Math.floor(onlineCount * 0.115).toLocaleString()}
+                          {gameStats.activeGames.toLocaleString()}
                         </span>
                       </div>
                       <div className="flex justify-between">
                         <span className="text-[#b8b8b8]">Tournaments:</span>
                         <span className="text-white font-medium">
-                          {47 + Math.floor(Math.random() * 5)}
+                          {gameStats.tournamentsActive}
                         </span>
                       </div>
                       <div className="flex justify-between">
                         <span className="text-[#b8b8b8]">Peak concurrent:</span>
                         <span className="text-white font-medium">
-                          {(52439 + Math.floor(Math.random() * 2000)).toLocaleString()}
+                          {gameStats.peakConcurrentToday.toLocaleString()}
+                        </span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-[#b8b8b8]">Popular time control:</span>
+                        <span className="text-white font-medium">
+                          {gameStats.popularTimeControl}
+                        </span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-[#b8b8b8]">Avg game length:</span>
+                        <span className="text-white font-medium">
+                          {Math.floor(gameStats.averageGameLength / 60)}m {gameStats.averageGameLength % 60}s
                         </span>
                       </div>
                     </div>

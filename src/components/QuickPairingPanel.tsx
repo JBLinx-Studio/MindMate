@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -16,10 +15,12 @@ import {
   Star,
   Settings,
   Timer,
-  Target
+  Target,
+  Loader2
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
+import { realMatchmaking } from '../utils/realMatchmaking';
 
 interface QuickPairingPanelProps {
   onStartGame?: (config: any) => void;
@@ -27,11 +28,12 @@ interface QuickPairingPanelProps {
 
 const QuickPairingPanel: React.FC<QuickPairingPanelProps> = ({ onStartGame }) => {
   const navigate = useNavigate();
+  const [isSearching, setIsSearching] = useState(false);
   const [gameConfig, setGameConfig] = useState({
     timeControl: '10+0',
     gameMode: 'casual',
     opponent: 'human',
-    ratingRange: [1400, 1600],
+    ratingRange: [1000, 1400] as [number, number],
     color: 'random',
     increment: 0,
     rated: false
@@ -49,24 +51,78 @@ const QuickPairingPanel: React.FC<QuickPairingPanelProps> = ({ onStartGame }) =>
     { id: '30+0', name: 'Classical', time: '30 min', icon: <Timer className="w-4 h-4" />, color: 'text-blue-400' }
   ];
 
-  const handleQuickPlay = () => {
-    const opponent = gameConfig.opponent === 'human' ? 'Random Player' : 'Computer';
+  const handleQuickPlay = async () => {
+    if (gameConfig.opponent === 'computer') {
+      // Immediate computer game
+      const opponent = 'Computer';
+      
+      toast.success(`Starting ${gameConfig.gameMode} game...`, {
+        description: `${gameConfig.timeControl} vs ${opponent}`,
+        duration: 2000,
+      });
+
+      const params = new URLSearchParams({
+        mode: gameConfig.gameMode,
+        time: gameConfig.timeControl,
+        opponent: opponent,
+        color: gameConfig.color === 'random' ? (Math.random() > 0.5 ? 'white' : 'black') : gameConfig.color,
+        rated: gameConfig.rated.toString()
+      });
+
+      navigate(`/game?${params.toString()}`);
+      return;
+    }
+
+    // Real human matchmaking
+    setIsSearching(true);
     
-    toast.success(`Starting ${gameConfig.gameMode} game...`, {
-      description: `${gameConfig.timeControl} vs ${opponent}`,
-      duration: 2000,
-    });
+    try {
+      const matchResult = await realMatchmaking.findMatch({
+        timeControl: gameConfig.timeControl,
+        ratingRange: gameConfig.ratingRange,
+        color: gameConfig.color as 'white' | 'black' | 'random',
+        rated: gameConfig.rated,
+        gameMode: gameConfig.gameMode
+      });
 
-    // Navigate to game window with configuration
-    const params = new URLSearchParams({
-      mode: gameConfig.gameMode,
-      time: gameConfig.timeControl,
-      opponent: opponent,
-      color: gameConfig.color === 'random' ? (Math.random() > 0.5 ? 'white' : 'black') : gameConfig.color,
-      rated: gameConfig.rated.toString()
-    });
+      if (matchResult.success && matchResult.opponent && matchResult.gameId) {
+        toast.success(`Match found!`, {
+          description: `Playing ${matchResult.opponent.username} (${matchResult.opponent.rating})`,
+          duration: 3000,
+        });
 
-    navigate(`/game?${params.toString()}`);
+        const params = new URLSearchParams({
+          mode: gameConfig.gameMode,
+          time: gameConfig.timeControl,
+          opponent: matchResult.opponent.username,
+          opponentRating: matchResult.opponent.rating.toString(),
+          gameId: matchResult.gameId,
+          color: gameConfig.color === 'random' ? (Math.random() > 0.5 ? 'white' : 'black') : gameConfig.color,
+          rated: gameConfig.rated.toString()
+        });
+
+        navigate(`/game?${params.toString()}`);
+      } else {
+        toast.info('Searching for opponent...', {
+          description: `Estimated wait: ${matchResult.estimatedWaitTime}s`,
+          duration: matchResult.estimatedWaitTime ? matchResult.estimatedWaitTime * 1000 : 5000,
+        });
+
+        // Continue searching for a while, then timeout
+        setTimeout(() => {
+          setIsSearching(false);
+          toast.error('No opponent found', {
+            description: 'Try adjusting your rating range or time control'
+          });
+        }, (matchResult.estimatedWaitTime || 30) * 1000);
+      }
+    } catch (error) {
+      console.error('Matchmaking error:', error);
+      toast.error('Matchmaking failed', {
+        description: 'Please try again'
+      });
+      setIsSearching(false);
+    }
   };
 
   const handleCustomGame = () => {
@@ -206,15 +262,18 @@ const QuickPairingPanel: React.FC<QuickPairingPanelProps> = ({ onStartGame }) =>
             <div className="px-2">
               <Slider
                 value={gameConfig.ratingRange}
-                onValueChange={(value) => setGameConfig(prev => ({ ...prev, ratingRange: value }))}
-                min={800}
-                max={3000}
+                onValueChange={(value) => setGameConfig(prev => ({ ...prev, ratingRange: value as [number, number] }))}
+                min={400}
+                max={2800}
                 step={50}
                 className="w-full"
               />
               <div className="flex justify-between text-xs text-[#b8b8b8] mt-1">
                 <span>{gameConfig.ratingRange[0]}</span>
                 <span>{gameConfig.ratingRange[1]}</span>
+              </div>
+              <div className="text-center text-xs text-[#b8b8b8] mt-1">
+                Range: {gameConfig.ratingRange[1] - gameConfig.ratingRange[0]} points
               </div>
             </div>
           </div>
@@ -236,10 +295,20 @@ const QuickPairingPanel: React.FC<QuickPairingPanelProps> = ({ onStartGame }) =>
         <div className="space-y-3">
           <Button 
             onClick={handleQuickPlay}
+            disabled={isSearching}
             className="w-full bg-[#759900] hover:bg-[#6a8700] text-white py-3"
           >
-            <Play className="w-5 h-5 mr-2" />
-            Start Game
+            {isSearching ? (
+              <>
+                <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                Searching...
+              </>
+            ) : (
+              <>
+                <Play className="w-5 h-5 mr-2" />
+                Start Game
+              </>
+            )}
           </Button>
           
           <div className="grid grid-cols-2 gap-2">
@@ -277,6 +346,12 @@ const QuickPairingPanel: React.FC<QuickPairingPanelProps> = ({ onStartGame }) =>
               <span>Mode:</span>
               <span className="text-white capitalize">{gameConfig.gameMode}</span>
             </div>
+            {gameConfig.opponent === 'human' && (
+              <div className="flex justify-between">
+                <span>Rating:</span>
+                <span className="text-white">{gameConfig.ratingRange[0]}-{gameConfig.ratingRange[1]}</span>
+              </div>
+            )}
             {gameConfig.rated && (
               <div className="flex justify-between">
                 <span>Rating:</span>
