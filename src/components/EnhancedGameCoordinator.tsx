@@ -145,6 +145,42 @@ export const EnhancedGameCoordinator: React.FC<EnhancedGameCoordinatorProps> = (
     toast.success('Game reset to starting position');
   };
 
+  const handleSuggestionMove = (from: { x: number, y: number }, to: { x: number, y: number }) => {
+    // Defensive: deep clone board to avoid mutating state
+    const newBoard = gameState.board.map(row => row.map(piece => piece ? { ...piece } : null));
+    const movingPiece = newBoard[from.y][from.x];
+
+    if (!movingPiece) {
+      toast.error("No piece to move!");
+      return;
+    }
+
+    // Simple move logic (not handling special moves/captures/promotions)
+    newBoard[to.y][to.x] = { ...movingPiece, position: { x: to.x, y: to.y }, hasMoved: true };
+    newBoard[from.y][from.x] = null;
+
+    // Add to move history (notation only shows move, not detailed PGN)
+    const newMove = {
+      from,
+      to,
+      piece: movingPiece,
+      notation: '', // Could be generated with ChessNotation.moveToNotation
+      timestamp: new Date()
+    };
+
+    const newGameState = {
+      ...gameState,
+      board: newBoard,
+      currentPlayer: gameState.currentPlayer === 'white' ? 'black' : 'white',
+      moves: [...gameState.moves, newMove],
+      lastMoveHighlight: { from, to },
+      selectedSquare: undefined
+    };
+
+    onGameStateChange(newGameState);
+    toast.success("Move played from suggestion!");
+  };
+
   const getModeDescription = (mode: GameMode): string => {
     switch (mode) {
       case 'practice': return 'Free play with analysis tools';
@@ -217,10 +253,7 @@ export const EnhancedGameCoordinator: React.FC<EnhancedGameCoordinatorProps> = (
         return (
           <MoveSuggestionSystem
             gameState={gameState}
-            onMoveSelected={(from, to) => {
-              // Handle move selection logic here - this is the correct signature
-              console.log('Move selected:', from, to);
-            }}
+            onMoveSelected={handleSuggestionMove}
             isActive={isGameActive && gameMode !== 'puzzles'}
             skillLevel={playerSkillLevel}
           />
