@@ -1,212 +1,232 @@
 
-import { GameState, Piece, Position, Move } from '../types/chess';
-import { initializeBoard } from './chessLogic';
+import { GameState, Piece, Position } from '../types/chess';
 
 export class ChessNotation {
-  static boardToFEN(gameState: GameState): string {
+  static fenToBoard(fen: string): { board: (Piece | null)[][], currentPlayer: 'white' | 'black' } {
+    const [boardStr, activeColor] = fen.split(' ');
+    const ranks = boardStr.split('/');
+    const board: (Piece | null)[][] = [];
+    
+    for (let rankIndex = 0; rankIndex < 8; rankIndex++) {
+      const rank = ranks[rankIndex];
+      const row: (Piece | null)[] = [];
+      
+      for (let i = 0; i < rank.length; i++) {
+        const char = rank[i];
+        
+        if (char >= '1' && char <= '8') {
+          // Empty squares
+          const emptySquares = parseInt(char);
+          for (let j = 0; j < emptySquares; j++) {
+            row.push(null);
+          }
+        } else {
+          // Piece
+          const color = char === char.toUpperCase() ? 'white' : 'black';
+          const pieceType = this.charToPieceType(char.toLowerCase());
+          
+          if (pieceType) {
+            row.push({
+              type: pieceType,
+              color,
+              position: { x: row.length, y: rankIndex },
+              hasMoved: false
+            });
+          }
+        }
+      }
+      
+      board.push(row);
+    }
+    
+    return {
+      board,
+      currentPlayer: activeColor === 'w' ? 'white' : 'black'
+    };
+  }
+  
+  static boardToFen(gameState: GameState): string {
     let fen = '';
     
     // Board position
     for (let y = 0; y < 8; y++) {
       let emptyCount = 0;
-      let rowFen = '';
+      let rankStr = '';
       
       for (let x = 0; x < 8; x++) {
         const piece = gameState.board[y][x];
         
-        if (!piece) {
-          emptyCount++;
-        } else {
+        if (piece) {
           if (emptyCount > 0) {
-            rowFen += emptyCount.toString();
+            rankStr += emptyCount.toString();
             emptyCount = 0;
           }
           
-          const pieceChar = this.pieceToFENChar(piece);
-          rowFen += pieceChar;
+          const pieceChar = this.pieceTypeToChar(piece.type);
+          rankStr += piece.color === 'white' ? pieceChar.toUpperCase() : pieceChar;
+        } else {
+          emptyCount++;
         }
       }
       
       if (emptyCount > 0) {
-        rowFen += emptyCount.toString();
+        rankStr += emptyCount.toString();
       }
       
-      fen += rowFen;
+      fen += rankStr;
       if (y < 7) fen += '/';
     }
     
     // Active color
-    fen += ` ${gameState.currentPlayer.charAt(0)}`;
+    fen += ' ' + (gameState.currentPlayer === 'white' ? 'w' : 'b');
     
-    // Castling rights (simplified)
-    let castling = '';
-    const whiteKing = this.findPiece(gameState.board, 'king', 'white');
-    const blackKing = this.findPiece(gameState.board, 'king', 'black');
+    // Castling availability (simplified)
+    fen += ' KQkq';
     
-    if (whiteKing && !whiteKing.hasMoved) {
-      const whiteKingsideRook = gameState.board[7][7];
-      const whiteQueensideRook = gameState.board[7][0];
-      
-      if (whiteKingsideRook && !whiteKingsideRook.hasMoved) castling += 'K';
-      if (whiteQueensideRook && !whiteQueensideRook.hasMoved) castling += 'Q';
-    }
-    
-    if (blackKing && !blackKing.hasMoved) {
-      const blackKingsideRook = gameState.board[0][7];
-      const blackQueensideRook = gameState.board[0][0];
-      
-      if (blackKingsideRook && !blackKingsideRook.hasMoved) castling += 'k';
-      if (blackQueensideRook && !blackQueensideRook.hasMoved) castling += 'q';
-    }
-    
-    fen += ` ${castling || '-'}`;
-    
-    // En passant (simplified)
+    // En passant target square (simplified)
     fen += ' -';
     
-    // Halfmove and fullmove clocks
-    const fullmoveNumber = Math.floor(gameState.moves.length / 2) + 1;
-    fen += ` 0 ${fullmoveNumber}`;
+    // Halfmove and fullmove counters
+    fen += ' 0 1';
     
     return fen;
   }
   
-  static fenToBoard(fen: string): { board: (Piece | null)[][], currentPlayer: 'white' | 'black' } {
-    const parts = fen.split(' ');
-    const boardPart = parts[0];
-    const activeColor = parts[1] === 'w' ? 'white' : 'black';
-    
-    const board: (Piece | null)[][] = Array(8).fill(null).map(() => Array(8).fill(null));
-    
-    const rows = boardPart.split('/');
-    
-    for (let y = 0; y < 8; y++) {
-      const row = rows[y];
-      let x = 0;
-      
-      for (const char of row) {
-        if (char >= '1' && char <= '8') {
-          x += parseInt(char);
-        } else {
-          const piece = this.fenCharToPiece(char, { x, y });
-          if (piece) {
-            board[y][x] = piece;
-          }
-          x++;
-        }
-      }
+  static moveToNotation(
+    piece: Piece, 
+    from: Position, 
+    to: Position, 
+    board: (Piece | null)[][],
+    isCapture: boolean = false,
+    isCheck: boolean = false,
+    isCheckmate: boolean = false
+  ): string {
+    // Handle castling
+    if (piece.type === 'king' && Math.abs(to.x - from.x) === 2) {
+      return to.x > from.x ? 'O-O' : 'O-O-O';
     }
     
-    return { board, currentPlayer: activeColor };
-  }
-  
-  static movesToPGN(moves: Move[], gameResult?: string): string {
-    let pgn = '[Event "Live Game"]\n';
-    pgn += `[Date "${new Date().toISOString().split('T')[0]}"]\n`;
-    pgn += '[White "Player 1"]\n';
-    pgn += '[Black "Player 2"]\n';
-    pgn += `[Result "${gameResult || '*'}"]\n\n`;
+    let notation = '';
     
-    for (let i = 0; i < moves.length; i += 2) {
-      const moveNumber = Math.floor(i / 2) + 1;
-      pgn += `${moveNumber}. ${moves[i].notation}`;
-      
-      if (moves[i + 1]) {
-        pgn += ` ${moves[i + 1].notation}`;
-      }
-      
-      pgn += ' ';
-      
-      // Line break every 8 moves for readability
-      if (moveNumber % 4 === 0) {
-        pgn += '\n';
-      }
+    // Piece symbol (except for pawns)
+    if (piece.type !== 'pawn') {
+      notation += piece.type.charAt(0).toUpperCase();
     }
     
-    pgn += ` ${gameResult || '*'}`;
-    return pgn;
-  }
-  
-  static pgnToMoves(pgn: string): Move[] {
-    // Remove headers and metadata
-    const gameText = pgn.split('\n').filter(line => 
-      !line.startsWith('[') && line.trim() !== ''
-    ).join(' ');
+    // Disambiguation (simplified for now)
     
-    // Extract move notation
-    const moveRegex = /\d+\.\s*([^\s]+)(?:\s+([^\s]+))?/g;
-    const moves: Move[] = [];
-    let match;
-    
-    while ((match = moveRegex.exec(gameText)) !== null) {
-      const whiteMove = match[1];
-      const blackMove = match[2];
-      
-      if (whiteMove && whiteMove !== '*' && !whiteMove.includes('-')) {
-        moves.push(this.createMoveFromNotation(whiteMove, 'white'));
+    // Capture notation
+    if (isCapture) {
+      if (piece.type === 'pawn') {
+        notation += String.fromCharCode(97 + from.x);
       }
-      
-      if (blackMove && blackMove !== '*' && !blackMove.includes('-')) {
-        moves.push(this.createMoveFromNotation(blackMove, 'black'));
-      }
+      notation += 'x';
     }
     
-    return moves;
-  }
-  
-  private static pieceToFENChar(piece: Piece): string {
-    const chars = {
-      pawn: 'p',
-      rook: 'r',
-      knight: 'n',
-      bishop: 'b',
-      queen: 'q',
-      king: 'k'
-    };
+    // Destination square
+    notation += String.fromCharCode(97 + to.x) + (8 - to.y);
     
-    const char = chars[piece.type];
-    return piece.color === 'white' ? char.toUpperCase() : char;
-  }
-  
-  private static fenCharToPiece(char: string, position: Position): Piece | null {
-    const color = char === char.toUpperCase() ? 'white' : 'black';
-    const lowerChar = char.toLowerCase();
-    
-    const types: { [key: string]: Piece['type'] } = {
-      'p': 'pawn',
-      'r': 'rook',
-      'n': 'knight',
-      'b': 'bishop',
-      'q': 'queen',
-      'k': 'king'
-    };
-    
-    const type = types[lowerChar];
-    if (!type) return null;
-    
-    return { type, color, position };
-  }
-  
-  private static findPiece(board: (Piece | null)[][], type: Piece['type'], color: 'white' | 'black'): Piece | null {
-    for (let y = 0; y < 8; y++) {
-      for (let x = 0; x < 8; x++) {
-        const piece = board[y][x];
-        if (piece && piece.type === type && piece.color === color) {
-          return piece;
-        }
-      }
+    // Pawn promotion (simplified to queen)
+    if (piece.type === 'pawn' && (to.y === 0 || to.y === 7)) {
+      notation += '=Q';
     }
-    return null;
+    
+    // Check and checkmate
+    if (isCheckmate) {
+      notation += '#';
+    } else if (isCheck) {
+      notation += '+';
+    }
+    
+    return notation;
   }
   
-  private static createMoveFromNotation(notation: string, color: 'white' | 'black'): Move {
-    // Simplified move creation from notation
+  static parseMove(notation: string): {
+    piece?: string;
+    from?: Position;
+    to?: Position;
+    isCapture: boolean;
+    isCheck: boolean;
+    isCheckmate: boolean;
+    isCastle: boolean;
+    promotion?: string;
+  } {
+    // Handle castling
+    if (notation === 'O-O' || notation === 'O-O-O') {
+      return {
+        isCastle: true,
+        isCapture: false,
+        isCheck: false,
+        isCheckmate: false
+      };
+    }
+    
+    const isCheckmate = notation.includes('#');
+    const isCheck = notation.includes('+') && !isCheckmate;
+    const isCapture = notation.includes('x');
+    
+    // Remove check/checkmate indicators
+    let cleanNotation = notation.replace(/[+#]/g, '');
+    
+    // Handle promotion
+    let promotion: string | undefined;
+    if (cleanNotation.includes('=')) {
+      const parts = cleanNotation.split('=');
+      cleanNotation = parts[0];
+      promotion = parts[1];
+    }
+    
+    // Extract destination square
+    const squareMatch = cleanNotation.match(/[a-h][1-8]$/);
+    let to: Position | undefined;
+    
+    if (squareMatch) {
+      const square = squareMatch[0];
+      to = {
+        x: square.charCodeAt(0) - 97,
+        y: 8 - parseInt(square[1])
+      };
+    }
+    
+    // Extract piece type
+    let piece: string | undefined;
+    if (cleanNotation.match(/^[NBRQK]/)) {
+      piece = cleanNotation[0].toLowerCase();
+    } else {
+      piece = 'pawn';
+    }
+    
     return {
-      from: { x: 0, y: 0 },
-      to: { x: 0, y: 0 },
-      piece: { type: 'pawn', color, position: { x: 0, y: 0 } },
-      notation,
-      timestamp: new Date()
+      piece,
+      to,
+      isCapture,
+      isCheck,
+      isCheckmate,
+      isCastle: false,
+      promotion
     };
+  }
+  
+  private static charToPieceType(char: string): Piece['type'] | null {
+    switch (char) {
+      case 'p': return 'pawn';
+      case 'r': return 'rook';
+      case 'n': return 'knight';
+      case 'b': return 'bishop';
+      case 'q': return 'queen';
+      case 'k': return 'king';
+      default: return null;
+    }
+  }
+  
+  private static pieceTypeToChar(type: Piece['type']): string {
+    switch (type) {
+      case 'pawn': return 'p';
+      case 'rook': return 'r';
+      case 'knight': return 'n';
+      case 'bishop': return 'b';
+      case 'queen': return 'q';
+      case 'king': return 'k';
+    }
   }
 }
