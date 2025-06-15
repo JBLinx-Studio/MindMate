@@ -154,8 +154,8 @@ export const isInCheck = (board: (Piece | null)[][], color: 'white' | 'black'): 
 
 const getPieceAttacks = (
   piece: Piece,
-  board: (Piece | null)[][]
-): Position[] => {
+  board: (Piece | null)[][],
+  ): Position[] => {
   const moves: Position[] = [];
   const { x, y } = piece.position;
 
@@ -172,11 +172,8 @@ const getPieceAttacks = (
       break;
     }
     default:
-      // ... same as your current code for attack patterns ...
-      // (no "check" legality handled here)
       switch (piece.type) {
         case 'rook':
-          // ... existing rook logic ...
           for (const [dx, dy] of [[0, 1], [0, -1], [1, 0], [-1, 0]]) {
             for (let i = 1; i < 8; i++) {
               const newPos = { x: x + dx * i, y: y + dy * i };
