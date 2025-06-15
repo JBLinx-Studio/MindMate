@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -144,7 +143,7 @@ export function TopNavigationMenu() {
             <Shield className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
           </div>
           <div className="flex flex-col min-w-0">
-            <span className="text-white font-bold text-sm sm:text-base leading-none truncate">ChessForge</span>
+            <span className="text-white font-bold text-sm sm:text-base leading-none truncate">MindMate</span>
             <span className="text-[#759900] text-xs font-medium hidden sm:block truncate">by JBLinx Studio</span>
           </div>
         </div>
