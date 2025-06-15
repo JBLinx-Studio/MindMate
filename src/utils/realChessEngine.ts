@@ -131,14 +131,21 @@ export class RealChessEngine {
   }
 
   private evaluateMaterial(gameState: GameState): number {
-    const values = { pawn: 1, knight: 3, bishop: 3, rook: 5, queen: 9, king: 0 };
+    const pieceValues: Record<string, number> = { 
+      pawn: 1, 
+      knight: 3, 
+      bishop: 3, 
+      rook: 5, 
+      queen: 9, 
+      king: 0 
+    };
     let score = 0;
 
     for (let y = 0; y < 8; y++) {
       for (let x = 0; x < 8; x++) {
         const piece = gameState.board[y][x];
         if (piece) {
-          const value = values[piece.type];
+          const value = pieceValues[piece.type] || 0;
           score += piece.color === 'white' ? value : -value;
         }
       }
@@ -273,19 +280,25 @@ export class RealChessEngine {
     const weaknesses: string[] = [];
     
     // Check for doubled pawns
-    const pawnFiles = { white: new Map(), black: new Map() };
+    const whitePawnFiles = new Map<number, number>();
+    const blackPawnFiles = new Map<number, number>();
     
     for (let y = 0; y < 8; y++) {
       for (let x = 0; x < 8; x++) {
         const piece = gameState.board[y][x];
         if (piece && piece.type === 'pawn') {
-          const count = pawnFiles[piece.color].get(x) || 0;
-          pawnFiles[piece.color].set(x, count + 1);
+          if (piece.color === 'white') {
+            const count = whitePawnFiles.get(x) || 0;
+            whitePawnFiles.set(x, count + 1);
+          } else {
+            const count = blackPawnFiles.get(x) || 0;
+            blackPawnFiles.set(x, count + 1);
+          }
         }
       }
     }
     
-    pawnFiles.white.forEach((count, file) => {
+    whitePawnFiles.forEach((count, file) => {
       if (count > 1) {
         const fileChar = String.fromCharCode(97 + file);
         weaknesses.push(`Doubled pawns on ${fileChar}-file`);
@@ -332,13 +345,13 @@ export class RealChessEngine {
           
           for (const move of moves.slice(0, 3)) { // Limit for performance
             const moveNotation = this.moveToNotation(piece, { x, y }, move, gameState.board);
-            const eval = this.evaluateMove(gameState, { x, y }, move);
+            const moveEval = this.evaluateMove(gameState, { x, y }, move);
             
-            if (gameState.currentPlayer === 'white' && eval > bestEval) {
-              bestEval = eval;
+            if (gameState.currentPlayer === 'white' && moveEval > bestEval) {
+              bestEval = moveEval;
               bestMove = moveNotation;
-            } else if (gameState.currentPlayer === 'black' && eval < bestEval) {
-              bestEval = eval;
+            } else if (gameState.currentPlayer === 'black' && moveEval < bestEval) {
+              bestEval = moveEval;
               bestMove = moveNotation;
             }
           }
@@ -370,8 +383,15 @@ export class RealChessEngine {
     let score = 0;
     
     if (capturedPiece) {
-      const values = { pawn: 1, knight: 3, bishop: 3, rook: 5, queen: 9, king: 0 };
-      score += values[capturedPiece.type];
+      const pieceValues: Record<string, number> = { 
+        pawn: 1, 
+        knight: 3, 
+        bishop: 3, 
+        rook: 5, 
+        queen: 9, 
+        king: 0 
+      };
+      score += pieceValues[capturedPiece.type] || 0;
     }
     
     // Center control bonus
@@ -415,21 +435,21 @@ export class RealChessEngine {
   }
 
   private getPositionKey(gameState: GameState): string {
-    let key = '';
+    const parts: string[] = [];
     
     for (let y = 0; y < 8; y++) {
       for (let x = 0; x < 8; x++) {
         const piece = gameState.board[y][x];
         if (piece) {
-          key += `${piece.color[0]}${piece.type[0]}${x}${y}`;
+          parts.push(`${piece.color.charAt(0)}${piece.type.charAt(0)}${x}${y}`);
         } else {
-          key += 'e';
+          parts.push('e');
         }
       }
     }
     
-    key += gameState.currentPlayer[0];
-    return key;
+    parts.push(gameState.currentPlayer.charAt(0));
+    return parts.join('');
   }
 
   private findKing(board: (Piece | null)[][], color: 'white' | 'black'): Position | null {
