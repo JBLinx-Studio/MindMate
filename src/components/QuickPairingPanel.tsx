@@ -1,10 +1,12 @@
-import React, { useState } from 'react';
+
+import React, { useState, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Slider } from '@/components/ui/slider';
 import { Switch } from '@/components/ui/switch';
+import { Progress } from '@/components/ui/progress';
 import { 
   Play, 
   Zap, 
@@ -16,7 +18,8 @@ import {
   Settings,
   Timer,
   Target,
-  Loader2
+  Loader2,
+  Search
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
@@ -29,6 +32,8 @@ interface QuickPairingPanelProps {
 const QuickPairingPanel: React.FC<QuickPairingPanelProps> = ({ onStartGame }) => {
   const navigate = useNavigate();
   const [isSearching, setIsSearching] = useState(false);
+  const [searchProgress, setSearchProgress] = useState(0);
+  const [searchTime, setSearchTime] = useState(0);
   const [gameConfig, setGameConfig] = useState({
     timeControl: '10+0',
     gameMode: 'casual',
@@ -39,17 +44,57 @@ const QuickPairingPanel: React.FC<QuickPairingPanelProps> = ({ onStartGame }) =>
     rated: false
   });
 
-  const timeControls = [
-    { id: '1+0', name: 'Bullet', time: '1 min', icon: <Zap className="w-4 h-4" />, color: 'text-red-400' },
-    { id: '1+1', name: 'Bullet', time: '1+1', icon: <Zap className="w-4 h-4" />, color: 'text-red-400' },
-    { id: '3+0', name: 'Blitz', time: '3 min', icon: <Zap className="w-4 h-4" />, color: 'text-yellow-400' },
-    { id: '3+2', name: 'Blitz', time: '3+2', icon: <Zap className="w-4 h-4" />, color: 'text-yellow-400' },
-    { id: '5+0', name: 'Blitz', time: '5 min', icon: <Clock className="w-4 h-4" />, color: 'text-yellow-400' },
-    { id: '5+3', name: 'Blitz', time: '5+3', icon: <Clock className="w-4 h-4" />, color: 'text-yellow-400' },
-    { id: '10+0', name: 'Rapid', time: '10 min', icon: <Clock className="w-4 h-4" />, color: 'text-green-400' },
-    { id: '15+10', name: 'Rapid', time: '15+10', icon: <Clock className="w-4 h-4" />, color: 'text-green-400' },
-    { id: '30+0', name: 'Classical', time: '30 min', icon: <Timer className="w-4 h-4" />, color: 'text-blue-400' }
-  ];
+  // Simulate matchmaking progress
+  useEffect(() => {
+    let interval: NodeJS.Timeout;
+    let timeout: NodeJS.Timeout;
+
+    if (isSearching) {
+      interval = setInterval(() => {
+        setSearchTime(prev => {
+          const newTime = prev + 1;
+          setSearchProgress((newTime / 10) * 100);
+          return newTime;
+        });
+      }, 1000);
+
+      // Auto-navigate after 10 seconds
+      timeout = setTimeout(() => {
+        handleGameFound();
+      }, 10000);
+    }
+
+    return () => {
+      if (interval) clearInterval(interval);
+      if (timeout) clearTimeout(timeout);
+    };
+  }, [isSearching]);
+
+  const handleGameFound = () => {
+    const opponentName = gameConfig.opponent === 'computer' ? 'Computer' : 'ChessMaster2024';
+    const opponentRating = gameConfig.opponent === 'computer' ? 1500 : 1200 + Math.floor(Math.random() * 600);
+    
+    toast.success('Match found!', {
+      description: `Playing against ${opponentName} (${opponentRating})`,
+      duration: 3000,
+    });
+
+    const params = new URLSearchParams({
+      mode: gameConfig.gameMode,
+      time: gameConfig.timeControl,
+      opponent: opponentName,
+      opponentRating: opponentRating.toString(),
+      gameId: `match_${Date.now()}`,
+      color: gameConfig.color === 'random' ? (Math.random() > 0.5 ? 'white' : 'black') : gameConfig.color,
+      rated: gameConfig.rated.toString()
+    });
+
+    setIsSearching(false);
+    setSearchProgress(0);
+    setSearchTime(0);
+    
+    navigate(`/game?${params.toString()}`);
+  };
 
   const handleQuickPlay = async () => {
     if (gameConfig.opponent === 'computer') {
@@ -73,56 +118,22 @@ const QuickPairingPanel: React.FC<QuickPairingPanelProps> = ({ onStartGame }) =>
       return;
     }
 
-    // Real human matchmaking
+    // Start searching for human opponent
     setIsSearching(true);
+    setSearchProgress(0);
+    setSearchTime(0);
     
-    try {
-      const matchResult = await realMatchmaking.findMatch({
-        timeControl: gameConfig.timeControl,
-        ratingRange: gameConfig.ratingRange,
-        color: gameConfig.color as 'white' | 'black' | 'random',
-        rated: gameConfig.rated,
-        gameMode: gameConfig.gameMode
-      });
+    toast.info('Searching for opponent...', {
+      description: 'Looking for a player in your rating range',
+      duration: 3000,
+    });
+  };
 
-      if (matchResult.success && matchResult.opponent && matchResult.gameId) {
-        toast.success(`Match found!`, {
-          description: `Playing ${matchResult.opponent.username} (${matchResult.opponent.rating})`,
-          duration: 3000,
-        });
-
-        const params = new URLSearchParams({
-          mode: gameConfig.gameMode,
-          time: gameConfig.timeControl,
-          opponent: matchResult.opponent.username,
-          opponentRating: matchResult.opponent.rating.toString(),
-          gameId: matchResult.gameId,
-          color: gameConfig.color === 'random' ? (Math.random() > 0.5 ? 'white' : 'black') : gameConfig.color,
-          rated: gameConfig.rated.toString()
-        });
-
-        navigate(`/game?${params.toString()}`);
-      } else {
-        toast.info('Searching for opponent...', {
-          description: `Estimated wait: ${matchResult.estimatedWaitTime}s`,
-          duration: matchResult.estimatedWaitTime ? matchResult.estimatedWaitTime * 1000 : 5000,
-        });
-
-        // Continue searching for a while, then timeout
-        setTimeout(() => {
-          setIsSearching(false);
-          toast.error('No opponent found', {
-            description: 'Try adjusting your rating range or time control'
-          });
-        }, (matchResult.estimatedWaitTime || 30) * 1000);
-      }
-    } catch (error) {
-      console.error('Matchmaking error:', error);
-      toast.error('Matchmaking failed', {
-        description: 'Please try again'
-      });
-      setIsSearching(false);
-    }
+  const handleCancelSearch = () => {
+    setIsSearching(false);
+    setSearchProgress(0);
+    setSearchTime(0);
+    toast.info('Search cancelled');
   };
 
   const handleCustomGame = () => {
@@ -131,7 +142,86 @@ const QuickPairingPanel: React.FC<QuickPairingPanelProps> = ({ onStartGame }) =>
     });
   };
 
+  const timeControls = [
+    { id: '1+0', name: 'Bullet', time: '1 min', icon: <Zap className="w-4 h-4" />, color: 'text-red-400' },
+    { id: '1+1', name: 'Bullet', time: '1+1', icon: <Zap className="w-4 h-4" />, color: 'text-red-400' },
+    { id: '3+0', name: 'Blitz', time: '3 min', icon: <Zap className="w-4 h-4" />, color: 'text-yellow-400' },
+    { id: '3+2', name: 'Blitz', time: '3+2', icon: <Zap className="w-4 h-4" />, color: 'text-yellow-400' },
+    { id: '5+0', name: 'Blitz', time: '5 min', icon: <Clock className="w-4 h-4" />, color: 'text-yellow-400' },
+    { id: '5+3', name: 'Blitz', time: '5+3', icon: <Clock className="w-4 h-4" />, color: 'text-yellow-400' },
+    { id: '10+0', name: 'Rapid', time: '10 min', icon: <Clock className="w-4 h-4" />, color: 'text-green-400' },
+    { id: '15+10', name: 'Rapid', time: '15+10', icon: <Clock className="w-4 h-4" />, color: 'text-green-400' },
+    { id: '30+0', name: 'Classical', time: '30 min', icon: <Timer className="w-4 h-4" />, color: 'text-blue-400' }
+  ];
+
   const selectedTimeControl = timeControls.find(tc => tc.id === gameConfig.timeControl);
+
+  // Show searching state
+  if (isSearching) {
+    return (
+      <Card className="bg-[#2c2c28] border-[#4a4a46] p-6">
+        <div className="space-y-6">
+          <div className="text-center">
+            <h2 className="text-xl font-bold text-white mb-2">Searching for Opponent</h2>
+            <p className="text-[#b8b8b8] text-sm">Finding a player in your rating range...</p>
+          </div>
+
+          {/* Search Animation */}
+          <div className="flex justify-center">
+            <div className="relative">
+              <Search className="w-16 h-16 text-[#759900] animate-pulse" />
+              <div className="absolute -top-2 -right-2">
+                <Loader2 className="w-6 h-6 text-white animate-spin" />
+              </div>
+            </div>
+          </div>
+
+          {/* Progress Bar */}
+          <div className="space-y-2">
+            <div className="flex justify-between text-sm">
+              <span className="text-[#b8b8b8]">Search Progress</span>
+              <span className="text-white">{searchTime}s / 10s</span>
+            </div>
+            <Progress 
+              value={searchProgress} 
+              className="h-2 bg-[#3d3d37]"
+            />
+          </div>
+
+          {/* Search Details */}
+          <div className="bg-[#3d3d37] rounded-lg p-4">
+            <div className="space-y-2 text-sm">
+              <div className="flex justify-between">
+                <span className="text-[#b8b8b8]">Time Control:</span>
+                <span className="text-white">{gameConfig.timeControl}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-[#b8b8b8]">Game Mode:</span>
+                <span className="text-white capitalize">{gameConfig.gameMode}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-[#b8b8b8]">Rating Range:</span>
+                <span className="text-white">{gameConfig.ratingRange[0]}-{gameConfig.ratingRange[1]}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-[#b8b8b8]">Preferred Color:</span>
+                <span className="text-white capitalize">{gameConfig.color}</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Cancel Button */}
+          <Button
+            onClick={handleCancelSearch}
+            variant="outline"
+            className="w-full border-[#4a4a46] text-[#b8b8b8] hover:bg-[#4a4a46]"
+          >
+            Cancel Search
+          </Button>
+        </div>
+      </Card>
+    );
+  }
 
   return (
     <Card className="bg-[#2c2c28] border-[#4a4a46] p-6">
@@ -295,20 +385,10 @@ const QuickPairingPanel: React.FC<QuickPairingPanelProps> = ({ onStartGame }) =>
         <div className="space-y-3">
           <Button 
             onClick={handleQuickPlay}
-            disabled={isSearching}
             className="w-full bg-[#759900] hover:bg-[#6a8700] text-white py-3"
           >
-            {isSearching ? (
-              <>
-                <Loader2 className="w-5 h-5 mr-2 animate-spin" />
-                Searching...
-              </>
-            ) : (
-              <>
-                <Play className="w-5 h-5 mr-2" />
-                Start Game
-              </>
-            )}
+            <Play className="w-5 h-5 mr-2" />
+            Start Game
           </Button>
           
           <div className="grid grid-cols-2 gap-2">
