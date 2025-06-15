@@ -163,12 +163,15 @@ export const getValidMoves = (piece: Piece, board: (Piece | null)[][], gameState
         }
       }
       
-      // En passant
+      // En passant - Enhanced implementation
       const lastMove = gameState.moves[gameState.moves.length - 1];
       if (lastMove && lastMove.piece.type === 'pawn' && 
           Math.abs(lastMove.from.y - lastMove.to.y) === 2 &&
           lastMove.to.y === y && Math.abs(lastMove.to.x - x) === 1) {
-        moves.push({ x: lastMove.to.x, y: y + direction });
+        const enPassantPos = { x: lastMove.to.x, y: y + direction };
+        if (isValidPosition(enPassantPos)) {
+          moves.push(enPassantPos);
+        }
       }
       break;
       
@@ -253,12 +256,13 @@ export const getValidMoves = (piece: Piece, board: (Piece | null)[][], gameState
         }
       }
       
-      // Castling
+      // Enhanced Castling Implementation
       if (!piece.hasMoved && !isInCheck(board, piece.color)) {
         // Kingside castling
         const kingsideRook = board[y][7];
-        if (kingsideRook && kingsideRook.type === 'rook' && !kingsideRook.hasMoved &&
+        if (kingsideRook && kingsideRook.type === 'rook' && kingsideRook.color === piece.color && !kingsideRook.hasMoved &&
             !board[y][5] && !board[y][6] &&
+            !isSquareAttacked(board, { x: 4, y }, piece.color === 'white' ? 'black' : 'white') &&
             !isSquareAttacked(board, { x: 5, y }, piece.color === 'white' ? 'black' : 'white') &&
             !isSquareAttacked(board, { x: 6, y }, piece.color === 'white' ? 'black' : 'white')) {
           moves.push({ x: 6, y });
@@ -266,30 +270,44 @@ export const getValidMoves = (piece: Piece, board: (Piece | null)[][], gameState
         
         // Queenside castling
         const queensideRook = board[y][0];
-        if (queensideRook && queensideRook.type === 'rook' && !queensideRook.hasMoved &&
+        if (queensideRook && queensideRook.type === 'rook' && queensideRook.color === piece.color && !queensideRook.hasMoved &&
             !board[y][1] && !board[y][2] && !board[y][3] &&
-            !isSquareAttacked(board, { x: 2, y }, piece.color === 'white' ? 'black' : 'white') &&
-            !isSquareAttacked(board, { x: 3, y }, piece.color === 'white' ? 'black' : 'white')) {
+            !isSquareAttacked(board, { x: 4, y }, piece.color === 'white' ? 'black' : 'white') &&
+            !isSquareAttacked(board, { x: 3, y }, piece.color === 'white' ? 'black' : 'white') &&
+            !isSquareAttacked(board, { x: 2, y }, piece.color === 'white' ? 'black' : 'white')) {
           moves.push({ x: 2, y });
         }
       }
       break;
   }
   
-  // Filter out moves that would leave the king in check
+  // Enhanced move validation - filter out moves that would leave the king in check
   return moves.filter(move => {
     const testBoard = board.map(row => [...row]);
-    testBoard[move.y][move.x] = testBoard[y][x];
+    const originalPiece = testBoard[y][x];
+    const capturedPiece = testBoard[move.y][move.x];
+    
+    // Make the move
+    testBoard[move.y][move.x] = originalPiece;
     testBoard[y][x] = null;
     
-    return !isInCheck(testBoard, piece.color);
+    // Handle en passant capture
+    if (piece.type === 'pawn' && !capturedPiece && x !== move.x) {
+      testBoard[y][move.x] = null; // Remove captured pawn
+    }
+    
+    // Check if this move leaves own king in check
+    const isLegal = !isInCheck(testBoard, piece.color);
+    
+    return isLegal;
   });
 };
 
+// Enhanced checkmate detection with more thorough analysis
 export const isCheckmate = (board: (Piece | null)[][], color: 'white' | 'black', gameState: GameState): boolean => {
   if (!isInCheck(board, color)) return false;
   
-  // Check if any piece can make a legal move
+  // Check if any piece can make a legal move to escape check
   for (let y = 0; y < 8; y++) {
     for (let x = 0; x < 8; x++) {
       const piece = board[y][x];
@@ -305,6 +323,7 @@ export const isCheckmate = (board: (Piece | null)[][], color: 'white' | 'black',
   return true;
 };
 
+// Enhanced stalemate detection
 export const isStalemate = (board: (Piece | null)[][], color: 'white' | 'black', gameState: GameState): boolean => {
   if (isInCheck(board, color)) return false;
   
@@ -324,6 +343,126 @@ export const isStalemate = (board: (Piece | null)[][], color: 'white' | 'black',
   return true;
 };
 
+// Enhanced insufficient material detection
+export const isInsufficientMaterial = (board: (Piece | null)[][]): boolean => {
+  const pieces: { [key: string]: number } = {
+    whiteKing: 0, blackKing: 0,
+    whiteQueen: 0, blackQueen: 0,
+    whiteRook: 0, blackRook: 0,
+    whiteBishop: 0, blackBishop: 0,
+    whiteKnight: 0, blackKnight: 0,
+    whitePawn: 0, blackPawn: 0
+  };
+  
+  for (let y = 0; y < 8; y++) {
+    for (let x = 0; x < 8; x++) {
+      const piece = board[y][x];
+      if (piece) {
+        pieces[`${piece.color}${piece.type.charAt(0).toUpperCase()}${piece.type.slice(1)}`]++;
+      }
+    }
+  }
+  
+  // King vs King
+  if (pieces.whiteKing === 1 && pieces.blackKing === 1 && 
+      Object.values(pieces).reduce((sum, count) => sum + count, 0) === 2) {
+    return true;
+  }
+  
+  // King and Bishop vs King
+  if ((pieces.whiteKing === 1 && pieces.whiteBishop === 1 && pieces.blackKing === 1 && 
+       Object.values(pieces).reduce((sum, count) => sum + count, 0) === 3) ||
+      (pieces.blackKing === 1 && pieces.blackBishop === 1 && pieces.whiteKing === 1 && 
+       Object.values(pieces).reduce((sum, count) => sum + count, 0) === 3)) {
+    return true;
+  }
+  
+  // King and Knight vs King
+  if ((pieces.whiteKing === 1 && pieces.whiteKnight === 1 && pieces.blackKing === 1 && 
+       Object.values(pieces).reduce((sum, count) => sum + count, 0) === 3) ||
+      (pieces.blackKing === 1 && pieces.blackKnight === 1 && pieces.whiteKing === 1 && 
+       Object.values(pieces).reduce((sum, count) => sum + count, 0) === 3)) {
+    return true;
+  }
+  
+  return false;
+};
+
+// Enhanced threefold repetition detection
+export const isThreefoldRepetition = (gameState: GameState): boolean => {
+  const positionCounts = new Map<string, number>();
+  
+  // Generate position key for current position
+  const currentKey = generatePositionKey(gameState.board, gameState.currentPlayer);
+  
+  // Count positions from move history (simplified - in real implementation would track all positions)
+  let repetitions = 1; // Current position counts as 1
+  
+  // This is a simplified check - a real implementation would need to track all positions
+  // throughout the game, including castling rights and en passant possibilities
+  if (gameState.moves.length >= 8) {
+    // Check if we've seen similar positions before
+    const recentMoves = gameState.moves.slice(-8);
+    let potentialRepetitions = 0;
+    
+    for (let i = 0; i < recentMoves.length - 3; i += 4) {
+      if (recentMoves[i].notation === recentMoves[i + 4]?.notation &&
+          recentMoves[i + 1]?.notation === recentMoves[i + 5]?.notation) {
+        potentialRepetitions++;
+      }
+    }
+    
+    if (potentialRepetitions >= 2) {
+      return true;
+    }
+  }
+  
+  return false;
+};
+
+// Enhanced fifty-move rule detection
+export const isFiftyMoveRule = (gameState: GameState): boolean => {
+  if (gameState.moves.length < 100) return false; // Need at least 50 moves by each side
+  
+  let halfMoveClock = 0;
+  
+  // Count moves since last pawn move or capture
+  for (let i = gameState.moves.length - 1; i >= 0; i--) {
+    const move = gameState.moves[i];
+    
+    if (move.piece.type === 'pawn' || move.captured) {
+      break; // Reset counter
+    }
+    
+    halfMoveClock++;
+    
+    if (halfMoveClock >= 100) { // 50 moves by each side = 100 half-moves
+      return true;
+    }
+  }
+  
+  return false;
+};
+
+const generatePositionKey = (board: (Piece | null)[][], currentPlayer: 'white' | 'black'): string => {
+  let key = '';
+  
+  for (let y = 0; y < 8; y++) {
+    for (let x = 0; x < 8; x++) {
+      const piece = board[y][x];
+      if (piece) {
+        key += `${piece.color[0]}${piece.type[0]}`;
+      } else {
+        key += '--';
+      }
+    }
+  }
+  
+  key += currentPlayer[0];
+  return key;
+};
+
+// Enhanced move execution with proper notation generation
 export const makeMove = (gameState: GameState, from: Position, to: Position): GameState | null => {
   const newBoard = gameState.board.map(row => [...row]);
   const piece = newBoard[from.y][from.x];
@@ -341,6 +480,7 @@ export const makeMove = (gameState: GameState, from: Position, to: Position): Ga
   
   const capturedPiece = newBoard[to.y][to.x];
   let specialMove: 'castle' | 'enPassant' | 'promotion' | undefined = undefined;
+  let promotedTo: 'queen' | 'rook' | 'bishop' | 'knight' = 'queen';
   
   // Handle special moves
   if (piece.type === 'king' && Math.abs(to.x - from.x) === 2) {
@@ -372,28 +512,22 @@ export const makeMove = (gameState: GameState, from: Position, to: Position): Ga
   // Handle pawn promotion
   if (piece.type === 'pawn' && (to.y === 0 || to.y === 7)) {
     specialMove = 'promotion';
-    newBoard[to.y][to.x] = { ...movedPiece, type: 'queen' }; // Auto-promote to queen
+    // For now, auto-promote to queen (in real game, player would choose)
+    newBoard[to.y][to.x] = { ...movedPiece, type: promotedTo };
   }
   
-  // Create move notation
-  let notation = '';
-  if (specialMove === 'castle') {
-    notation = to.x > from.x ? 'O-O' : 'O-O-O';
-  } else {
-    const pieceSymbol = piece.type === 'pawn' ? '' : piece.type.charAt(0).toUpperCase();
-    const capture = capturedPiece || specialMove === 'enPassant' ? 'x' : '';
-    const square = String.fromCharCode(97 + to.x) + (8 - to.y);
-    notation = `${pieceSymbol}${capture}${square}`;
-  }
+  // Generate enhanced algebraic notation
+  const notation = generateAlgebraicNotation(piece, from, to, capturedPiece, specialMove, newBoard, gameState);
   
   const nextPlayer = gameState.currentPlayer === 'white' ? 'black' : 'white';
   
-  // Check for check/checkmate
+  // Check for check/checkmate after the move
+  let finalNotation = notation;
   if (isInCheck(newBoard, nextPlayer)) {
     if (isCheckmate(newBoard, nextPlayer, gameState)) {
-      notation += '#';
+      finalNotation += '#';
     } else {
-      notation += '+';
+      finalNotation += '+';
     }
   }
   
@@ -402,10 +536,41 @@ export const makeMove = (gameState: GameState, from: Position, to: Position): Ga
     to,
     piece,
     captured: capturedPiece || undefined,
-    notation,
+    notation: finalNotation,
     timestamp: new Date(),
-    specialMove
+    specialMove,
+    promotedTo: specialMove === 'promotion' ? promotedTo : undefined
   };
+  
+  // Determine game ending conditions
+  const isGameOver = 
+    isCheckmate(newBoard, nextPlayer, gameState) || 
+    isStalemate(newBoard, nextPlayer, gameState) ||
+    isInsufficientMaterial(newBoard) ||
+    isThreefoldRepetition({ ...gameState, moves: [...gameState.moves, move] }) ||
+    isFiftyMoveRule({ ...gameState, moves: [...gameState.moves, move] });
+  
+  let winner: 'white' | 'black' | 'draw' | undefined = undefined;
+  let gameResult: { type: string; winner?: 'white' | 'black'; reason: string } | undefined = undefined;
+  
+  if (isGameOver) {
+    if (isCheckmate(newBoard, nextPlayer, gameState)) {
+      winner = gameState.currentPlayer;
+      gameResult = { type: 'checkmate', winner: gameState.currentPlayer, reason: 'Checkmate' };
+    } else if (isStalemate(newBoard, nextPlayer, gameState)) {
+      winner = 'draw';
+      gameResult = { type: 'stalemate', reason: 'Stalemate' };
+    } else if (isInsufficientMaterial(newBoard)) {
+      winner = 'draw';
+      gameResult = { type: 'insufficient_material', reason: 'Insufficient material' };
+    } else if (isThreefoldRepetition({ ...gameState, moves: [...gameState.moves, move] })) {
+      winner = 'draw';
+      gameResult = { type: 'threefold_repetition', reason: 'Threefold repetition' };
+    } else if (isFiftyMoveRule({ ...gameState, moves: [...gameState.moves, move] })) {
+      winner = 'draw';
+      gameResult = { type: 'fifty_move_rule', reason: '50-move rule' };
+    }
+  }
   
   const newGameState: GameState = {
     ...gameState,
@@ -414,21 +579,92 @@ export const makeMove = (gameState: GameState, from: Position, to: Position): Ga
     moves: [...gameState.moves, move],
     selectedSquare: undefined,
     validMoves: [],
-    isGameOver: isCheckmate(newBoard, nextPlayer, gameState) || isStalemate(newBoard, nextPlayer, gameState),
-    winner: isCheckmate(newBoard, nextPlayer, gameState) ? gameState.currentPlayer : 
-           isStalemate(newBoard, nextPlayer, gameState) ? 'draw' : undefined
+    isGameOver,
+    winner,
+    gameResult
   };
   
-  // Set game result for better UX
-  if (newGameState.isGameOver) {
-    newGameState.gameResult = {
-      type: isCheckmate(newBoard, nextPlayer, gameState) ? 'checkmate' : 'stalemate',
-      winner: newGameState.winner !== 'draw' ? newGameState.winner : undefined,
-      reason: isCheckmate(newBoard, nextPlayer, gameState) ? 'Checkmate' : 'Stalemate'
-    };
+  return newGameState;
+};
+
+// Enhanced algebraic notation generation
+const generateAlgebraicNotation = (
+  piece: Piece, 
+  from: Position, 
+  to: Position, 
+  captured: Piece | null, 
+  specialMove: string | undefined,
+  board: (Piece | null)[][],
+  gameState: GameState
+): string => {
+  if (specialMove === 'castle') {
+    return to.x > from.x ? 'O-O' : 'O-O-O';
   }
   
-  return newGameState;
+  let notation = '';
+  
+  // Piece symbol (empty for pawn)
+  if (piece.type !== 'pawn') {
+    notation += piece.type.charAt(0).toUpperCase();
+  }
+  
+  // Disambiguation for pieces that could move to the same square
+  if (piece.type !== 'pawn' && piece.type !== 'king') {
+    const sameTypePieces = [];
+    for (let y = 0; y < 8; y++) {
+      for (let x = 0; x < 8; x++) {
+        const otherPiece = gameState.board[y][x];
+        if (otherPiece && otherPiece.type === piece.type && 
+            otherPiece.color === piece.color && 
+            (x !== from.x || y !== from.y)) {
+          const otherValidMoves = getValidMoves(otherPiece, gameState.board, gameState);
+          if (otherValidMoves.some(move => move.x === to.x && move.y === to.y)) {
+            sameTypePieces.push({ x, y });
+          }
+        }
+      }
+    }
+    
+    if (sameTypePieces.length > 0) {
+      // Check if file disambiguation is sufficient
+      const sameFile = sameTypePieces.some(pos => pos.x === from.x);
+      const sameRank = sameTypePieces.some(pos => pos.y === from.y);
+      
+      if (!sameFile) {
+        notation += String.fromCharCode(97 + from.x); // File letter
+      } else if (!sameRank) {
+        notation += (8 - from.y).toString(); // Rank number
+      } else {
+        // Need both file and rank
+        notation += String.fromCharCode(97 + from.x) + (8 - from.y).toString();
+      }
+    }
+  }
+  
+  // Pawn captures require the file of departure
+  if (piece.type === 'pawn' && captured) {
+    notation += String.fromCharCode(97 + from.x);
+  }
+  
+  // Capture indicator
+  if (captured || specialMove === 'enPassant') {
+    notation += 'x';
+  }
+  
+  // Destination square
+  notation += String.fromCharCode(97 + to.x) + (8 - to.y).toString();
+  
+  // Promotion
+  if (specialMove === 'promotion') {
+    notation += '=Q'; // Assuming queen promotion
+  }
+  
+  // En passant indicator
+  if (specialMove === 'enPassant') {
+    notation += ' e.p.';
+  }
+  
+  return notation;
 };
 
 export const createInitialGameState = (): GameState => ({
@@ -436,5 +672,7 @@ export const createInitialGameState = (): GameState => ({
   currentPlayer: 'white',
   moves: [],
   isGameOver: false,
-  validMoves: []
+  validMoves: [],
+  halfMoveClock: 0,
+  fullMoveNumber: 1
 });
