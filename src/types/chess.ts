@@ -18,7 +18,6 @@ export interface Move {
   captured?: Piece;
   notation: string;
   timestamp: Date;
-  specialMove?: 'castle' | 'enPassant' | 'promotion';
 }
 
 export interface GameState {
@@ -29,11 +28,4 @@ export interface GameState {
   winner?: 'white' | 'black' | 'draw';
   selectedSquare?: Position;
   validMoves: Position[];
-  lastMoveHighlight?: { from: Position; to: Position };
-  timeRemaining?: { white: number; black: number };
-  gameResult?: {
-    type: 'checkmate' | 'stalemate' | 'resignation' | 'timeout' | 'draw';
-    winner?: 'white' | 'black';
-    reason?: string;
-  };
 }

@@ -3,13 +3,11 @@ import React from 'react';
 import { SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
 import { AppSidebar } from '../components/AppSidebar';
 import { Button } from '@/components/ui/button';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Upload, Play, RotateCcw, Database, BookOpen } from 'lucide-react';
-import PositionAnalyzer from '../components/PositionAnalyzer';
+import { Upload, Play, RotateCcw } from 'lucide-react';
 
 const Analysis = () => {
   return (
-    <SidebarProvider>
+    <SidebarProvider collapsedWidth={64}>
       <div className="min-h-screen flex w-full bg-gradient-to-br from-amber-50 to-orange-100">
         <AppSidebar />
         
@@ -22,69 +20,34 @@ const Analysis = () => {
           </header>
 
           <main className="flex-1 p-6">
-            <div className="max-w-6xl mx-auto">
-              <Tabs defaultValue="upload" className="space-y-6">
-                <TabsList className="grid w-full grid-cols-4">
-                  <TabsTrigger value="upload">Upload Game</TabsTrigger>
-                  <TabsTrigger value="position">Position Analysis</TabsTrigger>
-                  <TabsTrigger value="database">Game Database</TabsTrigger>
-                  <TabsTrigger value="opening">Opening Explorer</TabsTrigger>
-                </TabsList>
+            <div className="max-w-4xl mx-auto">
+              <div className="bg-white rounded-lg shadow-lg p-8 text-center">
+                <div className="mb-8">
+                  <h2 className="text-3xl font-bold text-gray-800 mb-4">Chess Game Analysis</h2>
+                  <p className="text-gray-600">Analyze your games with powerful chess engine</p>
+                </div>
                 
-                <TabsContent value="upload" className="space-y-6">
-                  <div className="bg-white rounded-lg shadow-lg p-8 text-center">
-                    <div className="mb-8">
-                      <h2 className="text-3xl font-bold text-gray-800 mb-4">Upload Chess Game</h2>
-                      <p className="text-gray-600">Upload PGN files to analyze your games with powerful chess engine</p>
-                    </div>
-                    
-                    <div className="space-y-6">
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        <Button size="lg" className="bg-blue-600 hover:bg-blue-700">
-                          <Upload className="w-5 h-5 mr-2" />
-                          Upload PGN
-                        </Button>
-                        <Button size="lg" variant="outline">
-                          <Play className="w-5 h-5 mr-2" />
-                          Analyze Last Game
-                        </Button>
-                        <Button size="lg" variant="outline">
-                          <RotateCcw className="w-5 h-5 mr-2" />
-                          Quick Analysis
-                        </Button>
-                      </div>
-                      
-                      <div className="border-2 border-dashed border-gray-300 rounded-lg p-8">
-                        <div className="text-gray-500">
-                          Drag and drop PGN files here, or click to select files
-                        </div>
-                      </div>
-                    </div>
+                <div className="space-y-6">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <Button size="lg" className="bg-blue-600 hover:bg-blue-700">
+                      <Upload className="w-5 h-5 mr-2" />
+                      Upload PGN
+                    </Button>
+                    <Button size="lg" variant="outline">
+                      <Play className="w-5 h-5 mr-2" />
+                      Analyze Last Game
+                    </Button>
+                    <Button size="lg" variant="outline">
+                      <RotateCcw className="w-5 h-5 mr-2" />
+                      Position Analysis
+                    </Button>
                   </div>
-                </TabsContent>
-                
-                <TabsContent value="position" className="space-y-6">
-                  <PositionAnalyzer />
-                </TabsContent>
-                
-                <TabsContent value="database" className="space-y-6">
-                  <div className="bg-white rounded-lg shadow-lg p-8 text-center">
-                    <Database className="w-16 h-16 mx-auto mb-4 text-gray-400" />
-                    <h3 className="text-xl font-semibold mb-2">Game Database</h3>
-                    <p className="text-gray-600 mb-6">Browse and search through millions of chess games</p>
-                    <Button>Coming Soon</Button>
-                  </div>
-                </TabsContent>
-                
-                <TabsContent value="opening" className="space-y-6">
-                  <div className="bg-white rounded-lg shadow-lg p-8 text-center">
-                    <BookOpen className="w-16 h-16 mx-auto mb-4 text-gray-400" />
-                    <h3 className="text-xl font-semibold mb-2">Opening Explorer</h3>
-                    <p className="text-gray-600 mb-6">Explore opening theory and statistics</p>
-                    <Button>Coming Soon</Button>
-                  </div>
-                </TabsContent>
-              </Tabs>
+                  
+                  <p className="text-gray-500 mt-8">
+                    Coming soon: Advanced position analysis, opening explorer, and game insights
+                  </p>
+                </div>
+              </div>
             </div>
           </main>
         </div>
