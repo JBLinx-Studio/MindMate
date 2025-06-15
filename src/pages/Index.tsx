@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { SidebarProvider } from '@/components/ui/sidebar';
 import { AppSidebar } from '../components/AppSidebar';
@@ -6,7 +7,7 @@ import { GameState } from '../types/chess';
 import { createInitialGameState } from '../utils/chessLogic';
 import { soundManager } from '../utils/soundManager';
 import { toast } from 'sonner';
-import { Volume2, VolumeX, Settings, Clock, MoreHorizontal, Flag, RotateCcw } from 'lucide-react';
+import { Volume2, VolumeX, Settings, Clock, MoreHorizontal, Flag, RotateCcw, Users, MessageSquare, Eye, Share2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -16,6 +17,7 @@ const Index = () => {
   const [gameState, setGameState] = useState<GameState>(createInitialGameState());
   const [soundEnabled, setSoundEnabled] = useState(true);
   const [gameTime, setGameTime] = useState({ white: 900, black: 900 });
+  const [spectators, setSpectators] = useState(47);
 
   const handleNewGame = () => {
     setGameState(createInitialGameState());
@@ -77,7 +79,7 @@ const Index = () => {
           {/* Main Game Area */}
           <main className="flex-1 flex">
             <div className="flex-1 p-4">
-              <div className="max-w-6xl mx-auto">
+              <div className="max-w-7xl mx-auto">
                 <div className="grid grid-cols-12 gap-4">
                   
                   {/* Left Panel - Player & Controls */}
@@ -91,7 +93,10 @@ const Index = () => {
                           </div>
                           <div>
                             <div className="text-white font-medium text-sm">Magnus</div>
-                            <div className="text-[#b8b8b8] text-xs">2831</div>
+                            <div className="text-[#b8b8b8] text-xs flex items-center space-x-1">
+                              <span>2831</span>
+                              <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                            </div>
                           </div>
                         </div>
                         <div className="text-right">
@@ -106,7 +111,7 @@ const Index = () => {
 
                     {/* Game Controls */}
                     <div className="bg-[#2c2c28] rounded-lg p-3">
-                      <div className="flex space-x-2">
+                      <div className="flex space-x-2 mb-3">
                         <Button 
                           onClick={handleNewGame}
                           className="flex-1 bg-[#759900] hover:bg-[#6a8700] text-white text-sm h-8"
@@ -121,11 +126,22 @@ const Index = () => {
                         >
                           <Flag className="w-4 h-4" />
                         </Button>
+                      </div>
+                      
+                      <div className="flex space-x-2">
+                        <Button
+                          onClick={toggleSound}
+                          variant="outline"
+                          className="flex-1 border-[#4a4a46] text-[#b8b8b8] hover:bg-[#4a4a46] h-8 text-xs"
+                        >
+                          {soundEnabled ? <Volume2 className="w-3 h-3 mr-1" /> : <VolumeX className="w-3 h-3 mr-1" />}
+                          Sound
+                        </Button>
                         <Button
                           variant="outline"
                           className="px-3 border-[#4a4a46] text-[#b8b8b8] hover:bg-[#4a4a46] h-8"
                         >
-                          <MoreHorizontal className="w-4 h-4" />
+                          <Settings className="w-4 h-4" />
                         </Button>
                       </div>
                     </div>
@@ -139,7 +155,10 @@ const Index = () => {
                           </div>
                           <div>
                             <div className="text-white font-medium text-sm">Carlsen</div>
-                            <div className="text-[#b8b8b8] text-xs">2820</div>
+                            <div className="text-[#b8b8b8] text-xs flex items-center space-x-1">
+                              <span>2820</span>
+                              <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                            </div>
                           </div>
                         </div>
                         <div className="text-right">
@@ -149,6 +168,17 @@ const Index = () => {
                             {formatTime(gameTime.white)}
                           </div>
                         </div>
+                      </div>
+                    </div>
+
+                    {/* Spectators */}
+                    <div className="bg-[#2c2c28] rounded-lg p-3">
+                      <div className="flex items-center justify-between text-sm">
+                        <div className="flex items-center space-x-2 text-[#b8b8b8]">
+                          <Eye className="w-4 h-4" />
+                          <span>Spectators</span>
+                        </div>
+                        <span className="text-white font-medium">{spectators}</span>
                       </div>
                     </div>
                   </div>
@@ -167,8 +197,24 @@ const Index = () => {
                   <div className="col-span-3 space-y-3">
                     {/* Move History */}
                     <div className="bg-[#2c2c28] rounded-lg">
-                      <div className="p-3 border-b border-[#4a4a46]">
+                      <div className="p-3 border-b border-[#4a4a46] flex items-center justify-between">
                         <h3 className="text-white font-medium text-sm">Moves</h3>
+                        <div className="flex items-center space-x-1">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="text-[#b8b8b8] hover:text-white h-6 w-6 p-0"
+                          >
+                            <Share2 className="w-3 h-3" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="text-[#b8b8b8] hover:text-white h-6 w-6 p-0"
+                          >
+                            <MoreHorizontal className="w-3 h-3" />
+                          </Button>
+                        </div>
                       </div>
                       <div className="p-3 max-h-64 overflow-y-auto">
                         {gameState.moves.length === 0 ? (
@@ -177,17 +223,25 @@ const Index = () => {
                           </div>
                         ) : (
                           <div className="space-y-1">
-                            {gameState.moves.map((move, index) => (
-                              <div key={index} className="flex items-center text-sm">
-                                <span className="text-[#b8b8b8] w-8">
-                                  {Math.ceil((index + 1) / 2)}.
-                                </span>
-                                <span className="text-white font-mono">
-                                  {String.fromCharCode(97 + move.from.x)}{8 - move.from.y}
-                                  {String.fromCharCode(97 + move.to.x)}{8 - move.to.y}
-                                </span>
-                              </div>
-                            ))}
+                            {gameState.moves.map((move, index) => {
+                              const moveNumber = Math.ceil((index + 1) / 2);
+                              const isWhiteMove = index % 2 === 0;
+                              
+                              return (
+                                <div key={index} className="flex items-center text-sm hover:bg-[#3d3d37] px-1 py-0.5 rounded cursor-pointer">
+                                  {isWhiteMove && (
+                                    <span className="text-[#b8b8b8] w-8 text-xs">
+                                      {moveNumber}.
+                                    </span>
+                                  )}
+                                  <span className="text-white font-mono text-xs">
+                                    {String.fromCharCode(97 + move.from.x)}{8 - move.from.y}
+                                    {String.fromCharCode(97 + move.to.x)}{8 - move.to.y}
+                                    {move.captured && <span className="text-red-400">x</span>}
+                                  </span>
+                                </div>
+                              );
+                            })}
                           </div>
                         )}
                       </div>
@@ -206,7 +260,45 @@ const Index = () => {
                         </div>
                         <div className="flex justify-between">
                           <span className="text-[#b8b8b8]">Status:</span>
-                          <span className="text-[#759900]">In progress</span>
+                          <Badge 
+                            variant="outline" 
+                            className="text-[#759900] border-[#759900] text-xs"
+                          >
+                            In progress
+                          </Badge>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-[#b8b8b8]">Rated:</span>
+                          <span className="text-white">Yes</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Chat */}
+                    <div className="bg-[#2c2c28] rounded-lg">
+                      <div className="p-3 border-b border-[#4a4a46] flex items-center justify-between">
+                        <h3 className="text-white font-medium text-sm flex items-center">
+                          <MessageSquare className="w-4 h-4 mr-2" />
+                          Chat
+                        </h3>
+                        <Badge 
+                          variant="outline" 
+                          className="text-[#b8b8b8] border-[#4a4a46] text-xs"
+                        >
+                          3
+                        </Badge>
+                      </div>
+                      <div className="p-3 max-h-32 overflow-y-auto">
+                        <div className="space-y-2 text-xs">
+                          <div className="text-[#b8b8b8]">
+                            <span className="text-white font-medium">Magnus:</span> Good luck!
+                          </div>
+                          <div className="text-[#b8b8b8]">
+                            <span className="text-white font-medium">Carlsen:</span> Thanks, you too
+                          </div>
+                          <div className="text-[#b8b8b8]">
+                            <span className="text-blue-400 font-medium">System:</span> Game started
+                          </div>
                         </div>
                       </div>
                     </div>
