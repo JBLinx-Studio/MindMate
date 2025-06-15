@@ -54,12 +54,17 @@ export const findKing = (board: (Piece | null)[][], color: 'white' | 'black'): P
   return null;
 };
 
-export const isSquareAttacked = (board: (Piece | null)[][], position: Position, byColor: 'white' | 'black'): boolean => {
+export const isSquareAttacked = (
+  board: (Piece | null)[][],
+  position: Position,
+  byColor: 'white' | 'black'
+): boolean => {
   for (let y = 0; y < 8; y++) {
     for (let x = 0; x < 8; x++) {
       const piece = board[y][x];
       if (piece && piece.color === byColor) {
-        const moves = getPieceAttacks(piece, board);
+        // Pass {forAttackDetection: true}
+        const moves = getPieceAttacks(piece, board, { forAttackDetection: true });
         if (moves.some(move => move.x === position.x && move.y === position.y)) {
           return true;
         }
@@ -77,10 +82,14 @@ export const isInCheck = (board: (Piece | null)[][], color: 'white' | 'black'): 
   return isSquareAttacked(board, kingPos, opponentColor);
 };
 
-const getPieceAttacks = (piece: Piece, board: (Piece | null)[][]): Position[] => {
+const getPieceAttacks = (
+  piece: Piece,
+  board: (Piece | null)[][],
+  opts?: { forAttackDetection?: boolean }
+): Position[] => {
   const moves: Position[] = [];
   const { x, y } = piece.position;
-  
+
   switch (piece.type) {
     case 'pawn':
       const direction = piece.color === 'white' ? -1 : 1;
@@ -92,19 +101,18 @@ const getPieceAttacks = (piece: Piece, board: (Piece | null)[][]): Position[] =>
         }
       }
       break;
-      
+
     case 'rook':
       for (const [dx, dy] of [[0, 1], [0, -1], [1, 0], [-1, 0]]) {
         for (let i = 1; i < 8; i++) {
           const newPos = { x: x + dx * i, y: y + dy * i };
           if (!isValidPosition(newPos)) break;
-          
           moves.push(newPos);
           if (board[newPos.y][newPos.x]) break;
         }
       }
       break;
-      
+
     case 'knight':
       const knightMoves = [[-2, -1], [-2, 1], [-1, -2], [-1, 2], [1, -2], [1, 2], [2, -1], [2, 1]];
       for (const [dx, dy] of knightMoves) {
@@ -114,48 +122,51 @@ const getPieceAttacks = (piece: Piece, board: (Piece | null)[][]): Position[] =>
         }
       }
       break;
-      
+
     case 'bishop':
       for (const [dx, dy] of [[1, 1], [1, -1], [-1, 1], [-1, -1]]) {
         for (let i = 1; i < 8; i++) {
           const newPos = { x: x + dx * i, y: y + dy * i };
           if (!isValidPosition(newPos)) break;
-          
           moves.push(newPos);
           if (board[newPos.y][newPos.x]) break;
         }
       }
       break;
-      
+
     case 'queen':
       for (const [dx, dy] of [[0, 1], [0, -1], [1, 0], [-1, 0], [1, 1], [1, -1], [-1, 1], [-1, -1]]) {
         for (let i = 1; i < 8; i++) {
           const newPos = { x: x + dx * i, y: y + dy * i };
           if (!isValidPosition(newPos)) break;
-          
           moves.push(newPos);
           if (board[newPos.y][newPos.x]) break;
         }
       }
       break;
-      
+
     case 'king':
       for (const [dx, dy] of [[0, 1], [0, -1], [1, 0], [-1, 0], [1, 1], [1, -1], [-1, 1], [-1, -1]]) {
         const newPos = { x: x + dx, y: y + dy };
-        if (isValidPosition(newPos)) {
-          moves.push(newPos);
+        if (!isValidPosition(newPos)) continue;
+
+        // PATCH: If forAttackDetection, skip returning king attacks
+        if (opts?.forAttackDetection) {
+          // Don't include king moves for attack detection
+          continue;
         }
+        moves.push(newPos);
       }
       break;
   }
-  
+
   return moves;
 };
 
 export const getValidMoves = (piece: Piece, board: (Piece | null)[][], gameState: GameState): Position[] => {
   const moves: Position[] = [];
   const { x, y } = piece.position;
-  
+
   switch (piece.type) {
     case 'pawn':
       const direction = piece.color === 'white' ? -1 : 1;
