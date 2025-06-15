@@ -1,3 +1,4 @@
+
 import { Piece, Position, GameState, Move } from '../types/chess';
 
 export const initializeBoard = (): (Piece | null)[][] => {
@@ -148,51 +149,67 @@ export const getValidMoves = (
 ): Position[] => {
   const moves: Position[] = [];
   const { x, y } = piece.position;
-  
+
   switch (piece.type) {
-    case 'pawn':
+    case 'pawn': {
       const direction = piece.color === 'white' ? -1 : 1;
       const startRow = piece.color === 'white' ? 6 : 1;
-      
+
       // Forward moves
-      if (isValidPosition({ x, y: y + direction }) && !board[y + direction][x]) {
+      if (
+        isValidPosition({ x, y: y + direction }) &&
+        !board[y + direction][x]
+      ) {
         moves.push({ x, y: y + direction });
-        
+
         // Double move from starting position
-        if (y === startRow && !board[y + 2 * direction][x]) {
+        if (
+          y === startRow &&
+          !board[y + 2 * direction][x]
+        ) {
           moves.push({ x, y: y + 2 * direction });
         }
       }
-      
+
       // Captures
       for (const dx of [-1, 1]) {
         const newPos = { x: x + dx, y: y + direction };
-        if (isValidPosition(newPos) && board[newPos.y][newPos.x] && 
-            board[newPos.y][newPos.x]!.color !== piece.color) {
+        if (
+          isValidPosition(newPos) &&
+          board[newPos.y][newPos.x] &&
+          board[newPos.y][newPos.x]!.color !== piece.color
+        ) {
           moves.push(newPos);
         }
       }
-      
+
       // En passant
-      if (gameState) {
+      if (!skipKingSafetyCheck && gameState) {
         const lastMove = gameState.moves[gameState.moves.length - 1];
         if (
           lastMove &&
           lastMove.piece.type === 'pawn' &&
           Math.abs(lastMove.from.y - lastMove.to.y) === 2 &&
-          lastMove.to.y === y && Math.abs(lastMove.to.x - x) === 1
+          lastMove.to.y === y &&
+          Math.abs(lastMove.to.x - x) === 1
         ) {
           moves.push({ x: lastMove.to.x, y: y + direction });
         }
       }
       break;
-      
+    }
+
     case 'rook':
-      for (const [dx, dy] of [[0, 1], [0, -1], [1, 0], [-1, 0]]) {
+      for (const [dx, dy] of [
+        [0, 1],
+        [0, -1],
+        [1, 0],
+        [-1, 0],
+      ]) {
         for (let i = 1; i < 8; i++) {
           const newPos = { x: x + dx * i, y: y + dy * i };
           if (!isValidPosition(newPos)) break;
-          
+
           const targetPiece = board[newPos.y][newPos.x];
           if (!targetPiece) {
             moves.push(newPos);
@@ -205,9 +222,18 @@ export const getValidMoves = (
         }
       }
       break;
-      
-    case 'knight':
-      const knightMoves = [[-2, -1], [-2, 1], [-1, -2], [-1, 2], [1, -2], [1, 2], [2, -1], [2, 1]];
+
+    case 'knight': {
+      const knightMoves = [
+        [-2, -1],
+        [-2, 1],
+        [-1, -2],
+        [-1, 2],
+        [1, -2],
+        [1, 2],
+        [2, -1],
+        [2, 1],
+      ];
       for (const [dx, dy] of knightMoves) {
         const newPos = { x: x + dx, y: y + dy };
         if (isValidPosition(newPos)) {
@@ -218,13 +244,19 @@ export const getValidMoves = (
         }
       }
       break;
-      
+    }
+
     case 'bishop':
-      for (const [dx, dy] of [[1, 1], [1, -1], [-1, 1], [-1, -1]]) {
+      for (const [dx, dy] of [
+        [1, 1],
+        [1, -1],
+        [-1, 1],
+        [-1, -1],
+      ]) {
         for (let i = 1; i < 8; i++) {
           const newPos = { x: x + dx * i, y: y + dy * i };
           if (!isValidPosition(newPos)) break;
-          
+
           const targetPiece = board[newPos.y][newPos.x];
           if (!targetPiece) {
             moves.push(newPos);
@@ -237,13 +269,22 @@ export const getValidMoves = (
         }
       }
       break;
-      
+
     case 'queen':
-      for (const [dx, dy] of [[0, 1], [0, -1], [1, 0], [-1, 0], [1, 1], [1, -1], [-1, 1], [-1, -1]]) {
+      for (const [dx, dy] of [
+        [0, 1],
+        [0, -1],
+        [1, 0],
+        [-1, 0],
+        [1, 1],
+        [1, -1],
+        [-1, 1],
+        [-1, -1],
+      ]) {
         for (let i = 1; i < 8; i++) {
           const newPos = { x: x + dx * i, y: y + dy * i };
           if (!isValidPosition(newPos)) break;
-          
+
           const targetPiece = board[newPos.y][newPos.x];
           if (!targetPiece) {
             moves.push(newPos);
@@ -256,9 +297,18 @@ export const getValidMoves = (
         }
       }
       break;
-      
-    case 'king':
-      for (const [dx, dy] of [[0, 1], [0, -1], [1, 0], [-1, 0], [1, 1], [1, -1], [-1, 1], [-1, -1]]) {
+
+    case 'king': {
+      for (const [dx, dy] of [
+        [0, 1],
+        [0, -1],
+        [1, 0],
+        [-1, 0],
+        [1, 1],
+        [1, -1],
+        [-1, 1],
+        [-1, -1],
+      ]) {
         const newPos = { x: x + dx, y: y + dy };
         if (isValidPosition(newPos)) {
           const targetPiece = board[newPos.y][newPos.x];
@@ -267,9 +317,14 @@ export const getValidMoves = (
           }
         }
       }
-      
+
       // Only offer castling when not skipping king safety checks
-      if (!skipKingSafetyCheck && gameState && !piece.hasMoved && !isInCheck(board, piece.color)) {
+      if (
+        !skipKingSafetyCheck &&
+        gameState &&
+        !piece.hasMoved &&
+        !isInCheck(board, piece.color)
+      ) {
         // Kingside castling
         const kingsideRook = board[y][7];
         if (
@@ -299,20 +354,21 @@ export const getValidMoves = (
         }
       }
       break;
+    }
   }
-  
-  // Filter moves that would leave the king in check -- ONLY for regular move gen, not for attack map
+
+  // CRITICAL: Filter out moves that leave king in check unless we are only generating an "attack map"
   if (!skipKingSafetyCheck) {
     return moves.filter(move => {
-      // Defensive: If no gameState, can't check king safety so return all
-      if (!gameState) return true;
+      if (!gameState) return true; // Defensive
+      // Create a minimal clone for the purposes of move testing
       const testBoard = board.map(row => [...row]);
       testBoard[move.y][move.x] = testBoard[y][x];
       testBoard[y][x] = null;
       return !isInCheck(testBoard, piece.color);
     });
   } else {
-    // For attack/attack mapping, just return the pseudo-legal moves
+    // Pseudo-legal moves only for attack mapping
     return moves;
   }
 };
