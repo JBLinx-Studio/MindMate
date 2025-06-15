@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -82,7 +81,8 @@ const GameToolsPanel: React.FC<GameToolsPanelProps> = ({ gameState, onGameStateC
         moves: [],
         isGameOver: false,
         validMoves: [],
-        selectedSquare: undefined
+        selectedSquare: undefined,
+        fullMoveNumber: 1
       };
       
       onGameStateChange(newGameState);
@@ -152,7 +152,8 @@ const GameToolsPanel: React.FC<GameToolsPanelProps> = ({ gameState, onGameStateC
         moves: [],
         isGameOver: false,
         validMoves: [],
-        selectedSquare: undefined
+        selectedSquare: undefined,
+        fullMoveNumber: 1
       };
       
       onGameStateChange(newGameState);

@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -49,7 +48,8 @@ const PositionAnalyzer: React.FC<PositionAnalyzerProps> = ({ gameState }) => {
             currentPlayer,
             moves: [],
             isGameOver: false,
-            validMoves: []
+            validMoves: [],
+            fullMoveNumber: 1
           };
         } catch (error) {
           toast.error('Invalid FEN string');
