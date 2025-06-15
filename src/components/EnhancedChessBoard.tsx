@@ -136,23 +136,23 @@ const EnhancedChessBoard: React.FC<EnhancedChessBoardProps> = ({
 
   return (
     <div className="w-full max-w-xl mx-auto">
-      {/* Lichess-style Board Container */}
+      {/* Enhanced Board Container with Lichess-style design */}
       <div className="relative">
-        {/* Coordinates */}
-        <div className="absolute -left-4 top-0 h-full flex flex-col justify-around text-xs text-[#b8b8b8] font-medium">
+        {/* Coordinates with improved styling */}
+        <div className="absolute -left-5 top-0 h-full flex flex-col justify-around text-sm text-[#8b8680] font-semibold">
           {[8, 7, 6, 5, 4, 3, 2, 1].map(num => (
             <div key={num} className="h-8 flex items-center">{num}</div>
           ))}
         </div>
         
-        <div className="absolute -bottom-4 left-0 w-full flex justify-around text-xs text-[#b8b8b8] font-medium">
+        <div className="absolute -bottom-5 left-0 w-full flex justify-around text-sm text-[#8b8680] font-semibold">
           {['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'].map(letter => (
             <div key={letter} className="w-8 flex justify-center">{letter}</div>
           ))}
         </div>
 
-        {/* Chess Board */}
-        <div className="w-full aspect-square grid grid-cols-8 rounded-lg overflow-hidden shadow-2xl">
+        {/* Enhanced Chess Board with improved shadows and styling */}
+        <div className="w-full aspect-square grid grid-cols-8 rounded-md overflow-hidden shadow-xl border-2 border-[#8b8680] bg-gradient-to-br from-[#f0d9b5] to-[#b58863]">
           {gameState.board.map((row, y) =>
             row.map((piece, x) => (
               <ChessSquare
@@ -167,12 +167,15 @@ const EnhancedChessBoard: React.FC<EnhancedChessBoardProps> = ({
                 onDragStart={(e) => handleDragStart(e, { x, y })}
                 onDragOver={handleDragOver}
                 onDrop={(e) => handleDrop(e, { x, y })}
-                showCoordinates={false}
+                showCoordinates={settings.showCoordinates}
                 boardTheme="lichess"
               />
             ))
           )}
         </div>
+
+        {/* Board edge decoration */}
+        <div className="absolute -inset-1 bg-gradient-to-r from-[#8b8680] via-[#a69c94] to-[#8b8680] rounded-lg -z-10 opacity-30" />
       </div>
 
       {/* Game Result Modal */}

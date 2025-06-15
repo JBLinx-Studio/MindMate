@@ -38,45 +38,40 @@ const ChessPiece: React.FC<ChessPieceProps> = ({
     return symbols[piece.color][piece.type];
   };
 
-  const getPieceGlow = () => {
+  const getPieceTextShadow = () => {
     if (piece.color === 'white') {
-      return 'drop-shadow-[0_2px_8px_rgba(0,0,0,0.9)]';
+      return '1px 1px 2px rgba(0,0,0,0.8), 0 0 4px rgba(0,0,0,0.4)';
     } else {
-      return 'drop-shadow-[0_2px_8px_rgba(255,255,255,0.9)]';
+      return '1px 1px 2px rgba(255,255,255,0.8), 0 0 4px rgba(255,255,255,0.4)';
     }
   };
 
   return (
     <div 
       className={`
-        text-5xl cursor-pointer select-none 
+        text-6xl cursor-pointer select-none 
         flex items-center justify-center
-        transition-all duration-300 ease-out
-        ${isDragging ? 'opacity-80 scale-125 z-50 rotate-12' : ''}
-        ${isSelected ? 'scale-115 animate-pulse' : isAnimating ? 'scale-110' : 'hover:scale-110'}
+        transition-all duration-200 ease-out
+        relative z-10
+        ${isDragging ? 'opacity-90 scale-110 z-50' : ''}
+        ${isSelected ? 'scale-105' : isAnimating ? 'scale-105' : 'hover:scale-105'}
         ${piece.color === 'white' 
-          ? 'text-slate-50' 
+          ? 'text-white' 
           : 'text-slate-900'
         }
-        hover:brightness-125 active:scale-95
-        ${getPieceGlow()}
+        hover:brightness-110 active:scale-95
       `}
       style={{
-        filter: `${getPieceGlow()} brightness(${isSelected || isAnimating ? '1.2' : '1'})`,
-        textShadow: piece.color === 'white'
-          ? '3px 3px 6px rgba(0,0,0,0.9), 0 0 10px rgba(255,255,255,0.3)'
-          : '3px 3px 6px rgba(255,255,255,0.9), 0 0 10px rgba(0,0,0,0.3)',
-        transform: isDragging ? 'rotate(12deg)' : 'none'
+        textShadow: getPieceTextShadow(),
+        filter: `brightness(${isSelected || isAnimating ? '1.1' : '1'}) contrast(1.1)`,
+        transform: isDragging ? 'rotate(3deg)' : 'none'
       }}
     >
       {getPieceSymbol(piece)}
       
-      {/* Magical sparkle effect when selected */}
+      {/* Selection glow effect */}
       {isSelected && (
-        <>
-          <div className="absolute -top-1 -right-1 w-2 h-2 bg-yellow-400 rounded-full animate-ping opacity-75" />
-          <div className="absolute -bottom-1 -left-1 w-1.5 h-1.5 bg-yellow-300 rounded-full animate-ping opacity-60" style={{ animationDelay: '0.3s' }} />
-        </>
+        <div className="absolute inset-0 rounded-full bg-yellow-400 opacity-20 animate-pulse" />
       )}
     </div>
   );
