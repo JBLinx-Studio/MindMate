@@ -36,4 +36,5 @@ export interface GameState {
     winner?: 'white' | 'black';
     reason?: string;
   };
+  fullMoveNumber: number;
 }
