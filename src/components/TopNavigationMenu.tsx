@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -46,15 +45,20 @@ import {
   Moon,
   Sun,
   Wifi,
-  WifiOff
+  WifiOff,
+  Menu,
+  X
 } from 'lucide-react';
 import { useLocation } from 'react-router-dom';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 export function TopNavigationMenu() {
   const location = useLocation();
+  const isMobile = useIsMobile();
   const [soundEnabled, setSoundEnabled] = useState(true);
   const [darkMode, setDarkMode] = useState(true);
   const [isOnline, setIsOnline] = useState(true);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   
   // Get breadcrumb based on current path
   const getBreadcrumb = () => {
@@ -77,27 +81,81 @@ export function TopNavigationMenu() {
 
   const breadcrumb = getBreadcrumb();
 
+  // Mobile Navigation Component
+  const MobileMenu = () => (
+    <div className="lg:hidden">
+      <Button
+        variant="ghost"
+        size="sm"
+        className="text-[#b8b8b8] hover:text-white hover:bg-[#2c2c28] h-9 w-9 p-0"
+        onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+      >
+        {mobileMenuOpen ? <X className="w-4 h-4" /> : <Menu className="w-4 h-4" />}
+      </Button>
+      
+      {mobileMenuOpen && (
+        <div className="absolute top-14 left-0 right-0 bg-[#1a1a1a] border-b border-[#3d3d37] p-4 z-50 shadow-xl">
+          {/* Mobile Quick Actions */}
+          <div className="space-y-3">
+            <div className="flex flex-col gap-2">
+              <Button
+                size="sm"
+                className="bg-gradient-to-r from-[#759900] to-[#6a8700] hover:from-[#6a8700] hover:to-[#5a7300] text-white h-8 text-xs font-semibold justify-start"
+              >
+                <Zap className="w-3 h-3 mr-2" />
+                Bullet 1+0
+              </Button>
+              <Button
+                size="sm"
+                className="bg-gradient-to-r from-[#dc7633] to-[#c0632b] hover:from-[#c0632b] hover:to-[#a0521f] text-white h-8 text-xs font-semibold justify-start"
+              >
+                <Timer className="w-3 h-3 mr-2" />
+                Blitz 3+2
+              </Button>
+              <Button
+                size="sm"
+                className="bg-gradient-to-r from-[#3498db] to-[#2e86c1] hover:from-[#2e86c1] hover:to-[#2874a6] text-white h-8 text-xs font-semibold justify-start"
+              >
+                <Clock className="w-3 h-3 mr-2" />
+                Rapid 10+0
+              </Button>
+            </div>
+            
+            {/* Mobile Search */}
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-[#4a4a46]" />
+              <Input
+                placeholder="Search..."
+                className="w-full h-9 pl-10 pr-4 bg-[#2c2c28] border-[#4a4a46] text-[#b8b8b8] placeholder:text-[#4a4a46] focus:border-[#759900] text-sm"
+              />
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+
   return (
-    <div className="h-14 bg-gradient-to-r from-[#1a1a1a] via-[#161512] to-[#1a1a1a] border-b border-[#3d3d37] flex items-center justify-between px-6 shadow-lg">
+    <div className="h-14 bg-gradient-to-r from-[#1a1a1a] via-[#161512] to-[#1a1a1a] border-b border-[#3d3d37] flex items-center justify-between px-3 sm:px-4 lg:px-6 shadow-lg">
       {/* Left side - Brand and Breadcrumb */}
-      <div className="flex items-center space-x-6 min-w-0 flex-1">
+      <div className="flex items-center space-x-2 sm:space-x-4 lg:space-x-6 min-w-0 flex-1">
         {/* Brand Logo */}
-        <div className="flex items-center space-x-3">
-          <div className="w-8 h-8 bg-gradient-to-br from-[#759900] to-[#5a7300] rounded-lg flex items-center justify-center shadow-md">
-            <Shield className="w-5 h-5 text-white" />
+        <div className="flex items-center space-x-2 sm:space-x-3 flex-shrink-0">
+          <div className="w-7 h-7 sm:w-8 sm:h-8 bg-gradient-to-br from-[#759900] to-[#5a7300] rounded-lg flex items-center justify-center shadow-md">
+            <Shield className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
           </div>
           <div className="flex flex-col">
-            <span className="text-white font-bold text-lg leading-none">ChessForge</span>
-            <span className="text-[#759900] text-xs font-medium">by JBLinx Studio</span>
+            <span className="text-white font-bold text-sm sm:text-base lg:text-lg leading-none">ChessForge</span>
+            <span className="text-[#759900] text-xs font-medium hidden sm:block">by JBLinx Studio</span>
           </div>
         </div>
 
-        {/* Breadcrumb Navigation */}
-        <div className="flex items-center space-x-2 text-sm">
+        {/* Breadcrumb Navigation - Hidden on mobile */}
+        <div className="hidden md:flex items-center space-x-2 text-sm min-w-0">
           {breadcrumb.map((item, index) => (
             <div key={index} className="flex items-center space-x-2">
               <div className="flex items-center space-x-1 text-[#b8b8b8] hover:text-white transition-colors cursor-pointer">
-                <item.icon className="w-4 h-4" />
+                <item.icon className="w-4 h-4 flex-shrink-0" />
                 <span className="truncate">{item.label}</span>
               </div>
               {index < breadcrumb.length - 1 && (
@@ -108,47 +166,47 @@ export function TopNavigationMenu() {
         </div>
       </div>
 
-      {/* Center - Enhanced Game Hub with Quick Actions */}
-      <div className="flex items-center space-x-4 px-8">
+      {/* Center - Desktop Game Hub */}
+      <div className="hidden xl:flex items-center space-x-4 px-4">
         {/* Quick Play Buttons */}
-        <div className="flex items-center space-x-2 bg-[#2c2c28] rounded-xl px-4 py-2 shadow-inner">
+        <div className="flex items-center space-x-2 bg-[#2c2c28] rounded-xl px-3 py-2 shadow-inner">
           <Button
             size="sm"
-            className="bg-gradient-to-r from-[#759900] to-[#6a8700] hover:from-[#6a8700] hover:to-[#5a7300] text-white h-8 px-4 text-xs font-semibold shadow-md transform hover:scale-105 transition-all"
+            className="bg-gradient-to-r from-[#759900] to-[#6a8700] hover:from-[#6a8700] hover:to-[#5a7300] text-white h-7 px-3 text-xs font-semibold shadow-md"
           >
             <Zap className="w-3 h-3 mr-1" />
-            Bullet 1+0
+            Bullet
           </Button>
           <Button
             size="sm"
-            className="bg-gradient-to-r from-[#dc7633] to-[#c0632b] hover:from-[#c0632b] hover:to-[#a0521f] text-white h-8 px-4 text-xs font-semibold shadow-md transform hover:scale-105 transition-all"
+            className="bg-gradient-to-r from-[#dc7633] to-[#c0632b] hover:from-[#c0632b] hover:to-[#a0521f] text-white h-7 px-3 text-xs font-semibold shadow-md"
           >
             <Timer className="w-3 h-3 mr-1" />
-            Blitz 3+2
+            Blitz
           </Button>
           <Button
             size="sm"
-            className="bg-gradient-to-r from-[#3498db] to-[#2e86c1] hover:from-[#2e86c1] hover:to-[#2874a6] text-white h-8 px-4 text-xs font-semibold shadow-md transform hover:scale-105 transition-all"
+            className="bg-gradient-to-r from-[#3498db] to-[#2e86c1] hover:from-[#2e86c1] hover:to-[#2874a6] text-white h-7 px-3 text-xs font-semibold shadow-md"
           >
             <Clock className="w-3 h-3 mr-1" />
-            Rapid 10+0
+            Rapid
           </Button>
         </div>
 
-        {/* Enhanced Game Mode Selector */}
+        {/* Game Mode Selector */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button
               variant="outline"
               size="sm"
-              className="border-[#4a4a46] bg-[#2c2c28] text-[#b8b8b8] hover:text-white hover:bg-[#3d3d37] h-9 px-4 font-medium shadow-md"
+              className="border-[#4a4a46] bg-[#2c2c28] text-[#b8b8b8] hover:text-white hover:bg-[#3d3d37] h-8 px-3 font-medium shadow-md"
             >
               <Gamepad2 className="w-4 h-4 mr-2" />
-              More Games
+              More
               <ChevronDown className="w-3 h-3 ml-2" />
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent className="bg-[#2c2c28] border-[#4a4a46] text-white min-w-56 z-50 shadow-xl" align="center">
+          <DropdownMenuContent className="bg-[#2c2c28] border-[#4a4a46] text-white min-w-48 z-50 shadow-xl" align="center">
             <DropdownMenuLabel className="text-[#759900] font-semibold flex items-center">
               <Flame className="w-4 h-4 mr-2" />
               Game Modes
@@ -192,46 +250,32 @@ export function TopNavigationMenu() {
           </DropdownMenuContent>
         </DropdownMenu>
 
-        {/* Enhanced Search */}
+        {/* Desktop Search */}
         <div className="flex items-center space-x-2">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-[#4a4a46]" />
             <Input
-              placeholder="Search players, games, openings..."
-              className="w-72 h-9 pl-10 pr-4 bg-[#2c2c28] border-[#4a4a46] text-[#b8b8b8] placeholder:text-[#4a4a46] focus:border-[#759900] text-sm shadow-inner"
+              placeholder="Search players, games..."
+              className="w-48 h-8 pl-10 pr-4 bg-[#2c2c28] border-[#4a4a46] text-[#b8b8b8] placeholder:text-[#4a4a46] focus:border-[#759900] text-sm shadow-inner"
             />
           </div>
           <Button
             variant="ghost"
             size="sm"
-            className="text-[#b8b8b8] hover:text-white hover:bg-[#2c2c28] h-9 w-9 p-0"
+            className="text-[#b8b8b8] hover:text-white hover:bg-[#2c2c28] h-8 w-8 p-0"
           >
             <Filter className="w-4 h-4" />
           </Button>
         </div>
-
-        {/* Active Games and Status */}
-        <div className="flex items-center space-x-3">
-          <div className="flex items-center space-x-2 bg-[#2c2c28] rounded-lg px-3 py-2 shadow-inner">
-            <div className="flex items-center space-x-2">
-              <div className="w-2 h-2 bg-[#759900] rounded-full animate-pulse"></div>
-              <span className="text-[#b8b8b8] text-xs font-medium">3 active</span>
-            </div>
-            <Button
-              size="sm"
-              className="bg-transparent hover:bg-[#4a4a46] text-[#759900] h-6 px-3 text-xs border border-[#759900]/30 hover:border-[#759900] font-medium"
-            >
-              <Play className="w-3 h-3 mr-1" />
-              View
-            </Button>
-          </div>
-        </div>
       </div>
 
       {/* Right side - User Info and Controls */}
-      <div className="flex items-center space-x-3 flex-1 justify-end">
-        {/* Quick Settings */}
-        <div className="flex items-center space-x-1">
+      <div className="flex items-center space-x-1 sm:space-x-2 lg:space-x-3 flex-1 justify-end">
+        {/* Mobile Menu */}
+        <MobileMenu />
+
+        {/* Quick Settings - Hidden on small screens */}
+        <div className="hidden sm:flex items-center space-x-1">
           <Button
             variant="ghost"
             size="sm"
@@ -250,14 +294,14 @@ export function TopNavigationMenu() {
           </Button>
         </div>
 
-        {/* User Performance */}
-        <div className="flex items-center space-x-3 text-sm bg-[#2c2c28] rounded-lg px-3 py-2">
-          <div className="flex items-center space-x-2">
+        {/* User Performance - Responsive */}
+        <div className="hidden md:flex items-center space-x-2 lg:space-x-3 text-sm bg-[#2c2c28] rounded-lg px-2 lg:px-3 py-2">
+          <div className="flex items-center space-x-1 lg:space-x-2">
             <TrendingUp className="w-4 h-4 text-[#759900]" />
-            <div className="text-[#b8b8b8]">Rating:</div>
+            <div className="text-[#b8b8b8] hidden lg:block">Rating:</div>
             <div className="text-[#759900] font-bold">1847</div>
           </div>
-          <div className="w-px h-4 bg-[#4a4a46]"></div>
+          <div className="w-px h-4 bg-[#4a4a46] hidden lg:block"></div>
           <div className="flex items-center space-x-1">
             <Star className="w-3 h-3 text-[#f39c12]" />
             <span className="text-[#f39c12] font-semibold text-xs">+24</span>
@@ -268,14 +312,14 @@ export function TopNavigationMenu() {
         <Button
           variant="ghost"
           size="sm"
-          className="text-[#b8b8b8] hover:text-white hover:bg-[#2c2c28] h-9 w-9 p-0 relative"
+          className="text-[#b8b8b8] hover:text-white hover:bg-[#2c2c28] h-8 w-8 sm:h-9 sm:w-9 p-0 relative"
         >
           <Bell className="w-4 h-4" />
           <div className="absolute -top-1 -right-1 w-3 h-3 bg-[#dc7633] rounded-full text-white text-xs flex items-center justify-center font-bold">3</div>
         </Button>
 
-        {/* Connection Status */}
-        <div className="flex items-center space-x-1">
+        {/* Connection Status - Hidden on mobile */}
+        <div className="hidden sm:flex items-center space-x-1">
           {isOnline ? (
             <Wifi className="w-4 h-4 text-[#759900]" />
           ) : (
@@ -283,38 +327,38 @@ export function TopNavigationMenu() {
           )}
         </div>
 
-        {/* Language */}
+        {/* Language - Hidden on small screens */}
         <Button
           variant="ghost"
           size="sm"
-          className="text-[#b8b8b8] hover:text-white hover:bg-[#2c2c28] h-9 w-9 p-0"
+          className="hidden sm:flex text-[#b8b8b8] hover:text-white hover:bg-[#2c2c28] h-8 w-8 sm:h-9 sm:w-9 p-0"
         >
           <Globe className="w-4 h-4" />
         </Button>
 
-        {/* Enhanced User Menu */}
+        {/* User Menu - Responsive */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button
               variant="ghost"
               size="sm"
-              className="text-[#b8b8b8] hover:text-white hover:bg-[#2c2c28] h-9 px-3 border border-[#4a4a46]"
+              className="text-[#b8b8b8] hover:text-white hover:bg-[#2c2c28] h-8 sm:h-9 px-2 sm:px-3 border border-[#4a4a46]"
             >
-              <div className="w-6 h-6 bg-gradient-to-br from-[#759900] to-[#5a7300] rounded-full flex items-center justify-center text-white font-bold text-xs mr-2">
+              <div className="w-5 h-5 sm:w-6 sm:h-6 bg-gradient-to-br from-[#759900] to-[#5a7300] rounded-full flex items-center justify-center text-white font-bold text-xs mr-1 sm:mr-2">
                 CP
               </div>
-              <span className="font-medium">ChessPlayer</span>
-              <ChevronDown className="w-3 h-3 ml-2" />
+              <span className="font-medium hidden sm:block">ChessPlayer</span>
+              <ChevronDown className="w-3 h-3 ml-1 sm:ml-2" />
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent className="bg-[#2c2c28] border-[#4a4a46] text-white min-w-64 z-50 shadow-xl" align="end">
+          <DropdownMenuContent className="bg-[#2c2c28] border-[#4a4a46] text-white min-w-56 sm:min-w-64 z-50 shadow-xl" align="end">
             <DropdownMenuLabel className="text-[#b8b8b8]">
               <div className="flex items-center space-x-3 p-2">
-                <div className="w-12 h-12 bg-gradient-to-br from-[#759900] to-[#5a7300] rounded-full flex items-center justify-center text-white font-bold text-lg">
+                <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-[#759900] to-[#5a7300] rounded-full flex items-center justify-center text-white font-bold text-base sm:text-lg">
                   CP
                 </div>
                 <div>
-                  <div className="font-semibold text-white text-base">ChessPlayer</div>
+                  <div className="font-semibold text-white text-sm sm:text-base">ChessPlayer</div>
                   <div className="text-sm text-[#759900] flex items-center">
                     <div className="w-2 h-2 bg-[#759900] rounded-full mr-2"></div>
                     Online
