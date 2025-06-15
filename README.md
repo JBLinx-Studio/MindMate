@@ -1,11 +1,11 @@
 
-# ChessForge - Master Your Chess Skills
+# MindMate - Master Your Chess Skills
 
 ## Project info
 
 **URL**: https://lovable.dev/projects/ea0c0a34-8000-43e0-8063-38e425854051
 
-ChessForge is a comprehensive online chess platform developed by JBLinx Studio, designed to help players of all levels improve their chess skills through interactive gameplay, puzzles, analysis tools, and educational content.
+MindMate is a comprehensive online chess platform developed by JBLinx Studio, designed to help players of all levels improve their chess skills through interactive gameplay, puzzles, analysis tools, and educational content.
 
 ## Features
 
@@ -82,7 +82,7 @@ This project is built with:
 
 Simply open [Lovable](https://lovable.dev/projects/ea0c0a34-8000-43e0-8063-38e425854051) and click on Share -> Publish.
 
-## Can I connect a custom domain to my ChessForge project?
+## Can I connect a custom domain to my MindMate project?
 
 Yes, you can!
 
@@ -92,7 +92,7 @@ Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-trick
 
 ## About JBLinx Studio
 
-ChessForge is developed by JBLinx Studio, a software development company focused on creating innovative educational and gaming applications. We specialize in building interactive platforms that combine learning with entertainment.
+MindMate is developed by JBLinx Studio, a software development company focused on creating innovative educational and gaming applications. We specialize in building interactive platforms that combine learning with entertainment.
 
 ## License
 
@@ -100,8 +100,8 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 
 ## Contributing
 
-We welcome contributions to ChessForge! Please feel free to submit issues, feature requests, or pull requests to help improve the platform.
+We welcome contributions to MindMate! Please feel free to submit issues, feature requests, or pull requests to help improve the platform.
 
 ## Support
 
-For support or questions about ChessForge, please contact JBLinx Studio or visit our documentation.
+For support or questions about MindMate, please contact JBLinx Studio or visit our documentation.
