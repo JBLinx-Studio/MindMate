@@ -281,7 +281,7 @@ export const EnhancedGameCoordinator: React.FC<EnhancedGameCoordinatorProps> = (
         return (
           <MoveSuggestionSystem
             gameState={gameState}
-            onMoveSelected={handleSuggestionMove}
+            onMoveSelected={handleSuggestionMove} {/* FIXED: Must match (from: Position, to: Position) => void */}
             isActive={isGameActive && gameMode !== 'puzzles'}
             skillLevel={playerSkillLevel}
           />
