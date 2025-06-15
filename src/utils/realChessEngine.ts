@@ -345,13 +345,13 @@ export class RealChessEngine {
           
           for (const move of moves.slice(0, 3)) { // Limit for performance
             const moveNotation = this.moveToNotation(piece, { x, y }, move, gameState.board);
-            const moveEval = this.evaluateMove(gameState, { x, y }, move);
+            const moveEvaluation = this.evaluateMove(gameState, { x, y }, move);
             
-            if (gameState.currentPlayer === 'white' && moveEval > bestEval) {
-              bestEval = moveEval;
+            if (gameState.currentPlayer === 'white' && moveEvaluation > bestEval) {
+              bestEval = moveEvaluation;
               bestMove = moveNotation;
-            } else if (gameState.currentPlayer === 'black' && moveEval < bestEval) {
-              bestEval = moveEval;
+            } else if (gameState.currentPlayer === 'black' && moveEvaluation < bestEval) {
+              bestEval = moveEvaluation;
               bestMove = moveNotation;
             }
           }
