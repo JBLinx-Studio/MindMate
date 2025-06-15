@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { SidebarProvider } from '@/components/ui/sidebar';
 import { AppSidebar } from '../components/AppSidebar';
@@ -11,6 +10,7 @@ import { Volume2, VolumeX, Settings, Clock, MoreHorizontal, Flag, RotateCcw } fr
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { TopNavigationMenu } from '../components/TopNavigationMenu';
 
 const Index = () => {
   const [gameState, setGameState] = useState<GameState>(createInitialGameState());
@@ -71,34 +71,8 @@ const Index = () => {
         <AppSidebar />
         
         <div className="flex-1 flex flex-col">
-          {/* Lichess-style Header */}
-          <header className="h-14 flex items-center justify-between px-4 bg-[#161512] border-b border-[#3d3d37]">
-            <div className="flex items-center space-x-4">
-              <div className="flex items-center space-x-2">
-                <div className="text-2xl font-bold text-white">lichess</div>
-                <div className="text-xs text-[#b8b8b8] mt-1">♞</div>
-              </div>
-            </div>
-            
-            <div className="flex items-center space-x-3">
-              <Button
-                onClick={toggleSound}
-                variant="ghost"
-                size="sm"
-                className="text-[#b8b8b8] hover:text-white hover:bg-[#2c2c28]"
-              >
-                {soundEnabled ? <Volume2 className="w-4 h-4" /> : <VolumeX className="w-4 h-4" />}
-              </Button>
-              
-              <Button
-                variant="ghost"
-                size="sm"
-                className="text-[#b8b8b8] hover:text-white hover:bg-[#2c2c28]"
-              >
-                <Settings className="w-4 h-4" />
-              </Button>
-            </div>
-          </header>
+          {/* Top Navigation Menu */}
+          <TopNavigationMenu />
 
           {/* Main Game Area */}
           <main className="flex-1 flex">
