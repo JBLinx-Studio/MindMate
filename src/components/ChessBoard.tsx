@@ -86,25 +86,37 @@ const ChessBoard: React.FC<ChessBoardProps> = ({ gameState, onGameStateChange })
   }, [gameState.moves]);
 
   return (
-    <div className="inline-block border-4 border-amber-900 rounded-lg shadow-2xl bg-amber-50">
-      <div className="grid grid-cols-8 gap-0 p-4">
-        {gameState.board.map((row, y) =>
-          row.map((piece, x) => (
-            <ChessSquare
-              key={`${x}-${y}`}
-              position={{ x, y }}
-              piece={piece}
-              isLight={(x + y) % 2 === 0}
-              isSelected={gameState.selectedSquare?.x === x && gameState.selectedSquare?.y === y}
-              isValidMove={isValidMove({ x, y })}
-              isLastMove={isLastMove({ x, y })}
-              onClick={() => handleSquareClick({ x, y })}
-              onDragStart={(e) => handleDragStart(e, { x, y })}
-              onDragOver={handleDragOver}
-              onDrop={(e) => handleDrop(e, { x, y })}
-            />
-          ))
-        )}
+    <div className="flex justify-center">
+      <div className="w-full max-w-2xl aspect-square">
+        {/* Enhanced Chess board container */}
+        <div className="w-full h-full border-8 border-gradient-to-br from-amber-900 to-amber-800 rounded-2xl shadow-2xl bg-gradient-to-br from-amber-200 to-amber-300 p-6 relative">
+          {/* Decorative corner elements */}
+          <div className="absolute top-2 left-2 w-4 h-4 bg-amber-900 rounded-full opacity-60" />
+          <div className="absolute top-2 right-2 w-4 h-4 bg-amber-900 rounded-full opacity-60" />
+          <div className="absolute bottom-2 left-2 w-4 h-4 bg-amber-900 rounded-full opacity-60" />
+          <div className="absolute bottom-2 right-2 w-4 h-4 bg-amber-900 rounded-full opacity-60" />
+          
+          {/* Chess board grid */}
+          <div className="w-full h-full grid grid-cols-8 gap-1 rounded-xl overflow-hidden shadow-inner">
+            {gameState.board.map((row, y) =>
+              row.map((piece, x) => (
+                <ChessSquare
+                  key={`${x}-${y}`}
+                  position={{ x, y }}
+                  piece={piece}
+                  isLight={(x + y) % 2 === 0}
+                  isSelected={gameState.selectedSquare?.x === x && gameState.selectedSquare?.y === y}
+                  isValidMove={isValidMove({ x, y })}
+                  isLastMove={isLastMove({ x, y })}
+                  onClick={() => handleSquareClick({ x, y })}
+                  onDragStart={(e) => handleDragStart(e, { x, y })}
+                  onDragOver={handleDragOver}
+                  onDrop={(e) => handleDrop(e, { x, y })}
+                />
+              ))
+            )}
+          </div>
+        </div>
       </div>
     </div>
   );
