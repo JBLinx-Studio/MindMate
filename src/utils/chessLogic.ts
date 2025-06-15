@@ -37,12 +37,18 @@ export const findKing = (board: (Piece | null)[][], color: 'white' | 'black'): P
   return null;
 };
 
-export const isSquareAttacked = (board: (Piece | null)[][], position: Position, byColor: 'white' | 'black'): boolean => {
+export const isSquareAttacked = (
+  board: (Piece | null)[][],
+  position: Position,
+  byColor: 'white' | 'black'
+): boolean => {
   for (let y = 0; y < 8; y++) {
     for (let x = 0; x < 8; x++) {
       const piece = board[y][x];
       if (piece && piece.color === byColor) {
-        const moves = getPieceAttacks(piece, board);
+        // When generating attacks, we don't care about king legality, just pseudo-legal moves.
+        // Pass true to skip the king check recursion!
+        const moves = getValidMoves(piece, board, undefined, true);
         if (moves.some(move => move.x === position.x && move.y === position.y)) {
           return true;
         }
@@ -55,7 +61,6 @@ export const isSquareAttacked = (board: (Piece | null)[][], position: Position, 
 export const isInCheck = (board: (Piece | null)[][], color: 'white' | 'black'): boolean => {
   const kingPos = findKing(board, color);
   if (!kingPos) return false;
-  
   const opponentColor = color === 'white' ? 'black' : 'white';
   return isSquareAttacked(board, kingPos, opponentColor);
 };
@@ -67,7 +72,6 @@ const getPieceAttacks = (piece: Piece, board: (Piece | null)[][]): Position[] =>
   switch (piece.type) {
     case 'pawn':
       const direction = piece.color === 'white' ? -1 : 1;
-      // Pawn attacks (diagonal captures only)
       for (const dx of [-1, 1]) {
         const newPos = { x: x + dx, y: y + direction };
         if (isValidPosition(newPos)) {
@@ -129,13 +133,49 @@ const getPieceAttacks = (piece: Piece, board: (Piece | null)[][]): Position[] =>
           moves.push(newPos);
         }
       }
+      
+      // Only offer castling when not skipping king safety checks
+      if (!gameState || !piece.hasMoved && !isInCheck(board, piece.color)) {
+        // Kingside castling
+        const kingsideRook = board[y][7];
+        if (
+          kingsideRook &&
+          kingsideRook.type === 'rook' &&
+          !kingsideRook.hasMoved &&
+          !board[y][5] &&
+          !board[y][6] &&
+          !isSquareAttacked(board, { x: 5, y }, piece.color === 'white' ? 'black' : 'white') &&
+          !isSquareAttacked(board, { x: 6, y }, piece.color === 'white' ? 'black' : 'white')
+        ) {
+          moves.push({ x: 6, y });
+        }
+        // Queenside castling
+        const queensideRook = board[y][0];
+        if (
+          queensideRook &&
+          queensideRook.type === 'rook' &&
+          !queensideRook.hasMoved &&
+          !board[y][1] &&
+          !board[y][2] &&
+          !board[y][3] &&
+          !isSquareAttacked(board, { x: 2, y }, piece.color === 'white' ? 'black' : 'white') &&
+          !isSquareAttacked(board, { x: 3, y }, piece.color === 'white' ? 'black' : 'white')
+        ) {
+          moves.push({ x: 2, y });
+        }
+      }
       break;
   }
   
   return moves;
 };
 
-export const getValidMoves = (piece: Piece, board: (Piece | null)[][], gameState: GameState): Position[] => {
+export const getValidMoves = (
+  piece: Piece,
+  board: (Piece | null)[][],
+  gameState?: GameState,
+  skipKingSafetyCheck: boolean = false
+): Position[] => {
   const moves: Position[] = [];
   const { x, y } = piece.position;
   
@@ -164,11 +204,16 @@ export const getValidMoves = (piece: Piece, board: (Piece | null)[][], gameState
       }
       
       // En passant
-      const lastMove = gameState.moves[gameState.moves.length - 1];
-      if (lastMove && lastMove.piece.type === 'pawn' && 
+      if (gameState) {
+        const lastMove = gameState.moves[gameState.moves.length - 1];
+        if (
+          lastMove &&
+          lastMove.piece.type === 'pawn' &&
           Math.abs(lastMove.from.y - lastMove.to.y) === 2 &&
-          lastMove.to.y === y && Math.abs(lastMove.to.x - x) === 1) {
-        moves.push({ x: lastMove.to.x, y: y + direction });
+          lastMove.to.y === y && Math.abs(lastMove.to.x - x) === 1
+        ) {
+          moves.push({ x: lastMove.to.x, y: y + direction });
+        }
       }
       break;
       
@@ -253,74 +298,86 @@ export const getValidMoves = (piece: Piece, board: (Piece | null)[][], gameState
         }
       }
       
-      // Castling
-      if (!piece.hasMoved && !isInCheck(board, piece.color)) {
+      // Only offer castling when not skipping king safety checks
+      if (!skipKingSafetyCheck && gameState && !piece.hasMoved && !isInCheck(board, piece.color)) {
         // Kingside castling
         const kingsideRook = board[y][7];
-        if (kingsideRook && kingsideRook.type === 'rook' && !kingsideRook.hasMoved &&
-            !board[y][5] && !board[y][6] &&
-            !isSquareAttacked(board, { x: 5, y }, piece.color === 'white' ? 'black' : 'white') &&
-            !isSquareAttacked(board, { x: 6, y }, piece.color === 'white' ? 'black' : 'white')) {
+        if (
+          kingsideRook &&
+          kingsideRook.type === 'rook' &&
+          !kingsideRook.hasMoved &&
+          !board[y][5] &&
+          !board[y][6] &&
+          !isSquareAttacked(board, { x: 5, y }, piece.color === 'white' ? 'black' : 'white') &&
+          !isSquareAttacked(board, { x: 6, y }, piece.color === 'white' ? 'black' : 'white')
+        ) {
           moves.push({ x: 6, y });
         }
-        
         // Queenside castling
         const queensideRook = board[y][0];
-        if (queensideRook && queensideRook.type === 'rook' && !queensideRook.hasMoved &&
-            !board[y][1] && !board[y][2] && !board[y][3] &&
-            !isSquareAttacked(board, { x: 2, y }, piece.color === 'white' ? 'black' : 'white') &&
-            !isSquareAttacked(board, { x: 3, y }, piece.color === 'white' ? 'black' : 'white')) {
+        if (
+          queensideRook &&
+          queensideRook.type === 'rook' &&
+          !queensideRook.hasMoved &&
+          !board[y][1] &&
+          !board[y][2] &&
+          !board[y][3] &&
+          !isSquareAttacked(board, { x: 2, y }, piece.color === 'white' ? 'black' : 'white') &&
+          !isSquareAttacked(board, { x: 3, y }, piece.color === 'white' ? 'black' : 'white')
+        ) {
           moves.push({ x: 2, y });
         }
       }
       break;
   }
   
-  // Filter out moves that would leave the king in check
-  return moves.filter(move => {
-    const testBoard = board.map(row => [...row]);
-    testBoard[move.y][move.x] = testBoard[y][x];
-    testBoard[y][x] = null;
-    
-    return !isInCheck(testBoard, piece.color);
-  });
+  // Filter moves that would leave the king in check -- ONLY for regular move gen, not for attack map
+  if (!skipKingSafetyCheck) {
+    return moves.filter(move => {
+      // Defensive: If no gameState, can't check king safety so return all
+      if (!gameState) return true;
+      const testBoard = board.map(row => [...row]);
+      testBoard[move.y][move.x] = testBoard[y][x];
+      testBoard[y][x] = null;
+      return !isInCheck(testBoard, piece.color);
+    });
+  } else {
+    // For attack/attack mapping, just return the pseudo-legal moves
+    return moves;
+  }
 };
 
 export const isCheckmate = (board: (Piece | null)[][], color: 'white' | 'black', gameState: GameState): boolean => {
   if (!isInCheck(board, color)) return false;
-  
-  // Check if any piece can make a legal move
+
   for (let y = 0; y < 8; y++) {
     for (let x = 0; x < 8; x++) {
       const piece = board[y][x];
       if (piece && piece.color === color) {
-        const validMoves = getValidMoves(piece, board, gameState);
+        const validMoves = getValidMoves(piece, board, gameState, false);
         if (validMoves.length > 0) {
           return false;
         }
       }
     }
   }
-  
   return true;
 };
 
 export const isStalemate = (board: (Piece | null)[][], color: 'white' | 'black', gameState: GameState): boolean => {
   if (isInCheck(board, color)) return false;
-  
-  // Check if any piece can make a legal move
+
   for (let y = 0; y < 8; y++) {
     for (let x = 0; x < 8; x++) {
       const piece = board[y][x];
       if (piece && piece.color === color) {
-        const validMoves = getValidMoves(piece, board, gameState);
+        const validMoves = getValidMoves(piece, board, gameState, false);
         if (validMoves.length > 0) {
           return false;
         }
       }
     }
   }
-  
   return true;
 };
 
