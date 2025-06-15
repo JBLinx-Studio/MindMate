@@ -21,6 +21,9 @@ export interface EnhancedGameSettings {
   enableKeyboardShortcuts: boolean;
   boardSize: 'small' | 'medium' | 'large';
   language: 'en' | 'es' | 'fr' | 'de' | 'ru';
+  // Added for feature completeness with UI:
+  autoAnalysis: boolean;
+  showMoveAnalysis: boolean;
 }
 
 const defaultSettings: EnhancedGameSettings = {
@@ -42,6 +45,9 @@ const defaultSettings: EnhancedGameSettings = {
   enableKeyboardShortcuts: true,
   boardSize: 'medium',
   language: 'en',
+  // Added
+  autoAnalysis: true,
+  showMoveAnalysis: true,
 };
 
 export const useEnhancedGameSettings = () => {
@@ -52,8 +58,6 @@ export const useEnhancedGameSettings = () => {
 
   useEffect(() => {
     localStorage.setItem('enhanced-chess-settings', JSON.stringify(settings));
-    
-    // Update sound manager settings
     enhancedSoundManager.setEnabled(settings.soundEnabled);
     enhancedSoundManager.setVolume(settings.soundVolume);
   }, [settings]);

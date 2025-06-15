@@ -238,11 +238,12 @@ const EnhancedChessBoard: React.FC<EnhancedChessBoardProps> = ({
     enhancedSoundManager.playGameStart();
   };
 
+  // Modify getBoardSize for a tighter, lichess feel
   const getBoardSize = () => {
     switch (settings.boardSize) {
-      case 'small': return 'w-full max-w-md';
-      case 'large': return 'w-full max-w-2xl';
-      default: return 'w-full max-w-lg';
+      case 'small': return 'w-full max-w-[360px]';
+      case 'large': return 'w-full max-w-[480px]';
+      default: return 'w-full max-w-[410px]';
     }
   };
 
@@ -258,137 +259,37 @@ const EnhancedChessBoard: React.FC<EnhancedChessBoardProps> = ({
   };
 
   return (
-    <div className={`${getBoardSize()} mx-auto transition-all duration-300`}>
-      {/* Enhanced Board Controls */}
-      <div className="flex justify-between items-center mb-6 px-2">
+    <div className={`${getBoardSize()} mx-0 transition-all duration-300`}>
+      {/* Board Controls row (minimalistic lichess style) */}
+      <div className="flex justify-between items-center mb-2 px-0">
         <div className="flex space-x-2">
           <Button
             onClick={() => updateSetting('showCoordinates', !settings.showCoordinates)}
-            variant="outline"
-            size="sm"
-            className="bg-white/80 backdrop-blur-sm hover:bg-white"
+            variant="ghost"
+            size="icon"
+            className={settings.showCoordinates ? "bg-neutral-300 border border-neutral-400" : ""}
+            aria-label="Toggle Coordinates"
           >
             <Eye className="w-4 h-4" />
           </Button>
-          <Button
-            onClick={analyzeCurrentPosition}
-            variant="outline"
-            size="sm"
-            className="bg-white/80 backdrop-blur-sm hover:bg-white"
-          >
-            <Brain className="w-4 h-4" />
-          </Button>
-          <Button
-            onClick={() => setIsFullscreen(!isFullscreen)}
-            variant="outline"
-            size="sm"
-            className="bg-white/80 backdrop-blur-sm hover:bg-white"
-          >
-            {isFullscreen ? <Minimize className="w-4 h-4" /> : <Maximize className="w-4 h-4" />}
-          </Button>
         </div>
-        
         <div className="flex items-center space-x-2">
-          {engineAnalysis && (
-            <Badge 
-              className={`${
-                engineAnalysis.centipawns > 50 ? 'bg-green-100 text-green-700 border-green-200' :
-                engineAnalysis.centipawns < -50 ? 'bg-red-100 text-red-700 border-red-200' :
-                'bg-gray-100 text-gray-700 border-gray-200'
-              }`}
-            >
-              <Target className="w-3 h-3 mr-1" />
-              {engineAnalysis.centipawns > 0 ? '+' : ''}{(engineAnalysis.centipawns / 100).toFixed(1)}
-            </Badge>
-          )}
-          
-          <Badge className="bg-green-100 text-green-700 border-green-200 animate-pulse">
-            <Sparkles className="w-3 h-3 mr-1" />
-            Enhanced
-          </Badge>
-          
-          <Button
-            onClick={() => setShowQuickSettings(!showQuickSettings)}
-            variant="ghost"
-            size="sm"
-            className="hover:bg-white/60"
-          >
-            <Settings className="w-4 h-4" />
-          </Button>
-          
           <Button
             onClick={() => updateSetting('soundEnabled', !settings.soundEnabled)}
             variant="ghost"
-            size="sm"
-            className="hover:bg-white/60"
+            size="icon"
+            className="hover:bg-neutral-300"
+            aria-label="Toggle Sound"
           >
             {settings.soundEnabled ? <Volume2 className="w-4 h-4" /> : <VolumeX className="w-4 h-4" />}
           </Button>
         </div>
       </div>
-
-      {/* Quick Settings Panel */}
-      {showQuickSettings && (
-        <Card className="mb-6 p-4 bg-white/90 backdrop-blur-sm border-0 shadow-lg">
-          <h4 className="font-semibold mb-3 flex items-center">
-            <Zap className="w-4 h-4 mr-2 text-purple-600" />
-            Game Settings
-          </h4>
-          <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <span className="text-sm">Sound Volume</span>
-              <div className="w-32">
-                <Slider
-                  value={[settings.soundVolume * 100]}
-                  onValueChange={([value]) => updateSetting('soundVolume', value / 100)}
-                  max={100}
-                  step={10}
-                  className="data-[state=open]:animate-in"
-                />
-              </div>
-            </div>
-            <div className="flex items-center justify-between">
-              <span className="text-sm">Show Move Analysis</span>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => updateSetting('showMoveAnalysis', !settings.showMoveAnalysis)}
-                className={settings.showMoveAnalysis ? 'bg-green-100' : ''}
-              >
-                {settings.showMoveAnalysis ? 'On' : 'Off'}
-              </Button>
-            </div>
-            <div className="flex items-center justify-between">
-              <span className="text-sm">Board Theme</span>
-              <select
-                value={settings.boardTheme}
-                onChange={(e) => updateSetting('boardTheme', e.target.value as any)}
-                className="text-sm border rounded px-3 py-1 bg-white"
-              >
-                <option value="classic">Classic Wood</option>
-                <option value="modern">Modern Blue</option>
-                <option value="wood">Premium Wood</option>
-                <option value="marble">Marble Luxury</option>
-                <option value="neon">Neon Gaming</option>
-                <option value="forest">Forest Green</option>
-              </select>
-            </div>
-          </div>
-        </Card>
-      )}
-
-      {/* Enhanced Chess Board Container */}
-      <div className={`relative ${isFullscreen ? 'fixed inset-0 z-50 bg-black/90 flex items-center justify-center' : ''}`}>
-        <div className="w-full aspect-square border-8 border-gradient-to-br from-amber-900 to-amber-800 rounded-3xl shadow-2xl bg-gradient-to-br from-amber-200 to-amber-300 p-6 relative overflow-hidden">
-          
-          {/* Decorative elements */}
-          <div className="absolute top-4 left-4 w-6 h-6 bg-amber-900 rounded-full opacity-70 animate-pulse" />
-          <div className="absolute top-4 right-4 w-6 h-6 bg-amber-900 rounded-full opacity-70 animate-pulse" style={{ animationDelay: '0.5s' }} />
-          <div className="absolute bottom-4 left-4 w-6 h-6 bg-amber-900 rounded-full opacity-70 animate-pulse" style={{ animationDelay: '1s' }} />
-          <div className="absolute bottom-4 right-4 w-6 h-6 bg-amber-900 rounded-full opacity-70 animate-pulse" style={{ animationDelay: '1.5s' }} />
-          
-          {/* Chess Board Grid */}
-          <div className="w-full h-full grid grid-cols-8 gap-px rounded-2xl overflow-hidden shadow-inner bg-amber-800/20">
+      
+      {/* Chess Board (flat, minimal deco, lichess style) */}
+      <div className={`relative`}>
+        <div className="w-full aspect-square border border-neutral-400 rounded-none shadow-none bg-neutral-200 p-0 relative overflow-hidden">
+          <div className="w-full h-full grid grid-cols-8 gap-0 rounded-none overflow-hidden shadow-none bg-neutral-200">
             {displayBoard.map((row, y) =>
               row.map((piece, x) => (
                 <ChessSquare
@@ -409,65 +310,18 @@ const EnhancedChessBoard: React.FC<EnhancedChessBoardProps> = ({
               ))
             )}
           </div>
-          
           {/* Move animation overlay */}
           {moveAnimation && (
             <div className="absolute inset-0 pointer-events-none">
               <div className="w-2 h-2 bg-yellow-400 rounded-full animate-ping absolute" 
-                   style={{
-                     left: `${(moveAnimation.to.x + 0.5) * 12.5}%`,
-                     top: `${(moveAnimation.to.y + 0.5) * 12.5}%`,
-                   }} />
+                style={{
+                  left: `${(moveAnimation.to.x + 0.5) * 12.5}%`,
+                  top: `${(moveAnimation.to.y + 0.5) * 12.5}%`,
+                }} />
             </div>
           )}
         </div>
       </div>
-
-      {/* Engine Analysis Panel */}
-      {showEngineAnalysis && engineAnalysis && (
-        <Card className="mt-6 p-4 bg-white/90 backdrop-blur-sm border-0 shadow-lg">
-          <div className="flex justify-between items-center mb-3">
-            <h4 className="font-semibold flex items-center">
-              <Brain className="w-4 h-4 mr-2 text-purple-600" />
-              Engine Analysis
-            </h4>
-            <Button variant="ghost" size="sm" onClick={() => setShowEngineAnalysis(false)}>×</Button>
-          </div>
-          <div className="grid grid-cols-3 gap-4 text-sm">
-            <div className="text-center">
-              <div className="font-bold text-lg">{engineAnalysis.bestMove}</div>
-              <div className="text-gray-600">Best Move</div>
-            </div>
-            <div className="text-center">
-              <div className={`font-bold text-lg ${
-                engineAnalysis.centipawns > 0 ? 'text-green-600' : 
-                engineAnalysis.centipawns < 0 ? 'text-red-600' : 'text-gray-600'
-              }`}>
-                {engineAnalysis.centipawns > 0 ? '+' : ''}{(engineAnalysis.centipawns / 100).toFixed(1)}
-              </div>
-              <div className="text-gray-600">Evaluation</div>
-            </div>
-            <div className="text-center">
-              <div className="font-bold text-lg">{engineAnalysis.depth}</div>
-              <div className="text-gray-600">Depth</div>
-            </div>
-          </div>
-          {engineAnalysis.tacticalThemes.length > 0 && (
-            <div className="mt-3">
-              <div className="text-xs text-gray-600 mb-1">Tactical Themes:</div>
-              <div className="flex flex-wrap gap-1">
-                {engineAnalysis.tacticalThemes.map((theme: string, index: number) => (
-                  <Badge key={index} variant="outline" className="text-xs">
-                    {theme}
-                  </Badge>
-                ))}
-              </div>
-            </div>
-          )}
-        </Card>
-      )}
-
-      {/* Game Result Modal */}
       {showResultModal && gameState.isGameOver && (
         <GameResultModal
           gameState={gameState}
