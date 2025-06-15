@@ -195,6 +195,7 @@ export const getValidMoves = (
           moves.push({ x: lastMove.to.x, y: y + direction });
         }
       }
+
       break;
     }
 
@@ -298,7 +299,7 @@ export const getValidMoves = (
       break;
 
     case 'king': {
-      // Standard 1-square king moves (no castling in attack mode)
+      // Always generate standard 1-square king moves
       for (const [dx, dy] of [
         [0, 1],
         [0, -1],
@@ -318,15 +319,14 @@ export const getValidMoves = (
         }
       }
 
-      // Only offer castling when not skipping king safety checks
-      // i.e., only if pseudo-legal move generation is OFF
+      // === << CRITICAL POINT: Only check for castling when NOT generating attacking info (i.e., only for legal moves) >>
       if (
-        !skipKingSafetyCheck &&
+        !skipKingSafetyCheck && // Only for legal move gen, not pseudo-legal
         gameState &&
         !piece.hasMoved &&
         !isInCheck(board, piece.color)
       ) {
-        // Kingside castling
+        // KINGSIDE CASTLING
         const kingsideRook = board[y][7];
         if (
           kingsideRook &&
@@ -334,12 +334,13 @@ export const getValidMoves = (
           !kingsideRook.hasMoved &&
           !board[y][5] &&
           !board[y][6] &&
+          // The following two checks MUST NOT run during attack map generation!
           !isSquareAttacked(board, { x: 5, y }, piece.color === 'white' ? 'black' : 'white') &&
           !isSquareAttacked(board, { x: 6, y }, piece.color === 'white' ? 'black' : 'white')
         ) {
           moves.push({ x: 6, y });
         }
-        // Queenside castling
+        // QUEENSIDE CASTLING
         const queensideRook = board[y][0];
         if (
           queensideRook &&
@@ -358,19 +359,19 @@ export const getValidMoves = (
     }
   }
 
-  // Filter out moves that leave the king in check (legal move filter),
-  // but ONLY when not in attack ("pseudo-legal") mode.
+  // ====== Filter: Only check for "leaving king in check" when generating fully legal moves ======
+  // If skipKingSafetyCheck=true, we are _only_ generating an attack map and must return as-is
   if (!skipKingSafetyCheck) {
     return moves.filter(move => {
-      if (!gameState) return true; // Defensive
-      // Create a minimal clone for the purposes of move testing
+      if (!gameState) return true;
+      // Simulate the move: it is CRITICAL that we do NOT re-enter isInCheck unless we are legalizing moves!
       const testBoard = board.map(row => [...row]);
       testBoard[move.y][move.x] = { ...piece, position: { ...move } };
       testBoard[y][x] = null;
       return !isInCheck(testBoard, piece.color);
     });
   } else {
-    // For pseudo-legal moves (used for attack/defense map), return as-is
+    // Return all moves if generating attacks
     return moves;
   }
 };
