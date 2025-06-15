@@ -81,18 +81,46 @@ export const isSquareAttacked = (
   position: Position,
   byColor: 'white' | 'black'
 ): boolean => {
-  // console.log("isSquareAttacked", position, byColor); // DEBUG
+  // To avoid recursion, use getValidMoves with skipCheckTest=true.
+  // For pawns, only check attack squares (see pawn logic below)
+
   for (let y = 0; y < 8; y++) {
     for (let x = 0; x < 8; x++) {
       const piece = board[y][x];
-      if (
-        piece &&
-        piece.color === byColor &&
-        piece.type !== 'king'
-      ) {
-        const moves = getPieceAttacks(piece, board);
-        if (moves.some(move => move.x === position.x && move.y === position.y)) {
-          return true;
+      if (piece && piece.color === byColor) {
+        if (piece.type === 'pawn') {
+          // Pawns only attack diagonally forward, never vertically
+          const direction = byColor === 'white' ? -1 : 1;
+          for (const dx of [-1, 1]) {
+            const attackX = x + dx;
+            const attackY = y + direction;
+            if (
+              isValidPosition({ x: attackX, y: attackY }) &&
+              attackX === position.x &&
+              attackY === position.y
+            ) {
+              return true;
+            }
+          }
+        } else {
+          // For all other pieces, use getValidMoves in attack-map mode (skipCheckTest=true)
+          // Pass a minimal dummy gameState to satisfy signature (move validation not needed for attacks)
+          const dummyGameState = {
+            board,
+            currentPlayer: byColor,
+            moves: [],
+            isGameOver: false,
+            validMoves: [],
+          };
+          const moves = getValidMoves(
+            piece,
+            board,
+            dummyGameState,
+            true // skipCheckTest!
+          );
+          if (moves.some((move) => move.x === position.x && move.y === position.y)) {
+            return true;
+          }
         }
       }
     }
