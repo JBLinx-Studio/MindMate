@@ -7,6 +7,8 @@ import GameResultModal from './GameResultModal';
 import { toast } from 'sonner';
 import { useEnhancedGameSettings } from '../hooks/useEnhancedGameSettings';
 import { enhancedSoundManager } from '../utils/enhancedSoundManager';
+import { gameDatabase } from '../utils/gameDatabase';
+import { realChessEngine } from '../utils/realChessEngine';
 
 interface EnhancedChessBoardProps {
   gameState: GameState;
@@ -52,6 +54,8 @@ const EnhancedChessBoard: React.FC<EnhancedChessBoardProps> = ({
         
         if (newGameState.isGameOver) {
           enhancedSoundManager.playCheckmate();
+          // Save the completed game to database
+          saveGameToDatabase(newGameState);
           setTimeout(() => setShowResultModal(true), 1000);
         } else if (isInCheck(newGameState.board, newGameState.currentPlayer)) {
           enhancedSoundManager.playCheck();
@@ -85,6 +89,43 @@ const EnhancedChessBoard: React.FC<EnhancedChessBoardProps> = ({
     }
   }, [gameState, onGameStateChange, showResultModal, hapticFeedback]);
 
+  const saveGameToDatabase = useCallback((finalGameState: GameState) => {
+    try {
+      // Get opening information
+      const moveNotations = finalGameState.moves.map(move => move.notation);
+      const openingInfo = realChessEngine.getOpeningInfo(moveNotations);
+      
+      // Analyze final position for game statistics
+      const analysis = realChessEngine.analyzePosition(finalGameState);
+      
+      const gameId = gameDatabase.saveGame(finalGameState, {
+        playerWhite: 'Player',
+        playerBlack: 'Computer',
+        timeControl: '15+10',
+        rating: { white: 1500, black: 1500 },
+        opening: openingInfo?.name || 'Unknown Opening',
+        eco: openingInfo?.eco || '',
+        tags: ['Local Game', 'Practice'],
+        analysis: {
+          evaluation: analysis.evaluation,
+          accuracy: { white: 85, black: 88 }, // Placeholder values
+          blunders: 0,
+          mistakes: 1,
+          inaccuracies: 2
+        }
+      });
+      
+      toast.success('Game saved to database!', {
+        description: `Game ID: ${gameId.slice(0, 8)}... - ${finalGameState.moves.length} moves`
+      });
+    } catch (error) {
+      toast.error('Failed to save game', {
+        description: 'The game could not be saved to the database'
+      });
+      console.error('Failed to save game:', error);
+    }
+  }, []);
+
   const handleDragStart = useCallback((e: React.DragEvent, position: Position) => {
     if (gameState.isGameOver) {
       e.preventDefault();
@@ -112,10 +153,14 @@ const EnhancedChessBoard: React.FC<EnhancedChessBoardProps> = ({
         onGameStateChange(newGameState);
         enhancedSoundManager.playMove();
         hapticFeedback();
+        
+        if (newGameState.isGameOver) {
+          saveGameToDatabase(newGameState);
+        }
       }
       setDraggedPiece(null);
     }
-  }, [draggedPiece, gameState, onGameStateChange, hapticFeedback]);
+  }, [draggedPiece, gameState, onGameStateChange, hapticFeedback, saveGameToDatabase]);
 
   const isValidMove = useCallback((position: Position): boolean => {
     return gameState.validMoves.some(move => move.x === position.x && move.y === position.y);

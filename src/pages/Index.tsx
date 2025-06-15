@@ -3,14 +3,16 @@ import React, { useState, useEffect } from 'react';
 import { SidebarProvider } from '@/components/ui/sidebar';
 import { AppSidebar } from '../components/AppSidebar';
 import EnhancedChessBoard from '../components/EnhancedChessBoard';
+import RealAnalysisPanel from '../components/RealAnalysisPanel';
 import { GameState } from '../types/chess';
 import { createInitialGameState } from '../utils/chessLogic';
 import { soundManager } from '../utils/soundManager';
 import { toast } from 'sonner';
-import { Volume2, VolumeX, Settings, Clock, MoreHorizontal, Flag, RotateCcw, Users, MessageSquare, Eye, Share2 } from 'lucide-react';
+import { Volume2, VolumeX, Settings, Clock, MoreHorizontal, Flag, RotateCcw, Users, MessageSquare, Eye, Share2, Brain } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { TopNavigationMenu } from '../components/TopNavigationMenu';
 
 const Index = () => {
@@ -193,115 +195,133 @@ const Index = () => {
                     </div>
                   </div>
 
-                  {/* Right Panel - Moves & Analysis */}
+                  {/* Right Panel - Analysis & Info */}
                   <div className="col-span-3 space-y-3">
-                    {/* Move History */}
-                    <div className="bg-[#2c2c28] rounded-lg">
-                      <div className="p-3 border-b border-[#4a4a46] flex items-center justify-between">
-                        <h3 className="text-white font-medium text-sm">Moves</h3>
-                        <div className="flex items-center space-x-1">
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="text-[#b8b8b8] hover:text-white h-6 w-6 p-0"
-                          >
-                            <Share2 className="w-3 h-3" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="text-[#b8b8b8] hover:text-white h-6 w-6 p-0"
-                          >
-                            <MoreHorizontal className="w-3 h-3" />
-                          </Button>
-                        </div>
-                      </div>
-                      <div className="p-3 max-h-64 overflow-y-auto">
-                        {gameState.moves.length === 0 ? (
-                          <div className="text-[#b8b8b8] text-sm text-center py-4">
-                            Game hasn't started
-                          </div>
-                        ) : (
-                          <div className="space-y-1">
-                            {gameState.moves.map((move, index) => {
-                              const moveNumber = Math.ceil((index + 1) / 2);
-                              const isWhiteMove = index % 2 === 0;
-                              
-                              return (
-                                <div key={index} className="flex items-center text-sm hover:bg-[#3d3d37] px-1 py-0.5 rounded cursor-pointer">
-                                  {isWhiteMove && (
-                                    <span className="text-[#b8b8b8] w-8 text-xs">
-                                      {moveNumber}.
-                                    </span>
-                                  )}
-                                  <span className="text-white font-mono text-xs">
-                                    {String.fromCharCode(97 + move.from.x)}{8 - move.from.y}
-                                    {String.fromCharCode(97 + move.to.x)}{8 - move.to.y}
-                                    {move.captured && <span className="text-red-400">x</span>}
-                                  </span>
-                                </div>
-                              );
-                            })}
-                          </div>
-                        )}
-                      </div>
-                    </div>
+                    <Tabs defaultValue="moves" className="w-full">
+                      <TabsList className="grid w-full grid-cols-2 bg-[#2c2c28]">
+                        <TabsTrigger value="moves" className="text-[#b8b8b8] data-[state=active]:bg-[#4a4a46] data-[state=active]:text-white">
+                          Moves
+                        </TabsTrigger>
+                        <TabsTrigger value="analysis" className="text-[#b8b8b8] data-[state=active]:bg-[#4a4a46] data-[state=active]:text-white">
+                          <Brain className="w-3 h-3 mr-1" />
+                          Analysis
+                        </TabsTrigger>
+                      </TabsList>
 
-                    {/* Game Info */}
-                    <div className="bg-[#2c2c28] rounded-lg p-3">
-                      <div className="space-y-2 text-sm">
-                        <div className="flex justify-between">
-                          <span className="text-[#b8b8b8]">Opening:</span>
-                          <span className="text-white">Italian Game</span>
+                      <TabsContent value="moves" className="space-y-3">
+                        {/* Move History */}
+                        <div className="bg-[#2c2c28] rounded-lg">
+                          <div className="p-3 border-b border-[#4a4a46] flex items-center justify-between">
+                            <h3 className="text-white font-medium text-sm">Moves</h3>
+                            <div className="flex items-center space-x-1">
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="text-[#b8b8b8] hover:text-white h-6 w-6 p-0"
+                              >
+                                <Share2 className="w-3 h-3" />
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="text-[#b8b8b8] hover:text-white h-6 w-6 p-0"
+                              >
+                                <MoreHorizontal className="w-3 h-3" />
+                              </Button>
+                            </div>
+                          </div>
+                          <div className="p-3 max-h-64 overflow-y-auto">
+                            {gameState.moves.length === 0 ? (
+                              <div className="text-[#b8b8b8] text-sm text-center py-4">
+                                Game hasn't started
+                              </div>
+                            ) : (
+                              <div className="space-y-1">
+                                {gameState.moves.map((move, index) => {
+                                  const moveNumber = Math.ceil((index + 1) / 2);
+                                  const isWhiteMove = index % 2 === 0;
+                                  
+                                  return (
+                                    <div key={index} className="flex items-center text-sm hover:bg-[#3d3d37] px-1 py-0.5 rounded cursor-pointer">
+                                      {isWhiteMove && (
+                                        <span className="text-[#b8b8b8] w-8 text-xs">
+                                          {moveNumber}.
+                                        </span>
+                                      )}
+                                      <span className="text-white font-mono text-xs">
+                                        {String.fromCharCode(97 + move.from.x)}{8 - move.from.y}
+                                        {String.fromCharCode(97 + move.to.x)}{8 - move.to.y}
+                                        {move.captured && <span className="text-red-400">x</span>}
+                                      </span>
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                            )}
+                          </div>
                         </div>
-                        <div className="flex justify-between">
-                          <span className="text-[#b8b8b8]">Time control:</span>
-                          <span className="text-white">15+10</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-[#b8b8b8]">Status:</span>
-                          <Badge 
-                            variant="outline" 
-                            className="text-[#759900] border-[#759900] text-xs"
-                          >
-                            In progress
-                          </Badge>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-[#b8b8b8]">Rated:</span>
-                          <span className="text-white">Yes</span>
-                        </div>
-                      </div>
-                    </div>
 
-                    {/* Chat */}
-                    <div className="bg-[#2c2c28] rounded-lg">
-                      <div className="p-3 border-b border-[#4a4a46] flex items-center justify-between">
-                        <h3 className="text-white font-medium text-sm flex items-center">
-                          <MessageSquare className="w-4 h-4 mr-2" />
-                          Chat
-                        </h3>
-                        <Badge 
-                          variant="outline" 
-                          className="text-[#b8b8b8] border-[#4a4a46] text-xs"
-                        >
-                          3
-                        </Badge>
-                      </div>
-                      <div className="p-3 max-h-32 overflow-y-auto">
-                        <div className="space-y-2 text-xs">
-                          <div className="text-[#b8b8b8]">
-                            <span className="text-white font-medium">Magnus:</span> Good luck!
-                          </div>
-                          <div className="text-[#b8b8b8]">
-                            <span className="text-white font-medium">Carlsen:</span> Thanks, you too
-                          </div>
-                          <div className="text-[#b8b8b8]">
-                            <span className="text-blue-400 font-medium">System:</span> Game started
+                        {/* Game Info */}
+                        <div className="bg-[#2c2c28] rounded-lg p-3">
+                          <div className="space-y-2 text-sm">
+                            <div className="flex justify-between">
+                              <span className="text-[#b8b8b8]">Opening:</span>
+                              <span className="text-white">Italian Game</span>
+                            </div>
+                            <div className="flex justify-between">
+                              <span className="text-[#b8b8b8]">Time control:</span>
+                              <span className="text-white">15+10</span>
+                            </div>
+                            <div className="flex justify-between">
+                              <span className="text-[#b8b8b8]">Status:</span>
+                              <Badge 
+                                variant="outline" 
+                                className="text-[#759900] border-[#759900] text-xs"
+                              >
+                                In progress
+                              </Badge>
+                            </div>
+                            <div className="flex justify-between">
+                              <span className="text-[#b8b8b8]">Rated:</span>
+                              <span className="text-white">Yes</span>
+                            </div>
                           </div>
                         </div>
-                      </div>
-                    </div>
+
+                        {/* Chat */}
+                        <div className="bg-[#2c2c28] rounded-lg">
+                          <div className="p-3 border-b border-[#4a4a46] flex items-center justify-between">
+                            <h3 className="text-white font-medium text-sm flex items-center">
+                              <MessageSquare className="w-4 h-4 mr-2" />
+                              Chat
+                            </h3>
+                            <Badge 
+                              variant="outline" 
+                              className="text-[#b8b8b8] border-[#4a4a46] text-xs"
+                            >
+                              3
+                            </Badge>
+                          </div>
+                          <div className="p-3 max-h-32 overflow-y-auto">
+                            <div className="space-y-2 text-xs">
+                              <div className="text-[#b8b8b8]">
+                                <span className="text-white font-medium">Magnus:</span> Good luck!
+                              </div>
+                              <div className="text-[#b8b8b8]">
+                                <span className="text-white font-medium">Carlsen:</span> Thanks, you too
+                              </div>
+                              <div className="text-[#b8b8b8]">
+                                <span className="text-blue-400 font-medium">System:</span> Game started
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </TabsContent>
+
+                      <TabsContent value="analysis">
+                        <RealAnalysisPanel gameState={gameState} />
+                      </TabsContent>
+                    </Tabs>
                   </div>
                 </div>
               </div>
