@@ -184,9 +184,9 @@ const RealTimeEvaluation: React.FC<RealTimeEvaluationProps> = ({
           <div className="mt-3">
             <div className="text-xs text-gray-500 mb-1">Evaluation trend</div>
             <div className="flex items-end space-x-0.5 h-6">
-              {evaluationHistory.slice(-10).map((eval, index) => {
-                const height = Math.max(2, Math.min(24, Math.abs(eval) * 8));
-                const color = eval > 0 ? 'bg-green-400' : eval < 0 ? 'bg-gray-600' : 'bg-gray-300';
+              {evaluationHistory.slice(-10).map((evaluation, index) => {
+                const height = Math.max(2, Math.min(24, Math.abs(evaluation) * 8));
+                const color = evaluation > 0 ? 'bg-green-400' : evaluation < 0 ? 'bg-gray-600' : 'bg-gray-300';
                 return (
                   <div
                     key={index}

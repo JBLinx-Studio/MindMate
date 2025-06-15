@@ -480,7 +480,6 @@ export const makeMove = (gameState: GameState, from: Position, to: Position): Ga
   
   const capturedPiece = newBoard[to.y][to.x];
   let specialMove: 'castle' | 'enPassant' | 'promotion' | undefined = undefined;
-  let promotedTo: 'queen' | 'rook' | 'bishop' | 'knight' = 'queen';
   
   // Handle special moves
   if (piece.type === 'king' && Math.abs(to.x - from.x) === 2) {
@@ -513,7 +512,7 @@ export const makeMove = (gameState: GameState, from: Position, to: Position): Ga
   if (piece.type === 'pawn' && (to.y === 0 || to.y === 7)) {
     specialMove = 'promotion';
     // For now, auto-promote to queen (in real game, player would choose)
-    newBoard[to.y][to.x] = { ...movedPiece, type: promotedTo };
+    newBoard[to.y][to.x] = { ...movedPiece, type: 'queen' };
   }
   
   // Generate enhanced algebraic notation
@@ -538,8 +537,7 @@ export const makeMove = (gameState: GameState, from: Position, to: Position): Ga
     captured: capturedPiece || undefined,
     notation: finalNotation,
     timestamp: new Date(),
-    specialMove,
-    promotedTo: specialMove === 'promotion' ? promotedTo : undefined
+    specialMove
   };
   
   // Determine game ending conditions
@@ -551,7 +549,7 @@ export const makeMove = (gameState: GameState, from: Position, to: Position): Ga
     isFiftyMoveRule({ ...gameState, moves: [...gameState.moves, move] });
   
   let winner: 'white' | 'black' | 'draw' | undefined = undefined;
-  let gameResult: { type: string; winner?: 'white' | 'black'; reason: string } | undefined = undefined;
+  let gameResult: { type: 'checkmate' | 'stalemate' | 'draw' | 'resignation' | 'timeout'; winner?: 'white' | 'black'; reason?: string } | undefined = undefined;
   
   if (isGameOver) {
     if (isCheckmate(newBoard, nextPlayer, gameState)) {
@@ -562,13 +560,13 @@ export const makeMove = (gameState: GameState, from: Position, to: Position): Ga
       gameResult = { type: 'stalemate', reason: 'Stalemate' };
     } else if (isInsufficientMaterial(newBoard)) {
       winner = 'draw';
-      gameResult = { type: 'insufficient_material', reason: 'Insufficient material' };
+      gameResult = { type: 'draw', reason: 'Insufficient material' };
     } else if (isThreefoldRepetition({ ...gameState, moves: [...gameState.moves, move] })) {
       winner = 'draw';
-      gameResult = { type: 'threefold_repetition', reason: 'Threefold repetition' };
+      gameResult = { type: 'draw', reason: 'Threefold repetition' };
     } else if (isFiftyMoveRule({ ...gameState, moves: [...gameState.moves, move] })) {
       winner = 'draw';
-      gameResult = { type: 'fifty_move_rule', reason: '50-move rule' };
+      gameResult = { type: 'draw', reason: '50-move rule' };
     }
   }
   
@@ -581,7 +579,8 @@ export const makeMove = (gameState: GameState, from: Position, to: Position): Ga
     validMoves: [],
     isGameOver,
     winner,
-    gameResult
+    gameResult,
+    fullMoveNumber: gameState.currentPlayer === 'black' ? gameState.fullMoveNumber + 1 : gameState.fullMoveNumber
   };
   
   return newGameState;
@@ -673,6 +672,5 @@ export const createInitialGameState = (): GameState => ({
   moves: [],
   isGameOver: false,
   validMoves: [],
-  halfMoveClock: 0,
   fullMoveNumber: 1
 });
