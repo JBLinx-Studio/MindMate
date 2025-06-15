@@ -83,7 +83,6 @@ export const isSquareAttacked = (
 ): boolean => {
   // To avoid recursion, use getValidMoves with skipCheckTest=true.
   // For pawns, only check attack squares (see pawn logic below)
-
   for (let y = 0; y < 8; y++) {
     for (let x = 0; x < 8; x++) {
       const piece = board[y][x];
@@ -98,6 +97,22 @@ export const isSquareAttacked = (
               isValidPosition({ x: attackX, y: attackY }) &&
               attackX === position.x &&
               attackY === position.y
+            ) {
+              return true;
+            }
+          }
+        } else if (piece.type === 'king') {
+          // *** CRUCIAL: DO NOT USE getValidMoves for king for attack detection ***
+          // Only add adjacent squares (since kings can't attack with check - it's illegal to be adjacent)
+          for (const [dx, dy] of [
+            [0, 1], [0, -1], [1, 0], [-1, 0],
+            [1, 1], [1, -1], [-1, 1], [-1, -1]
+          ]) {
+            const newPos = { x: x + dx, y: y + dy };
+            if (
+              isValidPosition(newPos) &&
+              newPos.x === position.x &&
+              newPos.y === position.y
             ) {
               return true;
             }
@@ -322,8 +337,9 @@ export const getValidMoves = (
           }
         }
       }
-      // Castling logic
-      if (!piece.hasMoved && !isInCheck(board, piece.color)) {
+      // When skipCheckTest, do NOT check for checks; we simply return adjacent squares (pseudo-legal king moves)
+      if (!skipCheckTest && !piece.hasMoved && !isInCheck(board, piece.color)) {
+        // Castling logic (same as before)
         const kingsideRook = board[y][7];
         if (kingsideRook && kingsideRook.type === 'rook' && !kingsideRook.hasMoved &&
             !board[y][5] && !board[y][6] &&
@@ -342,9 +358,7 @@ export const getValidMoves = (
       break;
   }
 
-  // DANGER ZONE: filter causes recursion
-  // To prevent infinite recursion:
-  // Only call isInCheck if skipCheckTest is false (i.e., not for attack map generation)
+  // Only call isInCheck when not in attack-detection mode to avoid infinite recursion!
   if (skipCheckTest) return moves;
   return moves.filter(move => {
     const testBoard = deepCopyBoard(board);
