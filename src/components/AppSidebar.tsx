@@ -1,57 +1,39 @@
 
 import React from 'react';
-import { Home, Gamepad2, Trophy, User, Settings, BookOpen } from 'lucide-react';
+import { Home, Gamepad2, Trophy, User, Settings, BookOpen, TrendingUp, Users } from 'lucide-react';
 import { NavLink } from 'react-router-dom';
 import {
   Sidebar,
   SidebarContent,
   SidebarGroup,
   SidebarGroupContent,
-  SidebarGroupLabel,
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
-  SidebarTrigger,
-  useSidebar,
 } from '@/components/ui/sidebar';
 
 const navigationItems = [
   { title: 'Play', url: '/', icon: Gamepad2 },
-  { title: 'Analysis', url: '/analysis', icon: BookOpen },
-  { title: 'Tournaments', url: '/tournaments', icon: Trophy },
-  { title: 'Profile', url: '/profile', icon: User },
-  { title: 'Settings', url: '/settings', icon: Settings },
+  { title: 'Puzzles', url: '/analysis', icon: BookOpen },
+  { title: 'Learn', url: '/tournaments', icon: TrendingUp },
+  { title: 'Watch', url: '/profile', icon: Users },
+  { title: 'Community', url: '/settings', icon: Trophy },
 ];
 
 export function AppSidebar() {
-  const { state } = useSidebar();
-  const isCollapsed = state === 'collapsed';
-
   return (
-    <Sidebar 
-      className={isCollapsed ? 'w-16' : 'w-64'} 
-      collapsible="icon"
-    >
-      <SidebarTrigger className="m-2 self-end" />
-      
-      <SidebarContent>
-        {/* Logo/Brand */}
-        <div className="p-4 border-b">
-          <div className="flex items-center space-x-3">
-            <div className="w-8 h-8 bg-amber-800 rounded-lg flex items-center justify-center">
-              <span className="text-white font-bold text-lg">♔</span>
-            </div>
-            {!isCollapsed && (
-              <div>
-                <h1 className="text-xl font-bold text-amber-800">ChessMaster</h1>
-                <p className="text-xs text-gray-600">Professional Chess Platform</p>
-              </div>
-            )}
+    <Sidebar className="w-48 border-r border-[#3d3d37] bg-[#161512]">
+      <SidebarContent className="bg-[#161512]">
+        {/* Logo */}
+        <div className="p-4">
+          <div className="flex items-center space-x-2">
+            <div className="text-2xl font-bold text-white">lichess</div>
+            <div className="text-[#b8b8b8]">♞</div>
           </div>
+          <div className="text-xs text-[#b8b8b8] mt-1">free online chess</div>
         </div>
 
         <SidebarGroup>
-          <SidebarGroupLabel>Navigation</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               {navigationItems.map((item) => (
@@ -61,11 +43,15 @@ export function AppSidebar() {
                       to={item.url} 
                       end
                       className={({ isActive }) => 
-                        `flex items-center space-x-3 ${isActive ? 'bg-amber-100 text-amber-800 font-medium' : 'hover:bg-gray-100'}`
+                        `flex items-center space-x-3 px-4 py-3 text-sm transition-colors ${
+                          isActive 
+                            ? 'bg-[#3d3d37] text-white border-r-2 border-[#759900]' 
+                            : 'text-[#b8b8b8] hover:text-white hover:bg-[#2c2c28]'
+                        }`
                       }
                     >
-                      <item.icon className="w-5 h-5" />
-                      {!isCollapsed && <span>{item.title}</span>}
+                      <item.icon className="w-4 h-4" />
+                      <span>{item.title}</span>
                     </NavLink>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
@@ -73,6 +59,19 @@ export function AppSidebar() {
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
+
+        {/* User Section */}
+        <div className="mt-auto p-4 border-t border-[#3d3d37]">
+          <div className="flex items-center space-x-2">
+            <div className="w-8 h-8 bg-[#4a4a46] rounded-full flex items-center justify-center">
+              <User className="w-4 h-4 text-white" />
+            </div>
+            <div>
+              <div className="text-white text-sm font-medium">Guest</div>
+              <div className="text-[#b8b8b8] text-xs">Sign in to play</div>
+            </div>
+          </div>
+        </div>
       </SidebarContent>
     </Sidebar>
   );
