@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -38,19 +37,19 @@ const AnalysisPanel: React.FC<AnalysisPanelProps> = ({ gameState }) => {
     setTimeout(() => setIsAnalyzing(false), 3000);
   };
 
-  const getEvaluationColor = (eval: number) => {
-    if (eval > 0.5) return "text-green-600";
-    if (eval < -0.5) return "text-red-600";
+  const getEvaluationColor = (evaluation: number) => {
+    if (evaluation > 0.5) return "text-green-600";
+    if (evaluation < -0.5) return "text-red-600";
     return "text-gray-600";
   };
 
-  const getEvaluationText = (eval: number) => {
-    if (eval > 1) return "White is winning";
-    if (eval > 0.5) return "White is better";
-    if (eval > 0.1) return "White is slightly better";
-    if (eval > -0.1) return "Equal position";
-    if (eval > -0.5) return "Black is slightly better";
-    if (eval > -1) return "Black is better";
+  const getEvaluationText = (evaluation: number) => {
+    if (evaluation > 1) return "White is winning";
+    if (evaluation > 0.5) return "White is better";
+    if (evaluation > 0.1) return "White is slightly better";
+    if (evaluation > -0.1) return "Equal position";
+    if (evaluation > -0.5) return "Black is slightly better";
+    if (evaluation > -1) return "Black is better";
     return "Black is winning";
   };
 
