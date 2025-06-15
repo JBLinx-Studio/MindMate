@@ -3,6 +3,7 @@ import React from 'react';
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import Games from './pages/Games';
 import Lobby from './pages/Lobby';
+import ChessGame from './pages/ChessGame';
 import Players from './pages/Players';
 import Profile from './pages/Profile';
 import Settings from './pages/Settings';
@@ -60,6 +61,7 @@ const AppContent = () => {
       <Routes>
         <Route path="/" element={<Lobby />} />
         <Route path="/lobby" element={<Lobby />} />
+        <Route path="/chess-game" element={<ChessGame />} />
         <Route path="/games" element={<Games />} />
         <Route path="/players" element={<Players />} />
         <Route path="/profile" element={<Profile />} />

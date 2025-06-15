@@ -1,5 +1,6 @@
 
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { SidebarProvider } from '@/components/ui/sidebar';
 import { AppSidebar } from '../components/AppSidebar';
 import { TopNavigationMenu } from '../components/TopNavigationMenu';
@@ -7,11 +8,14 @@ import EnhancedGameLobby from '../components/EnhancedGameLobby';
 import { ChessGameStarter } from '../components/ChessGameStarter';
 
 const Lobby = () => {
+  const navigate = useNavigate();
+
   const handleStartGame = (gameConfig: any) => {
     console.log('Game started with config:', gameConfig);
-    // Here you could navigate to a game page or open a game modal
-    // For now, we'll just show an alert
-    alert(`Starting ${gameConfig.mode} game with ${gameConfig.timeControl} time control!`);
+    // Navigate to the chess game page with the game configuration
+    navigate('/chess-game', { 
+      state: { gameConfig } 
+    });
   };
 
   return (
