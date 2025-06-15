@@ -303,7 +303,7 @@ export const ComprehensiveStatsTracker: React.FC<ComprehensiveStatsTrackerProps>
                 </span>
               </div>
               <Progress value={gameStats.timeManagement} className="h-2" />
-            </Card>
+            </div>
           </div>
 
           {/* Move Quality Distribution */}
