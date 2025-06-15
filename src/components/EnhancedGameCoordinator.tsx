@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { GameState, Position } from '../types/chess';
 import { useEnhancedGameSettings } from '../hooks/useEnhancedGameSettings';
@@ -12,12 +13,12 @@ import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
-import { 
-  Play, 
-  Pause, 
-  RotateCcw, 
-  Settings, 
-  Brain, 
+import {
+  Play,
+  Pause,
+  RotateCcw,
+  Settings,
+  Brain,
   Target,
   Trophy,
   Lightbulb,
@@ -67,13 +68,13 @@ export const EnhancedGameCoordinator: React.FC<EnhancedGameCoordinatorProps> = (
 
   const handleModeChange = (mode: GameMode) => {
     setGameMode(mode);
-    
+
     if (mode === 'puzzles') {
       setIsGameActive(false);
     } else {
       setIsGameActive(true);
     }
-    
+
     toast.success(`Switched to ${mode} mode`, {
       description: getModeDescription(mode)
     });
@@ -92,9 +93,18 @@ export const EnhancedGameCoordinator: React.FC<EnhancedGameCoordinatorProps> = (
   };
 
   const handleGameReset = () => {
-    const initialBoard: (any | null)[][] = Array(8).fill(null).map(() => Array(8).fill(null));
+    const initialBoard: (any | null)[][] = Array(8)
+      .fill(null)
+      .map(() => Array(8).fill(null));
     const pieces = [
-      'rook', 'knight', 'bishop', 'queen', 'king', 'bishop', 'knight', 'rook'
+      'rook',
+      'knight',
+      'bishop',
+      'queen',
+      'king',
+      'bishop',
+      'knight',
+      'rook'
     ];
     // Black pieces
     for (let x = 0; x < 8; x++) {
@@ -180,43 +190,65 @@ export const EnhancedGameCoordinator: React.FC<EnhancedGameCoordinatorProps> = (
 
   const getModeDescription = (mode: GameMode): string => {
     switch (mode) {
-      case 'practice': return 'Free play with analysis tools';
-      case 'ai': return 'Play against computer opponent';
-      case 'analysis': return 'Deep position analysis and evaluation';
-      case 'puzzles': return 'Solve tactical puzzles and improve';
-      case 'training': return 'Structured learning with feedback';
-      default: return '';
+      case 'practice':
+        return 'Free play with analysis tools';
+      case 'ai':
+        return 'Play against computer opponent';
+      case 'analysis':
+        return 'Deep position analysis and evaluation';
+      case 'puzzles':
+        return 'Solve tactical puzzles and improve';
+      case 'training':
+        return 'Structured learning with feedback';
+      default:
+        return '';
     }
   };
 
   const getAnalysisModeDescription = (mode: AnalysisMode): string => {
     switch (mode) {
-      case 'realtime': return 'Live position evaluation and best moves';
-      case 'tactical': return 'Find tactical patterns and combinations';
-      case 'performance': return 'Track move quality and accuracy';
-      case 'suggestions': return 'Get move recommendations with explanations';
-      default: return '';
+      case 'realtime':
+        return 'Live position evaluation and best moves';
+      case 'tactical':
+        return 'Find tactical patterns and combinations';
+      case 'performance':
+        return 'Track move quality and accuracy';
+      case 'suggestions':
+        return 'Get move recommendations with explanations';
+      default:
+        return '';
     }
   };
 
   const getModeIcon = (mode: GameMode) => {
     switch (mode) {
-      case 'practice': return <Play className="w-4 h-4" />;
-      case 'ai': return <Brain className="w-4 h-4" />;
-      case 'analysis': return <BarChart3 className="w-4 h-4" />;
-      case 'puzzles': return <Trophy className="w-4 h-4" />;
-      case 'training': return <Book className="w-4 h-4" />;
-      default: return <Play className="w-4 h-4" />;
+      case 'practice':
+        return <Play className="w-4 h-4" />;
+      case 'ai':
+        return <Brain className="w-4 h-4" />;
+      case 'analysis':
+        return <BarChart3 className="w-4 h-4" />;
+      case 'puzzles':
+        return <Trophy className="w-4 h-4" />;
+      case 'training':
+        return <Book className="w-4 h-4" />;
+      default:
+        return <Play className="w-4 h-4" />;
     }
   };
 
   const getAnalysisIcon = (mode: AnalysisMode) => {
     switch (mode) {
-      case 'realtime': return <Brain className="w-4 h-4" />;
-      case 'tactical': return <Target className="w-4 h-4" />;
-      case 'performance': return <BarChart3 className="w-4 h-4" />;
-      case 'suggestions': return <Lightbulb className="w-4 h-4" />;
-      default: return <Brain className="w-4 h-4" />;
+      case 'realtime':
+        return <Brain className="w-4 h-4" />;
+      case 'tactical':
+        return <Target className="w-4 h-4" />;
+      case 'performance':
+        return <BarChart3 className="w-4 h-4" />;
+      case 'suggestions':
+        return <Lightbulb className="w-4 h-4" />;
+      default:
+        return <Brain className="w-4 h-4" />;
     }
   };
 
@@ -249,7 +281,7 @@ export const EnhancedGameCoordinator: React.FC<EnhancedGameCoordinatorProps> = (
         return (
           <MoveSuggestionSystem
             gameState={gameState}
-            onMoveSelected={handleSuggestionMove} // <-- FIX: Pass correct function signature here
+            onMoveSelected={handleSuggestionMove}
             isActive={isGameActive && gameMode !== 'puzzles'}
             skillLevel={playerSkillLevel}
           />
@@ -426,3 +458,5 @@ export const EnhancedGameCoordinator: React.FC<EnhancedGameCoordinatorProps> = (
 };
 
 export default EnhancedGameCoordinator;
+// The file src/components/EnhancedGameCoordinator.tsx is getting very long (over 400 lines)! 
+// For maintainability, please consider asking me to help refactor it into smaller files after reviewing these changes.
