@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -27,9 +26,8 @@ import {
   Globe,
   Dumbbell,
   Film,
-  Spades,
-  Heart,
-  Diamond
+  Diamond,
+  Heart
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
@@ -109,10 +107,22 @@ const GameTypeSelector: React.FC = () => {
           description: 'Classic number puzzles with multiple difficulty levels and daily challenges.'
         },
         {
+          id: 'daily-word',
+          title: 'Daily Word Puzzle',
+          subtitle: 'Daily word challenges',
+          icon: <Type className="w-8 h-8 text-purple-400" />,
+          players: '1 player',
+          difficulty: 'Variable',
+          route: '/daily-word',
+          featured: true,
+          available: true,
+          description: 'Daily word puzzles with varying difficulty and AI-generated content.'
+        },
+        {
           id: 'crossword',
           title: 'Crossword',
           subtitle: 'Word clue puzzles',
-          icon: <Type className="w-8 h-8 text-blue-400" />,
+          icon: <BookOpen className="w-8 h-8 text-blue-400" />,
           players: '1 player',
           difficulty: 'Variable',
           route: '/crossword',
@@ -120,21 +130,10 @@ const GameTypeSelector: React.FC = () => {
           description: 'Daily crossword puzzles with varying themes and difficulty.'
         },
         {
-          id: 'wordle',
-          title: 'Word Guess',
-          subtitle: 'Daily word challenge',
-          icon: <BookOpen className="w-8 h-8 text-yellow-400" />,
-          players: '1 player',
-          difficulty: 'Intermediate',
-          route: '/word-guess',
-          available: false,
-          description: 'Guess the daily word in 6 tries with helpful hints.'
-        },
-        {
           id: 'anagram',
           title: 'Anagram Solver',
           subtitle: 'Rearrange letters',
-          icon: <Puzzle className="w-8 h-8 text-purple-400" />,
+          icon: <Puzzle className="w-8 h-8 text-orange-400" />,
           players: '1 player',
           difficulty: 'Variable',
           route: '/anagram',
@@ -145,7 +144,7 @@ const GameTypeSelector: React.FC = () => {
     },
     card: {
       title: 'Card Games',
-      icon: <Spades className="w-6 h-6" />,
+      icon: <Diamond className="w-6 h-6" />,
       color: 'text-red-400',
       games: [
         {
@@ -169,17 +168,6 @@ const GameTypeSelector: React.FC = () => {
           route: '/hearts',
           available: false,
           description: 'Avoid hearts and the Queen of Spades in this strategic card game.'
-        },
-        {
-          id: 'spades',
-          title: 'Spades',
-          subtitle: 'Partnership bidding',
-          icon: <Spades className="w-8 h-8 text-black" />,
-          players: '4 players',
-          difficulty: 'Advanced',
-          route: '/spades',
-          available: false,
-          description: 'Team-based trick-taking game with bidding and strategy.'
         }
       ]
     },
@@ -352,7 +340,7 @@ const GameTypeSelector: React.FC = () => {
       {/* Stats Section */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-8">
         <Card className="bg-[#2c2c28] border-[#4a4a46] p-4 text-center">
-          <div className="text-2xl font-bold text-[#759900]">3</div>
+          <div className="text-2xl font-bold text-[#759900]">4</div>
           <div className="text-[#b8b8b8] text-sm">Available Games</div>
         </Card>
         <Card className="bg-[#2c2c28] border-[#4a4a46] p-4 text-center">
