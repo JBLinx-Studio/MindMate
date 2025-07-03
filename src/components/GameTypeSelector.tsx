@@ -51,7 +51,7 @@ const GameTypeSelector: React.FC = () => {
           icon: <Crown className="w-8 h-8 text-blue-400" />,
           players: '2 players',
           difficulty: 'Advanced',
-          route: '/chess',
+          route: '/chess-lobby',
           featured: true,
           available: true,
           description: 'Master the ultimate strategy game with tournaments, puzzles, and analysis tools.'
@@ -63,7 +63,7 @@ const GameTypeSelector: React.FC = () => {
           icon: <Gamepad2 className="w-8 h-8 text-red-400" />,
           players: '2 players',
           difficulty: 'Intermediate',
-          route: '/checkers',
+          route: '/checkers-lobby',
           available: false,
           description: 'Classic checkers with multiple variants and difficulty levels.'
         },
@@ -74,7 +74,7 @@ const GameTypeSelector: React.FC = () => {
           icon: <Target className="w-8 h-8 text-green-400" />,
           players: '2 players',
           difficulty: 'Expert',
-          route: '/go',
+          route: '/go-lobby',
           available: false,
           description: 'The ancient game of territorial strategy and pattern recognition.'
         },
@@ -85,7 +85,7 @@ const GameTypeSelector: React.FC = () => {
           icon: <Dice1 className="w-8 h-8 text-purple-400" />,
           players: '2 players',
           difficulty: 'Beginner',
-          route: '/reversi',
+          route: '/reversi-lobby',
           available: false,
           description: 'Strategic disc-flipping game also known as Othello.'
         }
@@ -103,7 +103,7 @@ const GameTypeSelector: React.FC = () => {
           icon: <Grid3X3 className="w-8 h-8 text-green-400" />,
           players: '1 player',
           difficulty: 'Variable',
-          route: '/sudoku',
+          route: '/sudoku-lobby',
           featured: true,
           available: true,
           description: 'Classic number puzzles with multiple difficulty levels and daily challenges.'
@@ -115,7 +115,7 @@ const GameTypeSelector: React.FC = () => {
           icon: <Type className="w-8 h-8 text-blue-400" />,
           players: '1 player',
           difficulty: 'Variable',
-          route: '/crossword',
+          route: '/crossword-lobby',
           available: false,
           description: 'Daily crossword puzzles with varying themes and difficulty.'
         },
@@ -126,7 +126,7 @@ const GameTypeSelector: React.FC = () => {
           icon: <BookOpen className="w-8 h-8 text-yellow-400" />,
           players: '1 player',
           difficulty: 'Intermediate',
-          route: '/word-guess',
+          route: '/word-guess-lobby',
           available: false,
           description: 'Guess the daily word in 6 tries with helpful hints.'
         },
@@ -137,7 +137,7 @@ const GameTypeSelector: React.FC = () => {
           icon: <Puzzle className="w-8 h-8 text-purple-400" />,
           players: '1 player',
           difficulty: 'Variable',
-          route: '/anagram',
+          route: '/anagram-lobby',
           available: false,
           description: 'Find words by rearranging letters with time challenges.'
         }
@@ -155,7 +155,7 @@ const GameTypeSelector: React.FC = () => {
           icon: <Diamond className="w-8 h-8 text-red-400" />,
           players: '1 player',
           difficulty: 'Beginner',
-          route: '/solitaire',
+          route: '/solitaire-lobby',
           available: false,
           description: 'Multiple solitaire variants including Klondike and Spider.'
         },
@@ -166,7 +166,7 @@ const GameTypeSelector: React.FC = () => {
           icon: <Heart className="w-8 h-8 text-red-400" />,
           players: '4 players',
           difficulty: 'Intermediate',
-          route: '/hearts',
+          route: '/hearts-lobby',
           available: false,
           description: 'Avoid hearts and the Queen of Spades in this strategic card game.'
         },
@@ -177,7 +177,7 @@ const GameTypeSelector: React.FC = () => {
           icon: <Spades className="w-8 h-8 text-black" />,
           players: '4 players',
           difficulty: 'Advanced',
-          route: '/spades',
+          route: '/spades-lobby',
           available: false,
           description: 'Team-based trick-taking game with bidding and strategy.'
         }
@@ -195,7 +195,7 @@ const GameTypeSelector: React.FC = () => {
           icon: <Brain className="w-8 h-8 text-purple-400" />,
           players: '1-4 players',
           difficulty: 'Variable',
-          route: '/quiz',
+          route: '/quiz-lobby',
           featured: true,
           available: true,
           description: 'Thousands of questions across science, history, sports, and more.'
@@ -207,7 +207,7 @@ const GameTypeSelector: React.FC = () => {
           icon: <Calculator className="w-8 h-8 text-blue-400" />,
           players: '1 player',
           difficulty: 'Variable',
-          route: '/math-challenge',
+          route: '/math-challenge-lobby',
           available: false,
           description: 'Speed math challenges and problem-solving exercises.'
         },
@@ -218,7 +218,7 @@ const GameTypeSelector: React.FC = () => {
           icon: <Globe className="w-8 h-8 text-green-400" />,
           players: '1-4 players',
           difficulty: 'Intermediate',
-          route: '/geography',
+          route: '/geography-lobby',
           available: false,
           description: 'Test your knowledge of countries, capitals, and landmarks.'
         }

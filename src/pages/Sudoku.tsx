@@ -390,9 +390,9 @@ const Sudoku = () => {
             </main>
           </div>
         </div>
-      </div>
-    </SidebarProvider>
-  );
+      </SidebarProvider>
+    );
+  }
 };
 
 export default Sudoku;

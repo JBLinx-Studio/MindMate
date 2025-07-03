@@ -1,11 +1,15 @@
+
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Index from "./pages/Index";
 import Chess from "./pages/Chess";
+import ChessLobby from "./pages/ChessLobby";
 import Sudoku from "./pages/Sudoku";
+import SudokuLobby from "./pages/SudokuLobby";
 import Quiz from "./pages/Quiz";
+import QuizLobby from "./pages/QuizLobby";
 import Lobby from "./pages/Lobby";
 import Puzzles from "./pages/Puzzles";
 import Tournaments from "./pages/Tournaments";
@@ -47,6 +51,13 @@ const App = () => (
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<Index />} />
+          
+          {/* Game Lobbies */}
+          <Route path="/chess-lobby" element={<ChessLobby />} />
+          <Route path="/sudoku-lobby" element={<SudokuLobby />} />
+          <Route path="/quiz-lobby" element={<QuizLobby />} />
+          
+          {/* Games */}
           <Route path="/chess" element={<Chess />} />
           <Route path="/sudoku" element={<Sudoku />} />
           <Route path="/quiz" element={<Quiz />} />
