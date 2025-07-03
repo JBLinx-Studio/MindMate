@@ -16,7 +16,10 @@ import {
   RotateCcw,
   Lightbulb,
   CheckCircle2,
-  Trophy
+  Trophy,
+  Hash,
+  Grid3X3,
+  Eraser
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -130,6 +133,16 @@ const Sudoku = () => {
     }
   };
 
+  const getDifficultyIcon = (diff: string) => {
+    switch (diff) {
+      case 'easy': return <Star className="w-4 h-4" />;
+      case 'medium': return <Zap className="w-4 h-4" />;
+      case 'hard': return <Brain className="w-4 h-4" />;
+      case 'expert': return <Target className="w-4 h-4" />;
+      default: return <Hash className="w-4 h-4" />;
+    }
+  };
+
   // Timer effect
   useEffect(() => {
     let interval: NodeJS.Timeout;
@@ -168,10 +181,14 @@ const Sudoku = () => {
                   </Button>
                   
                   <div className="flex items-center space-x-4">
-                    <Badge className={`${getDifficultyColor(difficulty)} bg-transparent`}>
-                      {difficulty.toUpperCase()}
+                    <Badge className={`${getDifficultyColor(difficulty)} bg-transparent flex items-center space-x-1`}>
+                      {getDifficultyIcon(difficulty)}
+                      <span>{difficulty.toUpperCase()}</span>
                     </Badge>
-                    <div className="text-white">Time: {formatTime(timeElapsed)}</div>
+                    <div className="flex items-center space-x-2 text-white">
+                      <Clock className="w-4 h-4" />
+                      <span>{formatTime(timeElapsed)}</span>
+                    </div>
                     <div className="text-white">Mistakes: {mistakes}</div>
                   </div>
                 </div>
@@ -209,7 +226,10 @@ const Sudoku = () => {
                   <div className="space-y-4">
                     {/* Number Input */}
                     <Card className="bg-[#2c2c28] border-[#4a4a46] p-4">
-                      <h3 className="text-white font-semibold mb-3">Numbers</h3>
+                      <h3 className="text-white font-semibold mb-3 flex items-center">
+                        <Hash className="w-4 h-4 mr-2" />
+                        Numbers
+                      </h3>
                       <div className="grid grid-cols-3 gap-2">
                         {[1,2,3,4,5,6,7,8,9].map(num => (
                           <Button
@@ -224,9 +244,10 @@ const Sudoku = () => {
                       </div>
                       <Button
                         onClick={clearCell}
-                        className="w-full mt-2 bg-red-600 hover:bg-red-700 text-white"
+                        className="w-full mt-2 bg-red-600 hover:bg-red-700 text-white flex items-center justify-center"
                         disabled={!selectedCell}
                       >
+                        <Eraser className="w-4 h-4 mr-2" />
                         Clear
                       </Button>
                     </Card>
@@ -237,14 +258,14 @@ const Sudoku = () => {
                       <div className="space-y-2">
                         <Button
                           variant="outline"
-                          className="w-full border-[#4a4a46] text-[#b8b8b8] hover:bg-[#4a4a46]"
+                          className="w-full border-[#4a4a46] text-[#b8b8b8] hover:bg-[#4a4a46] flex items-center justify-center"
                         >
                           <Lightbulb className="w-4 h-4 mr-2" />
                           Hint
                         </Button>
                         <Button
                           variant="outline"
-                          className="w-full border-[#4a4a46] text-[#b8b8b8] hover:bg-[#4a4a46]"
+                          className="w-full border-[#4a4a46] text-[#b8b8b8] hover:bg-[#4a4a46] flex items-center justify-center"
                           onClick={() => setGameMode('menu')}
                         >
                           <RotateCcw className="w-4 h-4 mr-2" />
@@ -285,7 +306,7 @@ const Sudoku = () => {
             <div className="max-w-4xl mx-auto">
               <div className="text-center mb-8">
                 <div className="flex items-center justify-center mb-4">
-                  <Target className="w-12 h-12 text-[#759900] mr-3" />
+                  <Grid3X3 className="w-12 h-12 text-[#759900] mr-3" />
                   <h1 className="text-4xl font-bold text-white">Sudoku</h1>
                 </div>
                 <p className="text-[#b8b8b8] text-lg">Challenge your logic with number puzzles</p>
@@ -294,7 +315,10 @@ const Sudoku = () => {
               <div className="space-y-6">
                 {/* Difficulty Selection */}
                 <Card className="bg-[#2c2c28] border-[#4a4a46] p-6">
-                  <h2 className="text-xl font-semibold text-white mb-4">Choose Difficulty</h2>
+                  <h2 className="text-xl font-semibold text-white mb-4 flex items-center">
+                    <Target className="w-5 h-5 mr-2" />
+                    Choose Difficulty
+                  </h2>
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                     {(['easy', 'medium', 'hard', 'expert'] as const).map((diff) => (
                       <button
@@ -309,6 +333,9 @@ const Sudoku = () => {
                         `}
                       >
                         <div className="text-center">
+                          <div className="flex justify-center mb-2">
+                            {getDifficultyIcon(diff)}
+                          </div>
                           <div className="text-lg font-semibold capitalize">{diff}</div>
                           <div className="text-sm opacity-75">
                             {diff === 'easy' && '45 clues'}
@@ -336,7 +363,10 @@ const Sudoku = () => {
 
                 {/* Game Stats */}
                 <Card className="bg-[#2c2c28] border-[#4a4a46] p-6">
-                  <h2 className="text-xl font-semibold text-white mb-4">Your Stats</h2>
+                  <h2 className="text-xl font-semibold text-white mb-4 flex items-center">
+                    <Trophy className="w-5 h-5 mr-2" />
+                    Your Stats
+                  </h2>
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
                     <div>
                       <div className="text-2xl font-bold text-[#759900]">47</div>

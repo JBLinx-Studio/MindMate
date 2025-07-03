@@ -21,7 +21,15 @@ import {
   Grid3X3,
   Type,
   Calculator,
-  Brain
+  Brain,
+  Hash,
+  FlaskConical,
+  Globe,
+  Dumbbell,
+  Film,
+  Spades,
+  Heart,
+  Diamond
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
@@ -40,7 +48,7 @@ const GameTypeSelector: React.FC = () => {
           id: 'chess',
           title: 'Chess',
           subtitle: 'The classic strategy game',
-          icon: '♟️',
+          icon: <Crown className="w-8 h-8 text-blue-400" />,
           players: '2 players',
           difficulty: 'Advanced',
           route: '/chess',
@@ -52,7 +60,7 @@ const GameTypeSelector: React.FC = () => {
           id: 'checkers',
           title: 'Checkers',
           subtitle: 'Traditional board strategy',
-          icon: '🔴',
+          icon: <Gamepad2 className="w-8 h-8 text-red-400" />,
           players: '2 players',
           difficulty: 'Intermediate',
           route: '/checkers',
@@ -63,7 +71,7 @@ const GameTypeSelector: React.FC = () => {
           id: 'go',
           title: 'Go',
           subtitle: 'Ancient territory game',
-          icon: '⚫',
+          icon: <Target className="w-8 h-8 text-green-400" />,
           players: '2 players',
           difficulty: 'Expert',
           route: '/go',
@@ -74,7 +82,7 @@ const GameTypeSelector: React.FC = () => {
           id: 'reversi',
           title: 'Reversi',
           subtitle: 'Flip to win',
-          icon: '⚪',
+          icon: <Dice1 className="w-8 h-8 text-purple-400" />,
           players: '2 players',
           difficulty: 'Beginner',
           route: '/reversi',
@@ -92,7 +100,7 @@ const GameTypeSelector: React.FC = () => {
           id: 'sudoku',
           title: 'Sudoku',
           subtitle: 'Number placement puzzle',
-          icon: '🔢',
+          icon: <Grid3X3 className="w-8 h-8 text-green-400" />,
           players: '1 player',
           difficulty: 'Variable',
           route: '/sudoku',
@@ -104,7 +112,7 @@ const GameTypeSelector: React.FC = () => {
           id: 'crossword',
           title: 'Crossword',
           subtitle: 'Word clue puzzles',
-          icon: '📝',
+          icon: <Type className="w-8 h-8 text-blue-400" />,
           players: '1 player',
           difficulty: 'Variable',
           route: '/crossword',
@@ -115,7 +123,7 @@ const GameTypeSelector: React.FC = () => {
           id: 'wordle',
           title: 'Word Guess',
           subtitle: 'Daily word challenge',
-          icon: '🔤',
+          icon: <BookOpen className="w-8 h-8 text-yellow-400" />,
           players: '1 player',
           difficulty: 'Intermediate',
           route: '/word-guess',
@@ -126,7 +134,7 @@ const GameTypeSelector: React.FC = () => {
           id: 'anagram',
           title: 'Anagram Solver',
           subtitle: 'Rearrange letters',
-          icon: '🔀',
+          icon: <Puzzle className="w-8 h-8 text-purple-400" />,
           players: '1 player',
           difficulty: 'Variable',
           route: '/anagram',
@@ -137,14 +145,14 @@ const GameTypeSelector: React.FC = () => {
     },
     card: {
       title: 'Card Games',
-      icon: <Grid3X3 className="w-6 h-6" />,
+      icon: <Spades className="w-6 h-6" />,
       color: 'text-red-400',
       games: [
         {
           id: 'solitaire',
           title: 'Solitaire',
           subtitle: 'Classic card game',
-          icon: '🃏',
+          icon: <Diamond className="w-8 h-8 text-red-400" />,
           players: '1 player',
           difficulty: 'Beginner',
           route: '/solitaire',
@@ -155,7 +163,7 @@ const GameTypeSelector: React.FC = () => {
           id: 'hearts',
           title: 'Hearts',
           subtitle: 'Trick-taking game',
-          icon: '♥️',
+          icon: <Heart className="w-8 h-8 text-red-400" />,
           players: '4 players',
           difficulty: 'Intermediate',
           route: '/hearts',
@@ -166,7 +174,7 @@ const GameTypeSelector: React.FC = () => {
           id: 'spades',
           title: 'Spades',
           subtitle: 'Partnership bidding',
-          icon: '♠️',
+          icon: <Spades className="w-8 h-8 text-black" />,
           players: '4 players',
           difficulty: 'Advanced',
           route: '/spades',
@@ -184,7 +192,7 @@ const GameTypeSelector: React.FC = () => {
           id: 'quiz',
           title: 'Multi-Topic Quiz',
           subtitle: 'Test your knowledge',
-          icon: '🧠',
+          icon: <Brain className="w-8 h-8 text-purple-400" />,
           players: '1-4 players',
           difficulty: 'Variable',
           route: '/quiz',
@@ -196,7 +204,7 @@ const GameTypeSelector: React.FC = () => {
           id: 'math-challenge',
           title: 'Math Challenge',
           subtitle: 'Number skills test',
-          icon: '🔢',
+          icon: <Calculator className="w-8 h-8 text-blue-400" />,
           players: '1 player',
           difficulty: 'Variable',
           route: '/math-challenge',
@@ -207,7 +215,7 @@ const GameTypeSelector: React.FC = () => {
           id: 'geography',
           title: 'Geography Quiz',
           subtitle: 'World knowledge',
-          icon: '🌍',
+          icon: <Globe className="w-8 h-8 text-green-400" />,
           players: '1-4 players',
           difficulty: 'Intermediate',
           route: '/geography',
@@ -245,7 +253,10 @@ const GameTypeSelector: React.FC = () => {
     <div className="space-y-6">
       {/* Header */}
       <div className="text-center space-y-2">
-        <h1 className="text-4xl font-bold text-white">Choose Your Game</h1>
+        <div className="flex items-center justify-center mb-4">
+          <Gamepad2 className="w-12 h-12 text-[#759900] mr-3" />
+          <h1 className="text-4xl font-bold text-white">Choose Your Game</h1>
+        </div>
         <p className="text-[#b8b8b8] text-lg">Master multiple games, challenge your mind, compete with others</p>
       </div>
 
@@ -285,7 +296,7 @@ const GameTypeSelector: React.FC = () => {
               {/* Game Header */}
               <div className="flex items-start justify-between">
                 <div className="flex items-center space-x-3">
-                  <div className="text-3xl">{game.icon}</div>
+                  <div className="flex justify-center items-center">{game.icon}</div>
                   <div>
                     <div className="flex items-center space-x-2">
                       <h3 className="text-white font-semibold text-lg">{game.title}</h3>
@@ -341,7 +352,7 @@ const GameTypeSelector: React.FC = () => {
       {/* Stats Section */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-8">
         <Card className="bg-[#2c2c28] border-[#4a4a46] p-4 text-center">
-          <div className="text-2xl font-bold text-[#759900]">4+</div>
+          <div className="text-2xl font-bold text-[#759900]">3</div>
           <div className="text-[#b8b8b8] text-sm">Available Games</div>
         </Card>
         <Card className="bg-[#2c2c28] border-[#4a4a46] p-4 text-center">

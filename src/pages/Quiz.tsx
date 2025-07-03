@@ -15,7 +15,13 @@ import {
   XCircle,
   Trophy,
   Play,
-  RotateCcw
+  RotateCcw,
+  Zap,
+  BookOpen,
+  Globe,
+  Dumbbell,
+  Film,
+  FlaskConical
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -39,12 +45,12 @@ const Quiz = () => {
   const [userAnswers, setUserAnswers] = useState<number[]>([]);
 
   const categories = [
-    { id: 'mixed', name: 'Mixed Topics', icon: '🎯', color: 'text-blue-400' },
-    { id: 'science', name: 'Science', icon: '🔬', color: 'text-green-400' },
-    { id: 'history', name: 'History', icon: '📚', color: 'text-yellow-400' },
-    { id: 'geography', name: 'Geography', icon: '🌍', color: 'text-blue-400' },
-    { id: 'sports', name: 'Sports', icon: '⚽', color: 'text-red-400' },
-    { id: 'entertainment', name: 'Entertainment', icon: '🎬', color: 'text-purple-400' }
+    { id: 'mixed', name: 'Mixed Topics', icon: <Brain className="w-5 h-5" />, color: 'text-blue-400' },
+    { id: 'science', name: 'Science', icon: <FlaskConical className="w-5 h-5" />, color: 'text-green-400' },
+    { id: 'history', name: 'History', icon: <BookOpen className="w-5 h-5" />, color: 'text-yellow-400' },
+    { id: 'geography', name: 'Geography', icon: <Globe className="w-5 h-5" />, color: 'text-blue-400' },
+    { id: 'sports', name: 'Sports', icon: <Dumbbell className="w-5 h-5" />, color: 'text-red-400' },
+    { id: 'entertainment', name: 'Entertainment', icon: <Film className="w-5 h-5" />, color: 'text-purple-400' }
   ];
 
   // Sample questions (in a real app, these would come from an API)
@@ -364,7 +370,7 @@ const Quiz = () => {
                         `}
                       >
                         <div className="text-center">
-                          <div className="text-2xl mb-2">{category.icon}</div>
+                          <div className="flex justify-center mb-2">{category.icon}</div>
                           <div className="font-semibold">{category.name}</div>
                         </div>
                       </button>
