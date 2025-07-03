@@ -43,8 +43,9 @@ const GameTypeSelector: React.FC = () => {
           icon: '♟️',
           players: '2 players',
           difficulty: 'Advanced',
-          route: '/',
+          route: '/chess',
           featured: true,
+          available: true,
           description: 'Master the ultimate strategy game with tournaments, puzzles, and analysis tools.'
         },
         {
@@ -55,6 +56,7 @@ const GameTypeSelector: React.FC = () => {
           players: '2 players',
           difficulty: 'Intermediate',
           route: '/checkers',
+          available: false,
           description: 'Classic checkers with multiple variants and difficulty levels.'
         },
         {
@@ -65,6 +67,7 @@ const GameTypeSelector: React.FC = () => {
           players: '2 players',
           difficulty: 'Expert',
           route: '/go',
+          available: false,
           description: 'The ancient game of territorial strategy and pattern recognition.'
         },
         {
@@ -75,6 +78,7 @@ const GameTypeSelector: React.FC = () => {
           players: '2 players',
           difficulty: 'Beginner',
           route: '/reversi',
+          available: false,
           description: 'Strategic disc-flipping game also known as Othello.'
         }
       ]
@@ -93,6 +97,7 @@ const GameTypeSelector: React.FC = () => {
           difficulty: 'Variable',
           route: '/sudoku',
           featured: true,
+          available: true,
           description: 'Classic number puzzles with multiple difficulty levels and daily challenges.'
         },
         {
@@ -103,6 +108,7 @@ const GameTypeSelector: React.FC = () => {
           players: '1 player',
           difficulty: 'Variable',
           route: '/crossword',
+          available: false,
           description: 'Daily crossword puzzles with varying themes and difficulty.'
         },
         {
@@ -113,6 +119,7 @@ const GameTypeSelector: React.FC = () => {
           players: '1 player',
           difficulty: 'Intermediate',
           route: '/word-guess',
+          available: false,
           description: 'Guess the daily word in 6 tries with helpful hints.'
         },
         {
@@ -123,6 +130,7 @@ const GameTypeSelector: React.FC = () => {
           players: '1 player',
           difficulty: 'Variable',
           route: '/anagram',
+          available: false,
           description: 'Find words by rearranging letters with time challenges.'
         }
       ]
@@ -140,6 +148,7 @@ const GameTypeSelector: React.FC = () => {
           players: '1 player',
           difficulty: 'Beginner',
           route: '/solitaire',
+          available: false,
           description: 'Multiple solitaire variants including Klondike and Spider.'
         },
         {
@@ -150,6 +159,7 @@ const GameTypeSelector: React.FC = () => {
           players: '4 players',
           difficulty: 'Intermediate',
           route: '/hearts',
+          available: false,
           description: 'Avoid hearts and the Queen of Spades in this strategic card game.'
         },
         {
@@ -160,6 +170,7 @@ const GameTypeSelector: React.FC = () => {
           players: '4 players',
           difficulty: 'Advanced',
           route: '/spades',
+          available: false,
           description: 'Team-based trick-taking game with bidding and strategy.'
         }
       ]
@@ -178,6 +189,7 @@ const GameTypeSelector: React.FC = () => {
           difficulty: 'Variable',
           route: '/quiz',
           featured: true,
+          available: true,
           description: 'Thousands of questions across science, history, sports, and more.'
         },
         {
@@ -188,6 +200,7 @@ const GameTypeSelector: React.FC = () => {
           players: '1 player',
           difficulty: 'Variable',
           route: '/math-challenge',
+          available: false,
           description: 'Speed math challenges and problem-solving exercises.'
         },
         {
@@ -198,6 +211,7 @@ const GameTypeSelector: React.FC = () => {
           players: '1-4 players',
           difficulty: 'Intermediate',
           route: '/geography',
+          available: false,
           description: 'Test your knowledge of countries, capitals, and landmarks.'
         }
       ]
@@ -205,8 +219,8 @@ const GameTypeSelector: React.FC = () => {
   };
 
   const handleGameSelect = (game: any) => {
-    if (game.route === '/') {
-      navigate('/');
+    if (game.available) {
+      navigate(game.route);
     } else {
       toast.info(`${game.title} coming soon!`, {
         description: 'We\'re working on bringing you more amazing games.',
@@ -259,7 +273,14 @@ const GameTypeSelector: React.FC = () => {
       {/* Games Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-6">
         {currentCategory.games.map((game) => (
-          <Card key={game.id} className="bg-[#2c2c28] border-[#4a4a46] hover:border-[#759900] transition-all duration-300 cursor-pointer group">
+          <Card key={game.id} className="bg-[#2c2c28] border-[#4a4a46] hover:border-[#759900] transition-all duration-300 cursor-pointer group relative">
+            {/* Coming Soon Overlay */}
+            {!game.available && (
+              <div className="absolute inset-0 bg-black/50 rounded-lg flex items-center justify-center z-10">
+                <Badge className="bg-yellow-600 text-white text-sm">Coming Soon</Badge>
+              </div>
+            )}
+            
             <div className="p-6 space-y-4">
               {/* Game Header */}
               <div className="flex items-start justify-between">
@@ -270,6 +291,9 @@ const GameTypeSelector: React.FC = () => {
                       <h3 className="text-white font-semibold text-lg">{game.title}</h3>
                       {game.featured && (
                         <Badge className="bg-[#759900] text-white text-xs">Featured</Badge>
+                      )}
+                      {game.available && (
+                        <Badge className="bg-green-600 text-white text-xs">Available</Badge>
                       )}
                     </div>
                     <p className="text-[#b8b8b8] text-sm">{game.subtitle}</p>
@@ -299,10 +323,15 @@ const GameTypeSelector: React.FC = () => {
               {/* Play Button */}
               <Button
                 onClick={() => handleGameSelect(game)}
-                className="w-full bg-[#759900] hover:bg-[#6a8700] text-white group-hover:shadow-lg transition-all duration-300"
+                className={`w-full ${
+                  game.available 
+                    ? 'bg-[#759900] hover:bg-[#6a8700] text-white group-hover:shadow-lg' 
+                    : 'bg-gray-600 hover:bg-gray-700 text-gray-300 cursor-not-allowed'
+                } transition-all duration-300`}
+                disabled={!game.available}
               >
                 <Play className="w-4 h-4 mr-2" />
-                Play Now
+                {game.available ? 'Play Now' : 'Coming Soon'}
               </Button>
             </div>
           </Card>
@@ -312,12 +341,12 @@ const GameTypeSelector: React.FC = () => {
       {/* Stats Section */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-8">
         <Card className="bg-[#2c2c28] border-[#4a4a46] p-4 text-center">
-          <div className="text-2xl font-bold text-[#759900]">12+</div>
-          <div className="text-[#b8b8b8] text-sm">Game Types</div>
+          <div className="text-2xl font-bold text-[#759900]">4+</div>
+          <div className="text-[#b8b8b8] text-sm">Available Games</div>
         </Card>
         <Card className="bg-[#2c2c28] border-[#4a4a46] p-4 text-center">
-          <div className="text-2xl font-bold text-[#759900]">1M+</div>
-          <div className="text-[#b8b8b8] text-sm">Games Played</div>
+          <div className="text-2xl font-bold text-[#759900]">12+</div>
+          <div className="text-[#b8b8b8] text-sm">Total Planned</div>
         </Card>
         <Card className="bg-[#2c2c28] border-[#4a4a46] p-4 text-center">
           <div className="text-2xl font-bold text-[#759900]">50K+</div>
