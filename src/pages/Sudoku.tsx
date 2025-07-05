@@ -283,7 +283,7 @@ const Sudoku = () => {
                       <Button
                         onClick={clearCell}
                         className="w-full mt-4 bg-red-600 hover:bg-red-700 text-white flex items-center justify-center transition-all duration-200 hover:scale-105"
-                        disabled={!selectedCell || board[selectedCell?.row]?.[selectedCell?.col] === null}
+                        disabled={!selectedCell || board[selectedCell?.row]?.[selectedCell?.col] !== null}
                       >
                         <Eraser className="w-4 h-4 mr-2" />
                         Clear Cell
