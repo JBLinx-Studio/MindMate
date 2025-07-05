@@ -29,25 +29,42 @@ const Quiz = () => {
   const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
   const [isComplete, setIsComplete] = useState(false);
 
-  // Sample questions for demo
+  // Enhanced questions with more variety and difficulty
   const questions = [
     {
       question: "What is the capital of France?",
       options: ["London", "Berlin", "Paris", "Madrid"],
       correct: 2,
-      category: "general"
+      category: "general",
+      difficulty: "easy"
     },
     {
       question: "Which planet is known as the Red Planet?",
       options: ["Venus", "Mars", "Jupiter", "Saturn"],
       correct: 1,
-      category: "science"
+      category: "science",
+      difficulty: "easy"
     },
     {
       question: "In which year did World War II end?",
       options: ["1944", "1945", "1946", "1947"],
       correct: 1,
-      category: "history"
+      category: "history",
+      difficulty: "medium"
+    },
+    {
+      question: "What is the chemical symbol for gold?",
+      options: ["Go", "Gd", "Au", "Ag"],
+      correct: 2,
+      category: "science",
+      difficulty: "hard"
+    },
+    {
+      question: "Who painted the Mona Lisa?",
+      options: ["Van Gogh", "Picasso", "Da Vinci", "Monet"],
+      correct: 2,
+      category: "general",
+      difficulty: "medium"
     }
   ];
 
