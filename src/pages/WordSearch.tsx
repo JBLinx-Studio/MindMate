@@ -410,9 +410,9 @@ const WordSearch = () => {
             </main>
           </div>
         </div>
-      </SidebarProvider>
-    );
-  }
+      </div>
+    </SidebarProvider>
+  );
 };
 
 export default WordSearch;

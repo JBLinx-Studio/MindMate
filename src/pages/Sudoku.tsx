@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { SidebarProvider } from '@/components/ui/sidebar';
 import { AppSidebar } from '../components/AppSidebar';
@@ -37,7 +36,6 @@ const Sudoku = () => {
   const [hintsUsed, setHintsUsed] = useState(0);
   const [notes, setNotes] = useState<{[key: string]: number[]}>({});
 
-  // Generate a simple Sudoku puzzle (enhanced for demo)
   const generateSudoku = (difficulty: string) => {
     const solution = [
       [5,3,4,6,7,8,9,1,2],

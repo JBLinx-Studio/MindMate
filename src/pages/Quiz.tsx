@@ -400,9 +400,9 @@ const Quiz = () => {
             </main>
           </div>
         </div>
-      </SidebarProvider>
-    );
-  }
+      </div>
+    </SidebarProvider>
+  );
 };
 
 export default Quiz;
