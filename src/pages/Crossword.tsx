@@ -211,7 +211,6 @@ const Crossword = () => {
                 
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                   <div className="space-y-6">
-                    {/* Crossword Grid */}
                     <Card className="bg-gradient-to-br from-[#2c2c28] to-[#252521] border-[#4a4a46] p-8 shadow-xl">
                       <h3 className="text-white font-semibold mb-6 text-xl">Crossword Grid</h3>
                       <div className="grid grid-cols-5 gap-1 max-w-sm mx-auto">
@@ -257,7 +256,6 @@ const Crossword = () => {
                       </div>
                     </Card>
 
-                    {/* Letter Input */}
                     <Card className="bg-gradient-to-br from-[#2c2c28] to-[#252521] border-[#4a4a46] p-6 shadow-xl">
                       <h3 className="text-white font-semibold mb-4">Letter Input</h3>
                       <div className="grid grid-cols-6 gap-2">
@@ -277,7 +275,6 @@ const Crossword = () => {
                   </div>
                   
                   <div className="space-y-6">
-                    {/* Clues */}
                     <Card className="bg-gradient-to-br from-[#2c2c28] to-[#252521] border-[#4a4a46] p-6 shadow-xl">
                       <h3 className="text-white font-semibold mb-4 flex items-center text-xl">
                         <Hash className="w-5 h-5 mr-2" />
@@ -315,7 +312,6 @@ const Crossword = () => {
                       </div>
                     </Card>
                     
-                    {/* Game Controls */}
                     <Card className="bg-gradient-to-br from-[#2c2c28] to-[#252521] border-[#4a4a46] p-6 shadow-xl">
                       <h3 className="text-white font-semibold mb-4">Game Controls</h3>
                       <div className="space-y-3">

@@ -232,7 +232,6 @@ const Sudoku = () => {
                 
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                   <div className="lg:col-span-2">
-                    {/* Sudoku Board */}
                     <Card className="bg-gradient-to-br from-[#2c2c28] to-[#252521] border-[#4a4a46] p-8 shadow-2xl">
                       <h3 className="text-white font-semibold mb-6 text-xl">Sudoku Grid</h3>
                       <div className="grid grid-cols-9 gap-1 max-w-lg mx-auto bg-white p-2 rounded-lg shadow-inner">
@@ -262,7 +261,6 @@ const Sudoku = () => {
                   </div>
                   
                   <div className="space-y-6">
-                    {/* Number Input */}
                     <Card className="bg-gradient-to-br from-[#2c2c28] to-[#252521] border-[#4a4a46] p-6 shadow-xl">
                       <h3 className="text-white font-semibold mb-4 flex items-center">
                         <Hash className="w-5 h-5 mr-2" />
@@ -283,14 +281,13 @@ const Sudoku = () => {
                       <Button
                         onClick={clearCell}
                         className="w-full mt-4 bg-red-600 hover:bg-red-700 text-white flex items-center justify-center transition-all duration-200 hover:scale-105"
-                        disabled={!selectedCell || board[selectedCell?.row]?.[selectedCell?.col] !== null}
+                        disabled={!selectedCell || board[selectedCell?.row]?.[selectedCell?.col] === null}
                       >
                         <Eraser className="w-4 h-4 mr-2" />
                         Clear Cell
                       </Button>
                     </Card>
                     
-                    {/* Game Controls */}
                     <Card className="bg-gradient-to-br from-[#2c2c28] to-[#252521] border-[#4a4a46] p-6 shadow-xl">
                       <h3 className="text-white font-semibold mb-4">Game Controls</h3>
                       <div className="space-y-3">
@@ -373,7 +370,6 @@ const Sudoku = () => {
               </div>
 
               <div className="space-y-8">
-                {/* Difficulty Selection */}
                 <Card className="bg-gradient-to-br from-[#2c2c28] to-[#252521] border-[#4a4a46] p-8 shadow-xl">
                   <h2 className="text-2xl font-semibold text-white mb-6 flex items-center">
                     <Target className="w-6 h-6 mr-3 text-[#759900]" />
@@ -409,7 +405,6 @@ const Sudoku = () => {
                   </div>
                 </Card>
 
-                {/* Start Game */}
                 <Card className="bg-gradient-to-r from-[#759900] to-[#6a8700] border-[#759900] p-8 text-center shadow-2xl">
                   <h2 className="text-2xl font-semibold text-white mb-6">Ready to Play?</h2>
                   <Button
@@ -421,7 +416,6 @@ const Sudoku = () => {
                   </Button>
                 </Card>
 
-                {/* Game Stats */}
                 <Card className="bg-gradient-to-br from-[#2c2c28] to-[#252521] border-[#4a4a46] p-8 shadow-xl">
                   <h2 className="text-2xl font-semibold text-white mb-6 flex items-center">
                     <Trophy className="w-6 h-6 mr-3 text-yellow-400" />
@@ -450,9 +444,9 @@ const Sudoku = () => {
             </main>
           </div>
         </div>
-      </SidebarProvider>
-    );
-  }
+      </div>
+    </SidebarProvider>
+  );
 };
 
 export default Sudoku;
