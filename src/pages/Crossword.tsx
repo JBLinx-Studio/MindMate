@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { SidebarProvider } from '@/components/ui/sidebar';
 import { AppSidebar } from '../components/AppSidebar';
@@ -451,8 +450,8 @@ const Crossword = () => {
                   </div>
                 </Card>
               </div>
-            </main>
-          </div>
+            </div>
+          </main>
         </div>
       </div>
     </SidebarProvider>
