@@ -29,7 +29,8 @@ import {
   Film,
   Spades,
   Heart,
-  Diamond
+  Diamond,
+  Search
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
@@ -116,19 +117,21 @@ const GameTypeSelector: React.FC = () => {
           players: '1 player',
           difficulty: 'Variable',
           route: '/crossword-lobby',
-          available: false,
+          featured: true,
+          available: true,
           description: 'Daily crossword puzzles with varying themes and difficulty.'
         },
         {
-          id: 'wordle',
-          title: 'Word Guess',
-          subtitle: 'Daily word challenge',
-          icon: <BookOpen className="w-8 h-8 text-yellow-400" />,
+          id: 'word-search',
+          title: 'Word Search',
+          subtitle: 'Find hidden words',
+          icon: <Search className="w-8 h-8 text-purple-400" />,
           players: '1 player',
-          difficulty: 'Intermediate',
-          route: '/word-guess-lobby',
-          available: false,
-          description: 'Guess the daily word in 6 tries with helpful hints.'
+          difficulty: 'Variable',
+          route: '/word-search-lobby',
+          featured: true,
+          available: true,
+          description: 'Classic word finding puzzles with themed word lists.'
         },
         {
           id: 'anagram',
@@ -254,10 +257,10 @@ const GameTypeSelector: React.FC = () => {
       {/* Header */}
       <div className="text-center space-y-2">
         <div className="flex items-center justify-center mb-4">
-          <Gamepad2 className="w-12 h-12 text-[#759900] mr-3" />
-          <h1 className="text-4xl font-bold text-white">Choose Your Game</h1>
+          <Brain className="w-12 h-12 text-[#759900] mr-3" />
+          <h1 className="text-4xl font-bold text-white">MindMate</h1>
         </div>
-        <p className="text-[#b8b8b8] text-lg">Master multiple games, challenge your mind, compete with others</p>
+        <p className="text-[#b8b8b8] text-lg">Where logical thinkers come to sharpen their minds</p>
       </div>
 
       {/* Category Selector */}
@@ -352,11 +355,11 @@ const GameTypeSelector: React.FC = () => {
       {/* Stats Section */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-8">
         <Card className="bg-[#2c2c28] border-[#4a4a46] p-4 text-center">
-          <div className="text-2xl font-bold text-[#759900]">3</div>
+          <div className="text-2xl font-bold text-[#759900]">6</div>
           <div className="text-[#b8b8b8] text-sm">Available Games</div>
         </Card>
         <Card className="bg-[#2c2c28] border-[#4a4a46] p-4 text-center">
-          <div className="text-2xl font-bold text-[#759900]">12+</div>
+          <div className="text-2xl font-bold text-[#759900]">15+</div>
           <div className="text-[#b8b8b8] text-sm">Total Planned</div>
         </Card>
         <Card className="bg-[#2c2c28] border-[#4a4a46] p-4 text-center">
@@ -365,7 +368,7 @@ const GameTypeSelector: React.FC = () => {
         </Card>
         <Card className="bg-[#2c2c28] border-[#4a4a46] p-4 text-center">
           <div className="text-2xl font-bold text-[#759900]">24/7</div>
-          <div className="text-[#b8b8b8] text-sm">Online Play</div>
+          <div className="text-[#b8b8b8] text-sm">Mind Training</div>
         </Card>
       </div>
     </div>

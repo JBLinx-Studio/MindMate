@@ -10,6 +10,10 @@ import Sudoku from "./pages/Sudoku";
 import SudokuLobby from "./pages/SudokuLobby";
 import Quiz from "./pages/Quiz";
 import QuizLobby from "./pages/QuizLobby";
+import Crossword from "./pages/Crossword";
+import CrosswordLobby from "./pages/CrosswordLobby";
+import WordSearch from "./pages/WordSearch";
+import WordSearchLobby from "./pages/WordSearchLobby";
 import Lobby from "./pages/Lobby";
 import Puzzles from "./pages/Puzzles";
 import Tournaments from "./pages/Tournaments";
@@ -56,11 +60,15 @@ const App = () => (
           <Route path="/chess-lobby" element={<ChessLobby />} />
           <Route path="/sudoku-lobby" element={<SudokuLobby />} />
           <Route path="/quiz-lobby" element={<QuizLobby />} />
+          <Route path="/crossword-lobby" element={<CrosswordLobby />} />
+          <Route path="/word-search-lobby" element={<WordSearchLobby />} />
           
           {/* Games */}
           <Route path="/chess" element={<Chess />} />
           <Route path="/sudoku" element={<Sudoku />} />
           <Route path="/quiz" element={<Quiz />} />
+          <Route path="/crossword" element={<Crossword />} />
+          <Route path="/word-search" element={<WordSearch />} />
           <Route path="/lobby" element={<Lobby />} />
           
           {/* Existing routes */}
